@@ -16,14 +16,13 @@ const PORT = ENV.PORT;
 app.use(morgan("dev"));
 app.use(cors(corsOptions));
 
-
 app.use(errorHandler);
 
 
 export const server = http.createServer(app);
 
 server.listen(PORT, () => {
-  console.log(`Server is running on https://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 server.on("error", (e) => {
