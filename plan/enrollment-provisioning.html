@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan — Enrôlement &amp; Provisioning · DPC custom Device Owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0}
+  ::selection{background:rgba(201,169,106,.28);color:#fff}
+  a{color:#c9a96a;text-decoration:none;border-bottom:1px solid rgba(201,169,106,.35)}
+  a:hover{border-bottom-color:#c9a96a}
+  code{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.86em}
+  table{border-collapse:collapse}
+  tbody tr{transition:background-color .2s ease}
+  tbody tr:hover{background:rgba(201,169,106,.05)!important}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  @media (max-width:640px){.wrap{padding:40px 20px!important}.h1{font-size:32px!important}}
+</style>
+</head>
+<body style="background:radial-gradient(120% 80% at 50% -10%,#1d1813 0%,#14110f 55%,#100d0b 100%);color:#e9e2d6;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased;">
+<div class="wrap" style="max-width:860px;margin:0 auto;padding:72px 32px 96px;">
+
+  <!-- Masthead -->
+  <header style="margin:0 0 56px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#c9a96a;margin:0 0 22px;">Open&nbsp;MDM&nbsp;Stack · Document de planification</div>
+    <h1 class="h1" style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:46px;line-height:1.1;letter-spacing:-.01em;margin:0 0 24px;color:#fbf6ec;">Enrôlement <span style="color:#c9a96a;font-style:italic;font-weight:500;">&amp;</span> Provisioning</h1>
+    <div style="width:64px;height:1px;background:linear-gradient(90deg,#c9a96a,transparent);margin:0 0 24px;"></div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:19px;font-style:italic;color:#b9ac9b;margin:0;font-weight:400;">Stratégie DPC custom · Device Owner souverain</p>
+  </header>
+
+  <!-- Abstract -->
+  <div style="border:1px solid #322b24;border-radius:10px;padding:26px 30px;margin:0 0 64px;background:rgba(28,24,21,.5);">
+    <div style="display:grid;gap:14px;font-size:15px;">
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Stratégie</span><span style="color:#d8cfc1;">MDM souverain, DPC custom provisionné en <strong style="color:#fbf6ec;font-weight:600;">Device Owner</strong> — aucune dépendance Google, pas d'AMAPI, pas de FCM.</span></div>
+      <div style="height:1px;background:#262019;"></div>
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Push commandes</span><span style="color:#d8cfc1;">SSE + REST (acks / heartbeat) + polling lent en filet de sécurité.</span></div>
+      <div style="height:1px;background:#262019;"></div>
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Statut</span><span style="color:#b9ac9b;font-style:italic;">Planification — aucun code, référence d'architecture.</span></div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">01</span>Flux de provisioning de bout en bout</h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">QR · device factory-reset</p>
+    <pre style="background:#100d0b;border:1px solid #2c251f;border-radius:10px;padding:22px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:#a9c6a3;line-height:1.55;margin:0 0 24px;">[Admin/Dashboard]                    [Serveur API]              [Device neuf/reset]
+      |                                   |                            |
+      | 1. cree enrollment token          |                            |
+      |----------------------------------&gt;|                            |
+      | 2. recoit QR (payload + image)     |                            |
+      |&lt;----------------------------------|                            |
+      |                                                                 |
+      | 3. affiche le QR ----------------------------- scan (6 taps) --&gt;|
+      |                                                                 |
+      |                              4. download APK DPC &lt;--------------|
+      |                              (download location)                |
+      |                                                                 |
+      |                                   5. verifie checksum signature |
+      |                                   6. installe + set Device Owner|
+      |                                   7. onProvisioningComplete     |
+      |                                      -&gt; lit ADMIN_EXTRAS_BUNDLE  |
+      |                                      (token + URL serveur)       |
+      |                                                                 |
+      |                 8. POST /enroll (token + infos device) &lt;--------|
+      |                                   |                            |
+      |                 9. valide token, cree device, renvoie JWT -----&gt;|
+      |                                                                 |
+      |                10. applique policies + ouvre SSE + foreground   |
+      |&lt;------------- device "enrolled &amp; online" -----------------------|</pre>
+    <p style="margin:0;color:#d8cfc1;"><span style="color:#c9a96a;font-weight:600;">Point clé.</span> Sur un Device Owner, ce n'est pas l'app qui scanne le QR — c'est le <em style="font-family:'Fraunces',serif;">Setup Wizard</em> natif d'Android. La lib QR est donc <strong style="color:#fbf6ec;">côté serveur / dashboard</strong> (génération), pas côté Android.</p>
+  </section>
+
+  <!-- 2 -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 24px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">02</span>Côté serveur API — plan d'enrôlement</h2>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 14px;">Distinction fondamentale · statique vs dynamique</h3>
+    <table style="width:100%;font-size:14px;margin:0 0 24px;">
+      <thead><tr style="border-bottom:1px solid #c9a96a;">
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Partie</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Nature</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Source</th>
+      </tr></thead>
+      <tbody style="color:#d8cfc1;">
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">Component name du DeviceAdminReceiver</td><td style="padding:11px 12px;color:#a9c6a3;">Statique</td><td style="padding:11px 12px;color:#a99e8e;">Config</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">URL de download de l'APK</td><td style="padding:11px 12px;color:#a9c6a3;">Statique</td><td style="padding:11px 12px;color:#a99e8e;">Config</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">Checksum de signature de l'APK</td><td style="padding:11px 12px;color:#a9c6a3;">Statique</td><td style="padding:11px 12px;color:#a99e8e;">Config · keystore release</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#dcae6e;">ADMIN_EXTRAS_BUNDLE</code> → token + URL + tenant</td><td style="padding:11px 12px;color:#d6a08f;">Dynamique</td><td style="padding:11px 12px;color:#a99e8e;">Par enrôlement</td></tr>
+        <tr><td style="padding:11px 12px;">WiFi SSID / password (optionnel)</td><td style="padding:11px 12px;color:#d6a08f;">Dynamique</td><td style="padding:11px 12px;color:#a99e8e;">Par enrôlement</td></tr>
+      </tbody>
+    </table>
+    <p style="margin:0 0 28px;color:#d8cfc1;">Un endpoint assemble <code style="background:#100d0b;border:1px solid #2c251f;padding:2px 7px;border-radius:5px;color:#a9c6a3;">[config statique] + [token frais]</code> → JSON QR.</p>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 14px;">Modèle de données <span style="color:#8a7f70;font-size:14px;font-weight:400;font-style:italic;">(Drizzle)</span></h3>
+    <ul style="margin:0 0 28px;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:10px;"><strong style="color:#fbf6ec;"><code>enrollment_tokens</code></strong> — <code>id</code>, <code>token</code> (haute entropie), <code>tenant_id</code>, <code>created_by</code>, <code>expires_at</code>, <code>max_uses</code>, <code>used_count</code>, <code>status</code> (active/revoked/exhausted), opt. <code>policy_id</code>/<code>group_id</code>, opt. <code>device_name_template</code>.</li>
+      <li><strong style="color:#fbf6ec;"><code>devices</code></strong> — créé à l'enrôlement : <code>id</code>, <code>tenant_id</code>, <code>enrollment_token_id</code>, <code>serial</code>, <code>model</code>, <code>android_version</code>, <code>device_jwt_id</code>, <code>status</code>, <code>last_seen</code>, <code>enrolled_at</code>.</li>
+    </ul>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 14px;">Endpoints</h3>
+    <table style="width:100%;font-size:14px;margin:0 0 24px;">
+      <thead><tr style="border-bottom:1px solid #c9a96a;">
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Endpoint</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Auth</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Rôle</th>
+      </tr></thead>
+      <tbody style="color:#d8cfc1;">
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">POST /enrollment-tokens</code></td><td style="padding:11px 12px;color:#a99e8e;">user</td><td style="padding:11px 12px;">crée un token + renvoie payload QR + image</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">GET /provisioning/dpc.apk</code></td><td style="padding:11px 12px;color:#dcae6e;">publique / cookie-header</td><td style="padding:11px 12px;">sert l'APK pendant le provisioning</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">POST /enroll</code></td><td style="padding:11px 12px;color:#a99e8e;">token device</td><td style="padding:11px 12px;">valide le token, crée le device, renvoie le JWT</td></tr>
+        <tr><td style="padding:11px 12px;"><code style="color:#a9c6a3;">POST /devices/:id/deenroll</code></td><td style="padding:11px 12px;color:#a99e8e;">user</td><td style="padding:11px 12px;">révoque le device + son JWT</td></tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:14px;border-left:2px solid #d6a08f;background:rgba(214,160,143,.07);border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 28px;">
+      <span style="flex:none;font-family:'Fraunces',serif;font-style:italic;color:#d6a08f;font-weight:600;">Piège</span>
+      <p style="margin:0;font-size:14.5px;color:#d8cfc1;"><strong style="color:#fbf6ec;">Le download APK.</strong> À l'étape 4 le device n'est pas encore enrôlé → aucun credential. L'endpoint APK doit être accessible sans auth device : protège-le avec le <code style="color:#dcae6e;">PROVISIONING_PACKAGE_DOWNLOAD_COOKIE_HEADER</code> (header secret dans le QR) plutôt que de l'exposer totalement.</p>
+    </div>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 12px;">Lifecycle du token</h3>
+    <p style="margin:0;color:#d8cfc1;">Single-use (ou <code>max_uses</code> limité) + TTL court + scopé tenant. À l'étape 9 le serveur incrémente <code>used_count</code> et refuse si expiré / révoqué / épuisé. Bloque le replay.</p>
+  </section>
+
+  <!-- 3 -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 24px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">03</span>Lib de génération QR</h2>
+    <p style="margin:0 0 14px;color:#d8cfc1;"><strong style="color:#fbf6ec;">Côté serveur · <code style="color:#a9c6a3;">qrcode</code> (node-qrcode).</strong> Bon défaut :</p>
+    <ul style="margin:0 0 20px;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:7px;">mature, maintenu, zéro dépendance lourde ;</li>
+      <li style="margin-bottom:7px;">sort en <strong style="color:#fbf6ec;">data URL / PNG / SVG / terminal</strong> ;</li>
+      <li>niveaux de correction d'erreur réglables.</li>
+    </ul>
+    <div style="display:flex;gap:14px;border-left:2px solid #c9a96a;background:rgba(201,169,106,.07);border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px;">
+      <span style="flex:none;font-family:'Fraunces',serif;font-style:italic;color:#c9a96a;font-weight:600;">Note</span>
+      <p style="margin:0;font-size:14.5px;color:#d8cfc1;"><strong style="color:#fbf6ec;">Taille du payload.</strong> Download URL + checksum + bundle rendent le QR dense. Utiliser un niveau de correction <strong style="color:#fbf6ec;">L ou M</strong> (pas H) sinon le QR devient illisible / trop gros. node-qrcode auto-dimensionne la version — à tester sur device réel.</p>
+    </div>
+    <p style="margin:0 0 14px;color:#b9ac9b;font-size:14.5px;">Alternative streaming : <code>qr-image</code> (moins maintenu) — non recommandé.</p>
+    <p style="margin:0;color:#d8cfc1;"><strong style="color:#fbf6ec;">Côté Android · aucune lib QR nécessaire</strong> pour le provisioning Device Owner (le Setup Wizard scanne). Un scanner (ML Kit Barcode / ZXing) ne servirait qu'à un <em style="font-family:'Fraunces',serif;">autre</em> mode d'enrôlement in-app — hors scope.</p>
+  </section>
+
+  <!-- 4 -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">04</span>Côté Android — plan du provisioning</h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">le récepteur</p>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 12px;">AndroidManifest</h3>
+    <ul style="margin:0 0 24px;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:7px;"><code>DeviceAdminReceiver</code> avec permission <code>BIND_DEVICE_ADMIN</code>, intent-filters : <code>DEVICE_ADMIN_ENABLED</code>, <code>PROFILE_PROVISIONING_COMPLETE</code>.</li>
+      <li>Ressource XML <code>device_admin</code> listant les policies utilisées.</li>
+    </ul>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 12px;">Le receiver</h3>
+    <ul style="margin:0 0 24px;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:7px;"><code>onProfileProvisioningComplete(intent)</code> → <strong style="color:#dcae6e;">moment clé</strong> : récupérer l'<code>ADMIN_EXTRAS_BUNDLE</code> → token + URL serveur + tenant.</li>
+      <li><code>onEnabled</code> → admin actif.</li>
+    </ul>
+
+    <div style="display:flex;gap:14px;border-left:2px solid #d6a08f;background:rgba(214,160,143,.07);border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px;">
+      <span style="flex:none;font-family:'Fraunces',serif;font-style:italic;color:#d6a08f;font-weight:600;">Android&nbsp;10+</span>
+      <div style="font-size:14.5px;color:#d8cfc1;">
+        <strong style="color:#fbf6ec;">Obligatoire, sinon le provisioning échoue.</strong> Fournir deux activités :
+        <ul style="margin:8px 0 6px;padding-left:18px;">
+          <li style="margin-bottom:5px;"><code style="color:#dcae6e;">ACTION_GET_PROVISIONING_MODE</code> → renvoie le mode (fully-managed / device owner) ;</li>
+          <li><code style="color:#dcae6e;">ACTION_ADMIN_POLICY_COMPLIANCE</code> → finalise la conformité après provisioning (déclenche <code>/enroll</code>).</li>
+        </ul>
+        <span style="color:#a99e8e;font-style:italic;">Le détail qui fait « marche sur émulateur ancien » mais « échoue sur device récent ».</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 12px;">Séquence post-provisioning</h3>
+    <ol style="margin:0;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:6px;">Lire le bundle (token + URL).</li>
+      <li style="margin-bottom:6px;">Collecter les infos device (serial via <code>DevicePolicyManager</code>, model, version).</li>
+      <li style="margin-bottom:6px;"><code>POST /enroll</code> (Retrofit) → recevoir le JWT device.</li>
+      <li style="margin-bottom:6px;">Stocker le JWT (EncryptedSharedPreferences / Keystore).</li>
+      <li style="margin-bottom:6px;">Appliquer les policies, démarrer le <strong style="color:#fbf6ec;">foreground service</strong> + ouvrir le <strong style="color:#fbf6ec;">stream SSE</strong>.</li>
+      <li>Marquer la conformité (fin de <code>ADMIN_POLICY_COMPLIANCE</code>).</li>
+    </ol>
+  </section>
+
+  <!-- 5 -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 24px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">05</span>Sécurité</h2>
+    <ul style="margin:0;padding-left:20px;color:#d8cfc1;font-size:14.5px;">
+      <li style="margin-bottom:10px;"><strong style="color:#fbf6ec;">Token</strong> — haute entropie, single-use, TTL court, scopé tenant → anti-replay.</li>
+      <li style="margin-bottom:10px;"><strong style="color:#fbf6ec;">Checksum de signature</strong> dans le QR = protection MITM : le device refuse un APK substitué. Calculé depuis le keystore release (SHA-256 du certificat, base64 url-safe).</li>
+      <li style="margin-bottom:10px;"><strong style="color:#fbf6ec;">HTTPS obligatoire</strong> — l'URL serveur dans le bundle doit être <code>https</code>.</li>
+      <li style="margin-bottom:10px;"><strong style="color:#fbf6ec;">JWT device</strong> — signé, porte <code>device_id</code> + <code>tenant_id</code>, révocable (table de révocation / rotation) pour le de-enroll.</li>
+      <li><strong style="color:#fbf6ec;">Endpoint APK</strong> — cookie-header secret plutôt que public.</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section style="margin:0 0 24px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 24px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">06</span>Ordre de construction <span style="font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:#8a7f70;font-weight:400;">jalons</span></h2>
+    <table style="width:100%;font-size:14px;margin:0 0 24px;">
+      <thead><tr style="border-bottom:1px solid #c9a96a;">
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Jalon</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Livrable</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Pourquoi en premier</th>
+      </tr></thead>
+      <tbody style="color:#d8cfc1;">
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:12px;color:#d6a08f;font-weight:600;white-space:nowrap;">M0 · dé-risquer</td><td style="padding:12px;">APK stub DPC + checksum + QR hardcodé → réussir UN provisioning Device Owner sur device physique</td><td style="padding:12px;color:#b9ac9b;">Maillon le plus incertain. Valide aussi les activités Android 10+.</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:12px;color:#a9c6a3;font-weight:600;white-space:nowrap;">M1 · serveur</td><td style="padding:12px;">modèle <code>enrollment_tokens</code> + endpoint QR (<code>qrcode</code>) + hosting APK</td><td style="padding:12px;color:#b9ac9b;">la fondation backend.</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:12px;color:#a9c6a3;font-weight:600;white-space:nowrap;">M2 · boucle enroll</td><td style="padding:12px;">DPC lit le bundle → <code>POST /enroll</code> → JWT stocké</td><td style="padding:12px;color:#b9ac9b;">la chaîne device↔serveur réelle.</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:12px;color:#a9c6a3;font-weight:600;white-space:nowrap;">M3 · dashboard</td><td style="padding:12px;">UI qui génère / affiche le QR</td><td style="padding:12px;color:#b9ac9b;">rend l'enrôlement utilisable.</td></tr>
+        <tr><td style="padding:12px;color:#a9c6a3;font-weight:600;white-space:nowrap;">M4 · cycle de vie</td><td style="padding:12px;">de-enroll + révocation token / JWT</td><td style="padding:12px;color:#b9ac9b;">hygiène avant d'ajouter des commandes.</td></tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:14px;border-left:2px solid #c9a96a;background:rgba(201,169,106,.08);border-radius:0 8px 8px 0;padding:16px 20px;">
+      <span style="flex:none;font-family:'Fraunces',serif;font-style:italic;color:#c9a96a;font-weight:600;">M0 d'abord</span>
+      <p style="margin:0;font-size:15px;color:#e9e2d6;">Ne pas construire le serveur élégant avant d'avoir prouvé qu'un Device Owner se provisionne sur le matériel cible.</p>
+    </div>
+  </section>
+
+  <footer style="margin:64px 0 0;padding-top:24px;border-top:1px solid #262019;text-align:center;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:#6f655a;">Open MDM Stack · DPC custom Device Owner souverain</div>
+  </footer>
+
+</div>
+</body>
+</html>
