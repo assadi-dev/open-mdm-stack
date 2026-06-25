@@ -6,6 +6,15 @@
                 "CONTEXT7_API_KEY": "ctx7sk-6d568b39-6742-42d4-958a-a65e606b36f8"
             }
         },
+        "excalidraw": {
+            "command": "docker",
+            "args": [
+                "run", "-i", "--rm",
+                "-e", "EXPRESS_SERVER_URL=http://host.docker.internal:5000",
+                "-e", "ENABLE_CANVAS_SYNC=true",
+                "ghcr.io/yctimlin/mcp_excalidraw:latest"
+            ]
+        },
         "ui-kit": {
             "command": "npx",
             "args": [

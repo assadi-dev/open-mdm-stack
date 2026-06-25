@@ -47,3 +47,12 @@ services:
       - "8336:80"
     depends_on:
       - postgres
+
+
+  # Canvas server du MCP Excalidraw (UI + REST + WebSocket) que Claude pilote.
+  # Mappé sur 5000 (le canvas écoute sur 3000 en interne, déjà pris par apps/web).
+  excalidraw:
+    image: ghcr.io/yctimlin/mcp_excalidraw-canvas:latest
+    restart: unless-stopped
+    ports:
+      - "5000:3000"
