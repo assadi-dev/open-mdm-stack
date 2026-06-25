@@ -45,3 +45,7 @@ docker
 apps/api/storage/*
 
 apps/api/logs/*
+apps/api/node_modules/*
+apps/api/build/*
+apps/api/dist/*
+apps/api/src/drizzle/migrations/*

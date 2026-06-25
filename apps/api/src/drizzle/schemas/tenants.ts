@@ -11,7 +11,7 @@ export const tenants = pgTable("tenants", {
     logo: text("logo"),
     phoneNumber: text("phone_number"),
     address: text("address"),
-    ownerId: uuid("owner_id").notNull().references(() => user.id, { onDelete: "set null" }),
+    ownerId: text("owner_id").notNull().references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()

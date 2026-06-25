@@ -1,5 +1,5 @@
 {
-  "id": "f2e00b8c-de25-4eda-b855-066b6950eb9a",
+  "id": "11782a89-9fa9-41ca-8849-7fc5a4b61550",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -445,7 +445,7 @@
         },
         "owner_id": {
           "name": "owner_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
