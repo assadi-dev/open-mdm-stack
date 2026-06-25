@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="884" viewBox="0 0 1280 884" font-family="'Segoe UI', Roboto, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#495057"/></marker><marker id="arrowO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8590c"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<rect x="30" y="90" width="300" height="54" rx="12" fill="#6741d9" stroke="#5f3dc4" stroke-width="2"/>
+<rect x="440" y="90" width="300" height="54" rx="12" fill="#1971c2" stroke="#1864ab" stroke-width="2"/>
+<rect x="850" y="90" width="300" height="54" rx="12" fill="#2f9e44" stroke="#2b8a3e" stroke-width="2"/>
+<rect x="30" y="190" width="300" height="76" rx="12" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+<rect x="440" y="190" width="300" height="76" rx="12" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+<rect x="30" y="330" width="300" height="76" rx="12" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+<rect x="850" y="330" width="300" height="76" rx="12" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+<rect x="850" y="470" width="300" height="90" rx="12" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+<rect x="850" y="624" width="300" height="76" rx="12" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+<rect x="440" y="624" width="300" height="76" rx="12" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+<rect x="850" y="764" width="300" height="90" rx="12" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+<line x1="330" y1="228" x2="440" y2="228" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="590" y1="266" x2="590" y2="330" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="330" y1="368" x2="850" y2="368" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="1000" y1="406" x2="1000" y2="470" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="1000" y1="560" x2="1000" y2="624" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="850" y1="662" x2="740" y2="662" stroke="#e8590c" stroke-width="2" marker-end="url(#arrowO)"/>
+<line x1="740" y1="700" x2="850" y2="764" stroke="#e8590c" stroke-width="2" marker-end="url(#arrowO)"/>
+<text x="30" y="56" font-size="26" font-weight="700" fill="#1e1e1e"><tspan x="30" dy="0">Open MDM  -  Enrolement &amp; Provisioning  (DPC custom Device Owner)</tspan></text>
+<text x="90" y="126" font-size="20" font-weight="600" fill="#ffffff"><tspan x="90" dy="0">Admin / Dashboard</tspan></text>
+<text x="530" y="126" font-size="20" font-weight="600" fill="#ffffff"><tspan x="530" dy="0">Serveur API</tspan></text>
+<text x="890" y="124" font-size="18" font-weight="600" fill="#ffffff"><tspan x="890" dy="0">Device (factory-reset)</tspan></text>
+<text x="52" y="227" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="52" dy="0">1. Cree enrollment token</tspan></text>
+<text x="462" y="219" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="462" dy="0">2. Genere le QR</tspan><tspan x="462" dy="22.1">   (token + image)</tspan></text>
+<text x="52" y="359" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="52" dy="0">3. Affiche le QR</tspan><tspan x="52" dy="22.1">   au dashboard</tspan></text>
+<text x="872" y="359" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="872" dy="0">4. Scan QR (6 taps)</tspan><tspan x="872" dy="22.1">   via Setup Wizard</tspan></text>
+<text x="872" y="494" font-size="16" font-weight="400" fill="#1e1e1e"><tspan x="872" dy="0">5. Download APK DPC</tspan><tspan x="872" dy="20.8">   + set Device Owner</tspan><tspan x="872" dy="20.8">   + verif checksum</tspan></text>
+<text x="872" y="653" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="872" dy="0">6. POST /enroll</tspan><tspan x="872" dy="22.1">   (token + infos)</tspan></text>
+<text x="462" y="653" font-size="17" font-weight="400" fill="#1e1e1e"><tspan x="462" dy="0">7. Valide token,</tspan><tspan x="462" dy="22.1">   cree device -&gt; JWT</tspan></text>
+<text x="872" y="788" font-size="16" font-weight="400" fill="#1e1e1e"><tspan x="872" dy="0">8. Applique policies</tspan><tspan x="872" dy="20.8">   + ouvre SSE +</tspan><tspan x="872" dy="20.8">   foreground service</tspan></text>
+</svg>

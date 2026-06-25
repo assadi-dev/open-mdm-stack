@@ -43,6 +43,15 @@
       ],
       "@middleware/*": [
         "src/middleware/*"
+      ],
+      "@drizzle/*": [
+        "src/drizzle/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ],
+      "@schemas/*": [
+        "src/drizzle/schemas/*"
       ]
     }
   },

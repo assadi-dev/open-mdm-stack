@@ -8,6 +8,9 @@ import http from "http";
 import { API_BASE_URL, API_VERSION, corsOptions } from "@config/cors";
 import { errorHandler } from "./lib/global";
 import qrcodeRouter from "@features/qrcode/router";
+import { auth } from "@lib/auth";
+import { toNodeHandler } from "better-auth/node";
+
 
 
 const app = express();
@@ -16,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = ENV.PORT;
 
 app.use(morgan("dev"));
+
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(cors(corsOptions));
 
 app.use(errorHandler);

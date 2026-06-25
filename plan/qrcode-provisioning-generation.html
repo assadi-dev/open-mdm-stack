@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Génération du QR de provisioning · Côté API · Open MDM Stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0}
+  ::selection{background:rgba(201,169,106,.28);color:#fff}
+  a{color:#c9a96a;text-decoration:none;border-bottom:1px solid rgba(201,169,106,.35)}
+  a:hover{border-bottom-color:#c9a96a}
+  code{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:.86em}
+  table{border-collapse:collapse}
+  tbody tr{transition:background-color .2s ease}
+  tbody tr:hover{background:rgba(201,169,106,.05)!important}
+  .step{counter-increment:s}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  @media (max-width:640px){.wrap{padding:40px 20px!important}.h1{font-size:32px!important}.schema{overflow-x:auto}}
+</style>
+</head>
+<body style="background:radial-gradient(120% 80% at 50% -10%,#1d1813 0%,#14110f 55%,#100d0b 100%);color:#e9e2d6;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased;">
+<div class="wrap" style="max-width:860px;margin:0 auto;padding:72px 32px 96px;">
+
+  <!-- Masthead -->
+  <header style="margin:0 0 56px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#c9a96a;margin:0 0 22px;">Open&nbsp;MDM&nbsp;Stack · Côté API</div>
+    <h1 class="h1" style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:46px;line-height:1.1;letter-spacing:-.01em;margin:0 0 24px;color:#fbf6ec;">Génération du QR <span style="color:#c9a96a;font-style:italic;font-weight:500;">de</span> provisioning</h1>
+    <div style="width:64px;height:1px;background:linear-gradient(90deg,#c9a96a,transparent);margin:0 0 24px;"></div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:19px;font-style:italic;color:#b9ac9b;margin:0;font-weight:400;">Données d'entrée · étapes · payload · schéma</p>
+  </header>
+
+  <!-- Abstract -->
+  <div style="border:1px solid #322b24;border-radius:10px;padding:26px 30px;margin:0 0 64px;background:rgba(28,24,21,.5);">
+    <div style="display:grid;gap:14px;font-size:15px;">
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Endpoint</span><span style="color:#d8cfc1;"><code style="color:#a9c6a3;">POST /api/v1/enrollment-tokens</code> — auth user (dashboard).</span></div>
+      <div style="height:1px;background:#262019;"></div>
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Sortie</span><span style="color:#d8cfc1;">JSON de provisioning Android Device Owner + image QR (data URL / PNG / SVG).</span></div>
+      <div style="height:1px;background:#262019;"></div>
+      <div style="display:flex;gap:14px;"><span style="flex:none;width:128px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7f70;padding-top:3px;">Lib</span><span style="color:#d8cfc1;"><code>qrcode</code> (node-qrcode) — correction d'erreur <strong style="color:#fbf6ec;">M</strong> (payload dense).</span></div>
+    </div>
+  </div>
+
+  <!-- 01 — Schéma -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">01</span>Schéma de génération</h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">Dashboard → API → QR</p>
+
+    <div class="schema" style="background:#100d0b;border:1px solid #2c251f;border-radius:10px;padding:28px 22px;margin:0 0 18px;">
+      <svg viewBox="0 0 800 360" width="100%" role="img" aria-label="Schéma de génération du QR de provisioning" font-family="'Inter',sans-serif">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9a96a"/></marker>
+          <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a9c6a3"/></marker>
+        </defs>
+
+        <!-- Dashboard -->
+        <rect x="20" y="150" width="150" height="64" rx="10" fill="rgba(201,169,106,.08)" stroke="#c9a96a" stroke-width="1.5"/>
+        <text x="95" y="178" text-anchor="middle" fill="#fbf6ec" font-size="15" font-weight="600">Dashboard</text>
+        <text x="95" y="197" text-anchor="middle" fill="#b9ac9b" font-size="11">admin</text>
+
+        <!-- arrow dashboard -> API -->
+        <line x1="170" y1="173" x2="300" y2="173" stroke="#c9a96a" stroke-width="1.6" marker-end="url(#ar)"/>
+        <text x="235" y="163" text-anchor="middle" fill="#8a7f70" font-size="10" font-family="'JetBrains Mono',monospace">POST</text>
+
+        <!-- API box (contient le pipeline) -->
+        <rect x="300" y="44" width="320" height="276" rx="12" fill="rgba(40,33,27,.55)" stroke="#3a322a" stroke-width="1.5"/>
+        <text x="316" y="68" fill="#dcae6e" font-size="12" font-family="'JetBrains Mono',monospace" letter-spacing="1">SERVEUR&#160;API</text>
+
+        <!-- pipeline steps inside API -->
+        <rect x="320" y="80" width="280" height="40" rx="8" fill="rgba(169,198,163,.07)" stroke="#3f4d3c"/>
+        <text x="334" y="98" fill="#d8cfc1" font-size="12.5" font-weight="600">1 · Génère token (haute entropie)</text>
+        <text x="334" y="113" fill="#9a8f7f" font-size="10.5">+ persiste enrollment_tokens</text>
+
+        <rect x="320" y="130" width="280" height="40" rx="8" fill="rgba(169,198,163,.07)" stroke="#3f4d3c"/>
+        <text x="334" y="148" fill="#d8cfc1" font-size="12.5" font-weight="600">2 · Assemble le payload JSON</text>
+        <text x="334" y="163" fill="#9a8f7f" font-size="10.5">config statique + ADMIN_EXTRAS_BUNDLE</text>
+
+        <rect x="320" y="180" width="280" height="40" rx="8" fill="rgba(169,198,163,.07)" stroke="#3f4d3c"/>
+        <text x="334" y="198" fill="#d8cfc1" font-size="12.5" font-weight="600">3 · node-qrcode → image</text>
+        <text x="334" y="213" fill="#9a8f7f" font-size="10.5">errorCorrectionLevel: 'M'</text>
+
+        <rect x="320" y="230" width="280" height="40" rx="8" fill="rgba(201,169,106,.06)" stroke="#5a4d36"/>
+        <text x="334" y="248" fill="#dcae6e" font-size="12.5" font-weight="600">4 · Réponse { qr, token_id, expires_at }</text>
+        <text x="334" y="263" fill="#9a8f7f" font-size="10.5">data URL renvoyé au dashboard</text>
+
+        <!-- arrow API -> QR -->
+        <line x1="620" y1="173" x2="700" y2="173" stroke="#a9c6a3" stroke-width="1.6" marker-end="url(#arb)"/>
+
+        <!-- QR glyph -->
+        <g transform="translate(700,138)">
+          <rect x="0" y="0" width="70" height="70" rx="6" fill="#fbf6ec"/>
+          <g fill="#100d0b">
+            <rect x="8" y="8" width="18" height="18"/><rect x="44" y="8" width="18" height="18"/><rect x="8" y="44" width="18" height="18"/>
+            <rect x="12" y="12" width="10" height="10" fill="#fbf6ec"/><rect x="48" y="12" width="10" height="10" fill="#fbf6ec"/><rect x="12" y="48" width="10" height="10" fill="#fbf6ec"/>
+            <rect x="32" y="32" width="6" height="6"/><rect x="44" y="32" width="6" height="6"/><rect x="56" y="44" width="6" height="6"/><rect x="44" y="56" width="6" height="6"/><rect x="32" y="44" width="6" height="6"/>
+          </g>
+        </g>
+        <text x="735" y="228" text-anchor="middle" fill="#b9ac9b" font-size="11">QR affiché</text>
+      </svg>
+    </div>
+    <p style="margin:0;color:#d8cfc1;font-size:14.5px;"><span style="color:#c9a96a;font-weight:600;">Rappel.</span> Le device ne dialogue pas ici — le <em style="font-family:'Fraunces',serif;">Setup Wizard</em> natif d'Android scannera le QR plus tard. La génération est 100&#160;% côté serveur.</p>
+  </section>
+
+  <!-- 02 — Données d'entrée -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">02</span>Données d'entrée nécessaires</h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">Ce qu'il faut réunir avant de générer</p>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 14px;">Statique <span style="color:#8a7f70;font-size:14px;font-weight:400;font-style:italic;">— config serveur, identique à chaque enrôlement</span></h3>
+    <table style="width:100%;font-size:14px;margin:0 0 28px;">
+      <thead><tr style="border-bottom:1px solid #c9a96a;">
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Donnée</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Source</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Rôle</th>
+      </tr></thead>
+      <tbody style="color:#d8cfc1;">
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">Component name du DPC</td><td style="padding:11px 12px;color:#a99e8e;">ENV / constante</td><td style="padding:11px 12px;">classe du <code>DeviceAdminReceiver</code></td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">URL de download de l'APK</td><td style="padding:11px 12px;color:#a99e8e;">ENV</td><td style="padding:11px 12px;">où le Setup Wizard récupère le DPC</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;">Checksum de signature</td><td style="padding:11px 12px;color:#a99e8e;">keystore release</td><td style="padding:11px 12px;">anti-MITM — refuse un APK substitué</td></tr>
+        <tr><td style="padding:11px 12px;">Cookie-header de download</td><td style="padding:11px 12px;color:#a99e8e;">ENV (secret)</td><td style="padding:11px 12px;">protège l'endpoint APK</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#dcae6e;margin:0 0 14px;">Dynamique <span style="color:#8a7f70;font-size:14px;font-weight:400;font-style:italic;">— par enrôlement, depuis le body de la requête</span></h3>
+    <table style="width:100%;font-size:14px;margin:0 0 18px;">
+      <thead><tr style="border-bottom:1px solid #c9a96a;">
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Champ</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Requis</th>
+        <th style="text-align:left;padding:10px 12px;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Note</th>
+      </tr></thead>
+      <tbody style="color:#d8cfc1;">
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">server_url</code></td><td style="padding:11px 12px;color:#a9c6a3;">oui</td><td style="padding:11px 12px;"><strong style="color:#fbf6ec;">https</strong> obligatoire</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">expires_at / ttl</code></td><td style="padding:11px 12px;color:#a9c6a3;">oui</td><td style="padding:11px 12px;">TTL court — anti-replay</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">max_uses</code></td><td style="padding:11px 12px;color:#a99e8e;">défaut 1</td><td style="padding:11px 12px;">single-use recommandé</td></tr>
+        <tr style="border-bottom:1px solid #262019;"><td style="padding:11px 12px;"><code style="color:#a9c6a3;">policy_id / group_id</code></td><td style="padding:11px 12px;color:#a99e8e;">opt.</td><td style="padding:11px 12px;">pré-assignation</td></tr>
+        <tr><td style="padding:11px 12px;"><code style="color:#a9c6a3;">wifi_ssid / wifi_password</code></td><td style="padding:11px 12px;color:#a99e8e;">opt.</td><td style="padding:11px 12px;">provisioning sans réseau préconfiguré</td></tr>
+      </tbody>
+    </table>
+    <p style="margin:0 0 16px;color:#d8cfc1;font-size:14.5px;">Le <code style="color:#dcae6e;">enrollment_token</code> n'est <em style="font-family:'Fraunces',serif;">pas</em> une entrée : il est <strong style="color:#fbf6ec;">généré par le serveur</strong> (haute entropie) à l'étape&#160;1.</p>
+    <div style="display:flex;gap:14px;border-left:2px solid #c9a96a;background:rgba(201,169,106,.06);border-radius:0 8px 8px 0;padding:16px 20px;">
+      <span style="flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a96a;letter-spacing:.1em;padding-top:2px;">◆ MVP&#160;MONO-TENANT</span>
+      <span style="color:#d8cfc1;font-size:14.5px;">Ce MVP est <strong style="color:#fbf6ec;">mono-tenant</strong> (1 serveur = 1 organisation) : pas de <code>tenant_id</code> dans le payload ni le modèle de données. Le scope multi-tenant pourra être réintroduit plus tard sans casser le contrat d'enrôlement.</span>
+    </div>
+  </section>
+
+  <!-- 03 — Étapes -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">03</span>Étapes de génération <span style="color:#8a7f70;font-size:14px;font-weight:400;font-style:italic;">(API)</span></h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">Du body de la requête à l'image renvoyée</p>
+
+    <ol style="list-style:none;counter-reset:s;margin:0;padding:0;">
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">1</span>
+        <strong style="color:#fbf6ec;">Auth + validation (Zod).</strong> <span style="color:#d8cfc1;">Vérifie l'utilisateur dashboard, parse le body : <code>ttl</code>, <code>max_uses</code>, options WiFi/policy.</span></li>
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">2</span>
+        <strong style="color:#fbf6ec;">Génère le token.</strong> <span style="color:#d8cfc1;"><code>crypto.randomBytes</code> → haute entropie ; calcule <code>expires_at</code> ; persiste la ligne <code>enrollment_tokens</code> (<code>status=active</code>, <code>used_count=0</code>).</span></li>
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">3</span>
+        <strong style="color:#fbf6ec;">Charge la config statique.</strong> <span style="color:#d8cfc1;">Component name, URL APK, checksum signature, cookie-header — depuis l'ENV.</span></li>
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">4</span>
+        <strong style="color:#fbf6ec;">Assemble <code>ADMIN_EXTRAS_BUNDLE</code>.</strong> <span style="color:#d8cfc1;"><code>{ enrollment_token, server_url }</code> — la partie lue par le DPC après provisioning.</span></li>
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">5</span>
+        <strong style="color:#fbf6ec;">Construit le payload JSON.</strong> <span style="color:#d8cfc1;">Fusionne config statique + bundle dans l'objet aux clés <code>android.app.extra.*</code> (voir §04).</span></li>
+      <li class="step" style="position:relative;padding:0 0 22px 52px;border-left:1px solid #2c251f;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #c9a96a;color:#c9a96a;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">6</span>
+        <strong style="color:#fbf6ec;">Sérialise + encode QR.</strong> <span style="color:#d8cfc1;"><code>JSON.stringify</code> → <code>QRCode.toDataURL(payload, { errorCorrectionLevel: 'M' })</code>. Sortie data URL, PNG ou SVG.</span></li>
+      <li class="step" style="position:relative;padding:0 0 4px 52px;margin-left:14px;">
+        <span style="position:absolute;left:-14px;top:-2px;width:28px;height:28px;border-radius:50%;background:#1a1611;border:1px solid #dcae6e;color:#dcae6e;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;">7</span>
+        <strong style="color:#fbf6ec;">Répond au dashboard.</strong> <span style="color:#d8cfc1;"><code>{ token_id, expires_at, qr }</code> — le dashboard affiche l'image, prête à être scannée.</span></li>
+    </ol>
+  </section>
+
+  <!-- 04 — Payload -->
+  <section style="margin:0 0 64px;">
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#fbf6ec;margin:0 0 8px;display:flex;align-items:baseline;gap:14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#c9a96a;font-weight:500;">04</span>Structure du payload</h2>
+    <p style="color:#8a7f70;font-size:13px;margin:0 0 24px;font-style:italic;font-family:'Fraunces',serif;">Clés officielles Android Device Owner — encodées dans le QR</p>
+    <pre style="background:#100d0b;border:1px solid #2c251f;border-radius:10px;padding:22px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cfc6b8;line-height:1.6;margin:0 0 18px;">{
+  <span style="color:#8a7f70;">// statique — config serveur</span>
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME"</span>: <span style="color:#dcae6e;">"com.openmdm.dpc/.MdmDeviceAdminReceiver"</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION"</span>: <span style="color:#dcae6e;">"https://mdm.example.com/api/v1/provisioning/dpc.apk"</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM"</span>: <span style="color:#dcae6e;">"gJD2YwtOiWJHkSMkkIfLRlj-quNqG1fb6v100QmzM9w="</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_COOKIE_HEADER"</span>: <span style="color:#dcae6e;">"X-Provisioning-Token: &lt;secret&gt;"</span>,
+
+  <span style="color:#8a7f70;">// dynamique — lu par le DPC après provisioning</span>
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"</span>: {
+    <span style="color:#d6a08f;">"enrollment_token"</span>: <span style="color:#dcae6e;">"9f2c8a…haute-entropie"</span>,
+    <span style="color:#d6a08f;">"server_url"</span>: <span style="color:#dcae6e;">"https://mdm.example.com"</span>
+  },
+
+  <span style="color:#8a7f70;">// optionnel — réseau de provisioning</span>
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_WIFI_SSID"</span>: <span style="color:#dcae6e;">"OfficeWiFi"</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_WIFI_PASSWORD"</span>: <span style="color:#dcae6e;">"••••••••"</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"</span>: <span style="color:#dcae6e;">"WPA"</span>,
+  <span style="color:#a9c6a3;">"android.app.extra.PROVISIONING_SKIP_ENCRYPTION"</span>: <span style="color:#c98f8f;">false</span>
+}</pre>
+    <p style="margin:0;color:#d8cfc1;font-size:14.5px;">Seul <code style="color:#dcae6e;">ADMIN_EXTRAS_BUNDLE</code> change d'un enrôlement à l'autre. Le reste est figé par la config.</p>
+  </section>
+
+  <!-- Garde-fous -->
+  <section style="margin:0 0 24px;">
+    <div style="display:flex;gap:14px;border-left:2px solid #d6a08f;background:rgba(214,160,143,.07);border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 16px;">
+      <span style="flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:#d6a08f;letter-spacing:.1em;padding-top:2px;">⚠ DENSITÉ</span>
+      <span style="color:#d8cfc1;font-size:14.5px;">Avec URL + checksum + bundle, le QR est dense. Utiliser la correction d'erreur <strong style="color:#fbf6ec;">L ou M</strong>, jamais <strong style="color:#fbf6ec;">H</strong> (sinon QR illisible / trop gros). node-qrcode auto-dimensionne la version — <strong style="color:#fbf6ec;">à tester sur device réel</strong>.</span>
+    </div>
+    <div style="display:flex;gap:14px;border-left:2px solid #c9a96a;background:rgba(201,169,106,.06);border-radius:0 8px 8px 0;padding:16px 20px;">
+      <span style="flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9a96a;letter-spacing:.1em;padding-top:2px;">↪ CODE&#160;ACTUEL</span>
+      <span style="color:#d8cfc1;font-size:14.5px;">L'implémentation de départ (<code>features/qrcode/service.ts</code>) génère depuis un simple <code>text</code> en <code>errorCorrectionLevel: 'H'</code> et écrit un fichier. À faire évoluer : payload provisioning structuré + niveau <strong style="color:#fbf6ec;">M</strong> + sortie data URL.</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="margin:64px 0 0;padding-top:24px;border-top:1px solid #262019;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6f655a;letter-spacing:.1em;">Open&#160;MDM&#160;Stack · plan</span>
+    <span style="font-family:'Fraunces',serif;font-style:italic;color:#8a7f70;font-size:13px;">Voir aussi · enrollment-provisioning.html</span>
+  </footer>
+
+</div>
+</body>
+</html>

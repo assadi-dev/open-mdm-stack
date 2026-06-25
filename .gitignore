@@ -43,3 +43,5 @@ docker
 
 # Storage
 apps/api/storage/*
+
+apps/api/logs/*

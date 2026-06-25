@@ -10,6 +10,8 @@ const env_schema = z.object({
   S3_REGION: z.string().min(1),
   S3_ENDPOINT: z.string().min(1),
   S3_BUCKET: z.string().min(1),
+  DATABASE_URL: z.string().min(1),
+  BETTER_AUTH_SECRET: z.string().min(1),
 });
 
 const result = env_schema.safeParse(process.env);
