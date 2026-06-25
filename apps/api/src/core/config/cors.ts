@@ -1,9 +1,10 @@
 import { CorsOptions } from "cors";
 import { ENV } from "@config/env";
 
-const allowedOrigins = ENV.CORS_ORIGIN.split(",").map((o) => o.trim());
+const allowedOrigins = ENV.CORS_ORIGIN?.split(",").map((o) => o.trim());
 export const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
+        if (!allowedOrigins || allowedOrigins.includes("*")) return callback(null, true);
         if (origin && allowedOrigins.includes(origin)) return callback(null, true);
         callback(new Error(`Origin ${origin ?? "unknown"} not allowed by CORS`));
     },

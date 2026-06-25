@@ -5,6 +5,11 @@ const portSchema = z.coerce.number().int().min(1).max(65535).default(5550);
 const env_schema = z.object({
   PORT: portSchema,
   CORS_ORIGIN: z.string().min(1).default("http://localhost:3000,https://localhost:3000"),
+  S3_ACCESS_KEY: z.string().min(1),
+  S3_SECRET_KEY: z.string().min(1),
+  S3_REGION: z.string().min(1),
+  S3_ENDPOINT: z.string().min(1),
+  S3_BUCKET: z.string().min(1),
 });
 
 const result = env_schema.safeParse(process.env);

@@ -7,6 +7,8 @@ import { registerDependencies } from "./injection/di";
 import http from "http";
 import { corsOptions } from "@config/cors";
 import { errorHandler } from "./lib/global";
+import qrcodeRouter from "@features/qrcode/router";
+
 
 const app = express();
 app.use(express.json());
@@ -18,11 +20,14 @@ app.use(cors(corsOptions));
 
 app.use(errorHandler);
 
+app.use("/api/v1/qrcode", qrcodeRouter);
 
 export const server = http.createServer(app);
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+
+
 });
 
 server.on("error", (e) => {

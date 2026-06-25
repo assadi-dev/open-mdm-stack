@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+
+# Docker
+docker
+
+# Storage
+apps/api/storage/*
