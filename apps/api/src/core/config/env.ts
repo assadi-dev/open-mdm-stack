@@ -25,9 +25,9 @@ const env_schema = z.object({
     .min(1)
     .default("uvZWxNiL69K71LKebOhMCv8Jecs7RD5U7yMm5LsRDCw"),
   // HTTPS location the device downloads the agent APK from during provisioning.
-  MDM_APK_URL: z.string().min(1).default("https://10.192.2.9:5573/app-debug.apk"),
+  MDM_APK_URL: z.string().min(1).default("http://10.192.2.9:5573/download/apk/app-debug.apk"),
   // Base URL the enrolled device calls back (goes into the QR admin extras).
-  MDM_PUBLIC_BASE_URL: z.string().min(1).default("http://10.192.2.9:5573/"),
+  MDM_PUBLIC_BASE_URL: z.string().min(1).default("http://10.192.2.9:5573"),
   // Enrollment token lifetime in minutes.
   ENROLLMENT_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
 });
