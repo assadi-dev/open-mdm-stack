@@ -1,4 +1,4 @@
-import { HTTPBadRequestException } from "@core/exception";
+import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 import express from "express";
 import { ZodError } from "zod";
 
@@ -7,6 +7,11 @@ import { ZodError } from "zod";
 export const HttpError = (err: unknown) => {
 
     if (err instanceof HTTPBadRequestException) {
+        return {
+            statusCode: err.statusCode,
+            message: err.message,
+        };
+    } else if (err instanceof HTTPNotFoundException) {
         return {
             statusCode: err.statusCode,
             message: err.message,

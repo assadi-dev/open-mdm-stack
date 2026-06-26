@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 
 export class QRCodeController {
 
-    async generateQRController(req: Request, res: Response) {
+    generateQRController = async (req: Request, res: Response) => {
         try {
             const { text } = req.body;
             const qrCode = await generateQR(text);

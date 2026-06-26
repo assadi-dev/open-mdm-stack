@@ -12,6 +12,7 @@ const env_schema = z.object({
   S3_BUCKET: z.string().min(1),
   DATABASE_URL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(1),
+  BETTER_AUTH_URL: z.string().min(1),
 });
 
 const result = env_schema.safeParse(process.env);

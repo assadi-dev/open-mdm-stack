@@ -14,14 +14,15 @@ import authRouter from "@features/auth/route";
 
 
 
+const PORT = ENV.PORT;
 const app = express();
+//app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const PORT = ENV.PORT;
 
 app.use(morgan("dev"));
 
-//app.all("/api/auth/*splat", toNodeHandler(auth));
+
 
 app.use(cors(corsOptions));
 
