@@ -49,3 +49,4 @@ apps/api/node_modules/*
 apps/api/build/*
 apps/api/dist/*
 apps/api/src/drizzle/migrations/*
+.playwright-mcp
