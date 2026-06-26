@@ -11,7 +11,7 @@ export const generateQR = async (text: string) => {
             fs.mkdirSync(qrcodeDir, { recursive: true });
         }
         const fileName = `qrcode-${Date.now()}.png`;
-        await QRCode.toFile(path.join(qrcodeDir, fileName), text, { errorCorrectionLevel: 'H' })
+        await QRCode.toFile(path.join(qrcodeDir, fileName), text, { errorCorrectionLevel: "M" })
         return fileName;
     } catch (err) {
         console.error(err)
