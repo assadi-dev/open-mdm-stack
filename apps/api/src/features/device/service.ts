@@ -9,6 +9,19 @@ import { CreateEnrollmentTokenInput, EnrollDeviceInput, InventoryInput } from ".
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
+/**
+ * Android provisioning only accepts NONE | WPA | WEP | EAP for
+ * PROVISIONING_WIFI_SECURITY_TYPE. WPA2/WPA3 (PSK family) are declared as "WPA".
+ */
+const WIFI_SECURITY_TYPE_MAP: Record<string, "NONE" | "WPA" | "WEP" | "EAP"> = {
+    NONE: "NONE",
+    WEP: "WEP",
+    WPA: "WPA",
+    WPA2: "WPA",
+    WPA3: "WPA",
+    EAP: "EAP",
+};
+
 export class DeviceService {
     private repository: DeviceRepository;
 
@@ -58,9 +71,14 @@ export class DeviceService {
             "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
         };
         if (input?.wifiSsid) {
+            const securityType = WIFI_SECURITY_TYPE_MAP[input.wifiSecurityType ?? "WPA2"] ?? "WPA";
             payload["android.app.extra.PROVISIONING_WIFI_SSID"] = input.wifiSsid;
-            if (input.wifiPassword) {
+            payload["android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"] = securityType;
+            if (securityType !== "NONE" && input.wifiPassword) {
                 payload["android.app.extra.PROVISIONING_WIFI_PASSWORD"] = input.wifiPassword;
+            }
+            if (input.wifiHidden) {
+                payload["android.app.extra.PROVISIONING_WIFI_HIDDEN"] = true;
             }
         }
         return payload;
