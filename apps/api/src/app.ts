@@ -10,6 +10,7 @@ import { errorHandler } from "./lib/global";
 import qrcodeRouter from "@features/qrcode/router";
 import { auth } from "@lib/auth";
 import { toNodeHandler } from "better-auth/node";
+import authRouter from "@features/auth/route";
 
 
 
@@ -20,15 +21,17 @@ const PORT = ENV.PORT;
 
 app.use(morgan("dev"));
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
+//app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(cors(corsOptions));
 
-app.use(errorHandler);
 
 
 
+
+app.use(`${API_BASE_URL}`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
+app.use(errorHandler);
 
 export const server = http.createServer(app);
 

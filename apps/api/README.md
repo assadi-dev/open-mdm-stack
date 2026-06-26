@@ -6,7 +6,7 @@ API HTTP du stack **Open MDM** (MVP de Mobile Device Management). Construit avec
 
 > ⚠️ Des dépendances **LiveKit / Socket.IO** héritées du boilerplate d'origine
 > sont encore présentes dans le `package.json` mais ne sont pas câblées. La
-> migration vers la stack cible (Drizzle + PostgreSQL + PassportJS) est listée
+> migration vers la stack cible (Drizzle + PostgreSQL + Better Auth) est listée
 > dans la [Roadmap](#roadmap).
 
 ## Stack technique
@@ -17,6 +17,7 @@ API HTTP du stack **Open MDM** (MVP de Mobile Device Management). Construit avec
 | Langage            | TypeScript 5 (`commonjs`, décorateurs activés)|
 | Framework HTTP     | Express 5                                     |
 | Injection (DI)     | tsyringe + reflect-metadata                   |
+| Authentification   | Better Auth (email/password, sessions, JWT) + adapter Drizzle |
 | Validation         | Zod (env + payloads)                          |
 | Logs HTTP          | morgan                                        |
 | CORS               | cors (allowlist par origine)                  |
@@ -122,7 +123,7 @@ Alignement sur la stack cible du projet Open MDM :
 - [x] Renommer le package en `mdm-server-api`.
 - [ ] Retirer les dépendances LiveKit/WebRTC non utilisées (`livekit-server-sdk`, `socket.io` si non requis).
 - [ ] Intégrer **Drizzle ORM + PostgreSQL** (schéma, `drizzle-kit`, migrations) : tables `devices`, `enrollments`, `policies`, `commands`, `users`.
-- [ ] Authentification **PassportJS** (stratégie Local et/ou JWT) + hash des mots de passe.
+- [x] Authentification **Better Auth** (email/password, sessions, plugin JWT) via l'adapter Drizzle — scaffolé dans `src/lib/auth.ts`, route `/api/auth/*` montée. Reste à activer email/password, garder les routes métier et seeder le 1er admin.
 - [ ] Endpoints MDM : enrôlement de device, remontée de statut, push de policies, commandes distantes (lock / wipe / localisation).
 - [ ] Couche temps réel (Socket.IO) pour les commandes en push vers les devices, si nécessaire.
 
