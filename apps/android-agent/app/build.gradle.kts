@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mdm_android_agent"
+    namespace = "com.openmdm.agent"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.mdm_android_agent"
+        applicationId = "com.openmdm.agent"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
@@ -21,9 +21,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Stable signing identity shared across the team so the QR-provisioning
+    // PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM stays constant for the MVP.
+    signingConfigs {
+        create("mdmDev") {
+            storeFile = rootProject.file("keystore/mdm-dev.jks")
+            storePassword = "mdmdevpass"
+            keyAlias = "mdmdev"
+            keyPassword = "mdmdevpass"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("mdmDev")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("mdmDev")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

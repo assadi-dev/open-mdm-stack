@@ -1,4 +1,4 @@
-package com.example.mdm_android_agent
+package com.openmdm.agent
 
 import org.junit.Test
 

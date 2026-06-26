@@ -1,4 +1,4 @@
-package com.example.mdm_android_agent.ui.theme
+package com.openmdm.agent.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
