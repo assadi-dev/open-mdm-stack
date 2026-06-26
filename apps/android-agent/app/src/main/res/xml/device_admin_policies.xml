@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Device-admin policy declaration referenced by MdmDeviceAdminReceiver.
+  The agent is provisioned as Device Owner, so the full policy set is available;
+  these uses-policies are declared up front for the upcoming remote-command /
+  policy-enforcement work (lock, wipe, password rules) even though this first
+  cut does not exercise them yet.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <wipe-data />
+        <force-lock />
+        <reset-password />
+        <limit-password />
+        <watch-login />
+        <disable-camera />
+        <disable-keyguard-features />
+    </uses-policies>
+</device-admin>
