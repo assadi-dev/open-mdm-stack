@@ -20,5 +20,5 @@ export const auth = betterAuth({
             enabled: true,
         }
     },
-    trustedOrigins: [ENV.BETTER_AUTH_SECRET]
+
 })
