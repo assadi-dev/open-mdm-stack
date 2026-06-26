@@ -51,6 +51,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Debug-only ADB command hook (e.g. relinquish Device Owner). -->
+        <receiver
+            android:name=".device.DevCommandReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.openmdm.agent.CLEAR_DEVICE_OWNER" />
+            </intent-filter>
+        </receiver>
+
         <!-- Re-arm the heartbeat after reboot. -->
         <receiver
             android:name=".work.BootReceiver"
