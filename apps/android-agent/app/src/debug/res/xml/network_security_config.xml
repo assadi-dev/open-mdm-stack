@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only overlay: permits cleartext HTTP to ANY host so the dev API
+  server works regardless of its IP (DHCP / changing networks). This file
+  replaces the strict src/main config for debug builds only — release
+  stays HTTPS-only.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
