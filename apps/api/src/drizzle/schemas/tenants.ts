@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { uuid } from "drizzle-orm/pg-core";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { updatedAndCreatedAt, deletedAt } from "../timestampable";
 
 export const tenants = pgTable("tenants", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -12,12 +13,8 @@ export const tenants = pgTable("tenants", {
     phoneNumber: text("phone_number"),
     address: text("address"),
     ownerId: text("owner_id").notNull().references(() => user.id, { onDelete: "set null" }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-        .defaultNow()
-        .$onUpdate(() => /* @__PURE__ */ new Date())
-        .notNull(),
-    deletedAt: timestamp("deleted_at"),
+    ...updatedAndCreatedAt,
+    ...deletedAt,
 });
 
 export const tenantRelations = relations(tenants, ({ one }) => ({
