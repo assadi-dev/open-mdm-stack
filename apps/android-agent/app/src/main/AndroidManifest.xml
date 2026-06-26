@@ -30,6 +30,11 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:ignore="RequestInstallPackagesPolicy" />
 
+    <!-- Location (runtime). Declared here but NOT requested at startup; granted
+         on demand from the in-app Settings screen. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- Full installed-apps inventory on Android 11+. The agent is not
          distributed via Play, so the broad query is acceptable. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -56,6 +61,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- In-app settings (permissions management). -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:label="@string/settings_title"
+            android:theme="@style/Theme.Mdmandroidagent" />
 
         <!-- Device Owner / device-admin receiver. -->
         <receiver

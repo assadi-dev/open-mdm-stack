@@ -21,8 +21,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.content.Intent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.DateFormat
@@ -34,6 +36,7 @@ fun AgentScreen(
     viewModel: AgentViewModel = viewModel(factory = AgentViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -65,6 +68,12 @@ fun AgentScreen(
                     Text("Inventory")
                 }
             }
+        }
+
+        OutlinedButton(
+            onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) },
+        ) {
+            Text("Paramètres")
         }
 
         state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
