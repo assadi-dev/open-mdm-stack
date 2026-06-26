@@ -11,6 +11,7 @@ import qrcodeRouter from "@features/qrcode/router";
 import { auth } from "@lib/auth";
 import { toNodeHandler } from "better-auth/node";
 import authRouter from "@features/auth/route";
+import deviceRouter from "@features/device/route";
 
 
 
@@ -32,6 +33,7 @@ app.use(cors(corsOptions));
 
 app.use(`${API_BASE_URL}`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
+app.use(`${API_BASE_URL}/devices`, deviceRouter);
 app.use(errorHandler);
 
 export const server = http.createServer(app);
