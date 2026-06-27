@@ -54,3 +54,4 @@ apps/android-agent/.idea/deploymentTargetSelector.xml
 apps/android-agent/app/release/app-release.apk
 apps/api/src/download/apk/app-debug.apk
 apps/android-agent/app/release/*
+apps/api/src/download/apk/app-debug.apk
