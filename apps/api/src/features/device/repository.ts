@@ -1,10 +1,11 @@
 import { db } from "@drizzle/instance";
 import { devices, enrollmentTokens } from "@drizzle/schemas/device-schema";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
 
 export class DeviceRepository {
     async createToken(input: {
         token: string;
+        code: string;
         expiresAt: Date;
         createdBy?: string | null;
         qrFileName?: string | null;
@@ -13,6 +14,7 @@ export class DeviceRepository {
             .insert(enrollmentTokens)
             .values({
                 token: input.token,
+                code: input.code,
                 expiresAt: input.expiresAt,
                 createdBy: input.createdBy ?? null,
                 qrFileName: input.qrFileName ?? null,
@@ -30,14 +32,22 @@ export class DeviceRepository {
         return row;
     }
 
-    /** Returns the token only if it exists, is unused and not expired. */
-    async findUsableToken(token: string) {
+    /**
+     * Returns the row only if usable (unused, not expired), matching either the
+     * long `token` (raw value, e.g. from a QR) or the short `code` (normalized:
+     * uppercase, separators stripped — e.g. typed by hand).
+     */
+    async findUsableToken(value: string) {
+        const normalizedCode = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         const [row] = await db
             .select()
             .from(enrollmentTokens)
             .where(
                 and(
-                    eq(enrollmentTokens.token, token),
+                    or(
+                        eq(enrollmentTokens.token, value),
+                        eq(enrollmentTokens.code, normalizedCode),
+                    ),
                     eq(enrollmentTokens.isUsed, false),
                     gt(enrollmentTokens.expiresAt, new Date()),
                     isNull(enrollmentTokens.deviceId),

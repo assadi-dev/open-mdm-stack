@@ -13,6 +13,9 @@ export const enrollmentTokens = pgTable(
     {
         id: uuid("id").primaryKey().defaultRandom(),
         token: text("token").notNull().unique(),
+        // Short, human-typable code (no ambiguous chars) mapping to the same row,
+        // for camera-free enrollment. Stored normalized (uppercase, no separators).
+        code: text("code").unique(),
         createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
         expiresAt: timestamp("expires_at").notNull(),
         isUsed: boolean("is_used").notNull().default(false),
@@ -21,7 +24,10 @@ export const enrollmentTokens = pgTable(
         qrFileName: text("qr_file_name"),
         ...updatedAndCreatedAt,
     },
-    (table) => [index("enrollment_tokens_token_idx").on(table.token)],
+    (table) => [
+        index("enrollment_tokens_token_idx").on(table.token),
+        index("enrollment_tokens_code_idx").on(table.code),
+    ],
 );
 
 /**

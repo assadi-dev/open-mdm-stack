@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import { JWTPayload } from "better-auth";
 import { auth } from "@lib/auth";
 import { ENV } from "@config/env";
@@ -8,6 +8,24 @@ import { DeviceRepository } from "./repository";
 import { CreateEnrollmentTokenInput, EnrollDeviceInput, InventoryInput } from "./dto/schema";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
+
+// Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
+const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const ENROLL_CODE_LENGTH = 8;
+
+/** Raw, normalized code (uppercase, no separators) — stored and matched as-is. */
+function generateEnrollmentCode(): string {
+    let code = "";
+    for (let i = 0; i < ENROLL_CODE_LENGTH; i++) {
+        code += ENROLL_CODE_ALPHABET[randomInt(ENROLL_CODE_ALPHABET.length)];
+    }
+    return code;
+}
+
+/** Display form, grouped for readability: ABCD-EFGH. */
+function formatEnrollmentCode(code: string): string {
+    return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+}
 
 /**
  * Android provisioning only accepts NONE | WPA | WEP | EAP for
@@ -35,6 +53,7 @@ export class DeviceService {
      */
     async generateEnrollmentToken(input: CreateEnrollmentTokenInput, createdBy?: string | null) {
         const token = randomBytes(32).toString("base64url");
+        const code = generateEnrollmentCode();
         const ttlMinutes = input.expiresInMinutes ?? ENV.ENROLLMENT_TOKEN_TTL_MINUTES;
         const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
@@ -43,6 +62,7 @@ export class DeviceService {
 
         const row = await this.repository.createToken({
             token,
+            code,
             expiresAt,
             createdBy,
             qrFileName,
@@ -51,6 +71,7 @@ export class DeviceService {
         return {
             id: row.id,
             token: row.token,
+            code: formatEnrollmentCode(row.code ?? code),
             expiresAt: row.expiresAt,
             qrFileName: row.qrFileName,
             provisioning: payload,

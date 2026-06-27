@@ -23,6 +23,7 @@ export class DeviceController {
         return res.status(201).json({
             id: result.id,
             token: result.token,
+            code: result.code,
             expiresAt: result.expiresAt,
             qrUrl: `${API_BASE_URL}/devices/enroll-tokens/${result.id}/qr`,
             provisioning: result.provisioning,
