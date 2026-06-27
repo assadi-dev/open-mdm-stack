@@ -9,9 +9,9 @@ import { CreateEnrollmentTokenInput, EnrollDeviceInput, InventoryInput } from ".
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
-// Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
+// Short enrollment code: 6 chars from an unambiguous alphabet (no 0/O/1/I/L).
 const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-const ENROLL_CODE_LENGTH = 8;
+const ENROLL_CODE_LENGTH = 6;
 
 /** Raw, normalized code (uppercase, no separators) — stored and matched as-is. */
 function generateEnrollmentCode(): string {
@@ -20,11 +20,6 @@ function generateEnrollmentCode(): string {
         code += ENROLL_CODE_ALPHABET[randomInt(ENROLL_CODE_ALPHABET.length)];
     }
     return code;
-}
-
-/** Display form, grouped for readability: ABCD-EFGH. */
-function formatEnrollmentCode(code: string): string {
-    return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
 }
 
 /**
@@ -71,7 +66,7 @@ export class DeviceService {
         return {
             id: row.id,
             token: row.token,
-            code: formatEnrollmentCode(row.code ?? code),
+            code: row.code ?? code,
             expiresAt: row.expiresAt,
             qrFileName: row.qrFileName,
             provisioning: payload,
