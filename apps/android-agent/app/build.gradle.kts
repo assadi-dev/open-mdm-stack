@@ -84,6 +84,9 @@ dependencies {
     // Secure storage
     implementation(libs.androidx.security.crypto)
 
+    // QR scanning (optional enrollment channel)
+    implementation(libs.zxing.android.embedded)
+
     // Networking
     implementation(libs.retrofit)
     implementation(libs.okhttp)

@@ -48,6 +48,6 @@ apps/api/logs/*
 apps/api/node_modules/*
 apps/api/build/*
 apps/api/dist/*
-apps/api/src/drizzle/migrations/*
+apps/api/src/drizzle/migrations
 .playwright-mcp
 apps/android-agent/.idea/deploymentTargetSelector.xml

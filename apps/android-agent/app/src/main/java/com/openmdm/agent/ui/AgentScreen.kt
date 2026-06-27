@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -118,39 +122,70 @@ private fun ManualEnrollmentCard(
     busy: Boolean,
     onEnroll: (token: String, baseUrl: String) -> Unit,
 ) {
-    var token by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("") }
+    var showAdvanced by remember { mutableStateOf(false) }
+
+    val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        val contents = result.contents ?: return@rememberLauncherForActivityResult
+        EnrollmentQrParser.parse(contents)?.let { parsed ->
+            onEnroll(parsed.tokenOrCode, parsed.baseUrl ?: baseUrl)
+        }
+    }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Manual enrollment (dev)", style = MaterialTheme.typography.titleMedium)
+            Text("Enrôlement", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Used when provisioned via ADB instead of QR.",
+                "Saisis le code d'enrôlement, ou scanne le QR.",
                 style = MaterialTheme.typography.bodySmall,
             )
             OutlinedTextField(
-                value = token,
-                onValueChange = { token = it },
-                label = { Text("Enrollment token") },
+                value = code,
+                onValueChange = { code = it.uppercase() },
+                label = { Text("Code d'enrôlement") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
-                value = baseUrl,
-                onValueChange = { baseUrl = it },
-                label = { Text("Server base URL (optional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(
-                onClick = { onEnroll(token, baseUrl) },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(if (busy) "Enrolling…" else "Enroll")
+
+            if (showAdvanced) {
+                OutlinedTextField(
+                    value = baseUrl,
+                    onValueChange = { baseUrl = it },
+                    label = { Text("Server base URL (optionnel)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { onEnroll(code, baseUrl) },
+                    enabled = !busy && code.isNotBlank(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(if (busy) "Enrôlement…" else "Enrôler")
+                }
+                OutlinedButton(
+                    onClick = {
+                        scanLauncher.launch(
+                            ScanOptions()
+                                .setOrientationLocked(false)
+                                .setBeepEnabled(false)
+                                .setPrompt("Scanner le QR d'enrôlement"),
+                        )
+                    },
+                    enabled = !busy,
+                ) {
+                    Text("Scanner")
+                }
+            }
+
+            TextButton(onClick = { showAdvanced = !showAdvanced }) {
+                Text(if (showAdvanced) "Masquer les options" else "Options avancées")
             }
         }
     }

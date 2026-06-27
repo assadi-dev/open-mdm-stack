@@ -35,6 +35,12 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Camera: optional QR-scan enrollment channel (requested by the scanner). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <!-- Full installed-apps inventory on Android 11+. The agent is not
          distributed via Play, so the broad query is acceptable. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
