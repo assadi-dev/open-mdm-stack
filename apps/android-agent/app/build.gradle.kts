@@ -23,10 +23,10 @@ android {
 
         // Default MDM server base URL. 10.0.2.2 is the host loopback from the
         // Android emulator; the API listens on 5573. Override per build type.
-        buildConfigField("String", "MDM_BASE_URL", "\"http://10.0.2.2:5573/\"")
+        buildConfigField("String", "MDM_BASE_URL", "\"http://10.192.2.9:5573/\"")
         // When true, the network layer is backed by a local stub instead of the
         // (not-yet-implemented) real backend. See di/NetworkModule.
-        buildConfigField("boolean", "USE_MOCK", "true")
+        buildConfigField("boolean", "USE_MOCK", "false")
     }
 
     // Stable signing identity shared across the team so the QR-provisioning
@@ -83,6 +83,9 @@ dependencies {
 
     // Secure storage
     implementation(libs.androidx.security.crypto)
+
+    // QR scanning (optional enrollment channel)
+    implementation(libs.zxing.android.embedded)
 
     // Networking
     implementation(libs.retrofit)

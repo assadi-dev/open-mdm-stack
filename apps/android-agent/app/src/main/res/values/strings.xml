@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Open MDM Agent</string>
     <string name="device_admin_description">Allows the Open MDM server to manage this device (enrollment, inventory and remote policies).</string>
+    <string name="settings_title">Paramètres</string>
 </resources>

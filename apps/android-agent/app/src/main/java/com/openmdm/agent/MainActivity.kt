@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.openmdm.agent.ui.AgentScreen
+import com.openmdm.agent.ui.StartupPermissions
 import com.openmdm.agent.ui.theme.OpenMdmAgentTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OpenMdmAgentTheme {
+                StartupPermissions()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AgentScreen(modifier = Modifier.padding(innerPadding))
                 }

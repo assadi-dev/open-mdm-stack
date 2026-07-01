@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Production default: no cleartext. All traffic must be HTTPS.
+  The debug build overlays src/debug/res/xml/network_security_config.xml,
+  which permits cleartext to any host so local dev servers work on any IP.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
