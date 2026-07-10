@@ -1,4 +1,6 @@
 import { CopyIcon, TerminalIcon } from "@components/Icons/comons"
+import IconButton from "@components/ui/IconButton"
+import SectionHeading from "@components/ui/SectionHeading"
 import { ADB_COMMANDS } from "@lib/commands"
 import { logError } from "@lib/log"
 import { toastError, toastPromise, toastSuccess } from "@lib/toast"
@@ -8,29 +10,35 @@ import { useTransition } from "react"
 
 export default function AdbAdminCommands(): React.JSX.Element {
     return (
-        <div className="flex flex-col gap-4 py-3">
-            <div>
-                <p className="mb-3">Activate Device Owner</p>
-                <AdbAdminCommandCard command={ADB_COMMANDS.dpmSetDeviceOwner} />
+        <section>
+            <SectionHeading>Device admin</SectionHeading>
+            <div className="flex flex-col gap-3">
+                <div>
+                    <p className="mb-2 text-sm text-text-muted">Activate device owner</p>
+                    <AdbAdminCommandCard command={ADB_COMMANDS.dpmSetDeviceOwner} variant="primary" />
+                </div>
+                <div>
+                    <p className="mb-2 text-sm text-text-muted">Remove device owner</p>
+                    <AdbAdminCommandCard command={ADB_COMMANDS.dpmRemoveDeviceOwner} variant="danger" />
+                </div>
             </div>
-            <div>
-                <p className="mb-3">Remove Device Owner</p>
-                <AdbAdminCommandCard command={ADB_COMMANDS.dpmRemoveDeviceOwner} />
-            </div>
-        </div>
+        </section>
     )
 }
 
 
-const AdbAdminCommandCard = ({ command }: { command: string }): React.JSX.Element => {
+const AdbAdminCommandCard = ({ command, variant }: { command: string; variant: "primary" | "danger" }): React.JSX.Element => {
     const textToCopy = `adb shell ${command}`
 
     return (
-        <div className="border border-gray-200 rounded-lg p-4 bg-[#1e1e1e] flex items-center justify-between">
-            <p className="text-xs"><span className="font-bold text-yellow-400">adb</span> shell {command}</p>
-            <div className="flex gap-2">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border-subtle bg-surface px-4 py-3">
+            <p className="min-w-0 truncate font-mono text-xs text-slate-300">
+                <span aria-hidden="true" className="mr-2 text-accent">❯</span>
+                <span className="font-semibold text-keyword">adb</span> shell {command}
+            </p>
+            <div className="flex shrink-0 gap-2">
                 <CopyPastButton textToCopy={textToCopy} />
-                <RunCommandButton command={command} />
+                <RunCommandButton command={command} variant={variant} />
             </div>
         </div>
     )
@@ -47,9 +55,9 @@ export const CopyPastButton = ({ textToCopy }: { textToCopy: string }): React.JS
         }
     }
     return (
-        <button onClick={copyToClipboard} className="text-xs bg-black hover:bg-gray-800 text-white p-2 rounded-lg">
+        <IconButton onClick={copyToClipboard} label="Copy command">
             <CopyIcon className="size-4" />
-        </button>
+        </IconButton>
     )
 }
 
@@ -57,7 +65,7 @@ export const CopyPastButton = ({ textToCopy }: { textToCopy: string }): React.JS
 
 
 
-export const RunCommandButton = ({ command }: { command: string }): React.JSX.Element => {
+export const RunCommandButton = ({ command, variant = "primary" }: { command: string; variant?: "primary" | "danger" }): React.JSX.Element => {
     const [isPending, startTransition] = useTransition()
 
     const runCommand = async () => {
@@ -83,8 +91,8 @@ export const RunCommandButton = ({ command }: { command: string }): React.JSX.El
         )
     }
     return (
-        <button disabled={isPending} onClick={runCommandPromise} className="bg-green-600 hover:bg-green-800 text-white p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ">
+        <IconButton disabled={isPending} onClick={runCommandPromise} variant={variant} label="Run command">
             <TerminalIcon className="size-4" />
-        </button>
+        </IconButton>
     )
 }
