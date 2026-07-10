@@ -1,7 +1,0 @@
-@import "tailwindcss";
-
-@layer base {
-    html {
-        @apply bg-linear-to-bl from-slate-900 to-slate-800 h-screen w-screen text-white;
-    }
-}
