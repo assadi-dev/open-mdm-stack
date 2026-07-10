@@ -8,13 +8,7 @@ import AppFooter from "@components/AppFooter";
 
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
 
   return (
     <div className="w-full sm:max-w-5xl  xl:max-w-7xl mx-auto h-screen">
