@@ -56,7 +56,7 @@ export const CopyPastButton = ({ textToCopy }: { textToCopy: string }): React.JS
     }
     return (
         <IconButton onClick={copyToClipboard} label="Copy command">
-            <CopyIcon className="size-4" />
+            <CopyIcon className="size-6" />
         </IconButton>
     )
 }
@@ -92,7 +92,7 @@ export const RunCommandButton = ({ command, variant = "primary" }: { command: st
     }
     return (
         <IconButton disabled={isPending} onClick={runCommandPromise} variant={variant} label="Run command">
-            <TerminalIcon className="size-4" />
+            <TerminalIcon className="size-6" />
         </IconButton>
     )
 }

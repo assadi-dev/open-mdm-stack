@@ -4,7 +4,10 @@ import { invoke } from "@tauri-apps/api/core"
 import { useTransition } from "react"
 import SectionHeading from "@components/ui/SectionHeading"
 
+
+
 export default function AdbServerStart(): React.JSX.Element {
+
     return (
         <section>
             <SectionHeading>Server</SectionHeading>
@@ -18,6 +21,8 @@ export default function AdbServerStart(): React.JSX.Element {
         </section>
     )
 }
+
+
 
 
 export const AdbKillServerButton = (): React.JSX.Element => {

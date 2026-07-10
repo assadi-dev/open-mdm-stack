@@ -1,6 +1,8 @@
+
 export default function AppTitle(): React.JSX.Element {
+
     return (
-        <div className="flex flex-col gap-1 border-b border-border-subtle pb-4">
+        <div className="flex flex-col gap-1 border-b border-border-subtle pb-4 px-6">
             <h1 className="flex items-center gap-2 font-mono text-xl font-semibold text-slate-100">
                 <span aria-hidden="true" className="text-accent">❯</span>
                 ADB Commands Tools

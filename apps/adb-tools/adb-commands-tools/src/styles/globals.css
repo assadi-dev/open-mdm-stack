@@ -50,4 +50,26 @@
             animation: none;
         }
     }
+
+    .themed-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-border-subtle) transparent;
+    }
+
+    .themed-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .themed-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .themed-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--color-border-subtle);
+        border-radius: 9999px;
+    }
+
+    .themed-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-accent);
+    }
 }
