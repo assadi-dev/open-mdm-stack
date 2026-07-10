@@ -9,6 +9,8 @@
     "main"
   ],
   "permissions": [
-    "cli:default"
+    "fs:default",
+    "clipboard-manager:default",
+    "opener:default"
   ]
 }

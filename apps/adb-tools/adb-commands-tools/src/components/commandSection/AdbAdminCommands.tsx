@@ -1,6 +1,9 @@
+import { CopyIcon, TerminalIcon } from "@components/Icons/comons"
 import { ADB_COMMANDS } from "@lib/commands"
 import { logError } from "@lib/log"
-import { toastSuccess } from "@lib/toast"
+import { toastError, toastPromise, toastSuccess } from "@lib/toast"
+import { invoke } from "@tauri-apps/api/core"
+import { useTransition } from "react"
 
 
 export default function AdbAdminCommands(): React.JSX.Element {
@@ -24,10 +27,10 @@ const AdbAdminCommandCard = ({ command }: { command: string }): React.JSX.Elemen
 
     return (
         <div className="border border-gray-200 rounded-lg p-4 bg-[#1e1e1e] flex items-center justify-between">
-            <p className="text-sm"><span className="font-bold text-yellow-400">adb</span> shell {command}</p>
+            <p className="text-xs"><span className="font-bold text-yellow-400">adb</span> shell {command}</p>
             <div className="flex gap-2">
                 <CopyPastButton textToCopy={textToCopy} />
-                <button className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-2 py-2 rounded-lg border border-gray-200">Run</button>
+                <RunCommandButton command={command} />
             </div>
         </div>
     )
@@ -37,13 +40,51 @@ const AdbAdminCommandCard = ({ command }: { command: string }): React.JSX.Elemen
 export const CopyPastButton = ({ textToCopy }: { textToCopy: string }): React.JSX.Element => {
     const copyToClipboard = async () => {
         try {
-            await navigator.clipboard.writeText(textToCopy)
+            await invoke("clipboard_write", { text: textToCopy })
             toastSuccess("Text copied to clipboard")
         } catch (error) {
             logError("CopyPastButton", error as string)
         }
     }
     return (
-        <button onClick={copyToClipboard} className="text-sm bg-black hover:bg-gray-800 text-white px-2 py-2 rounded-lg border border-gray-200">copy</button>
+        <button onClick={copyToClipboard} className="text-xs bg-black hover:bg-gray-800 text-white p-2 rounded-lg">
+            <CopyIcon className="size-4" />
+        </button>
+    )
+}
+
+
+
+
+
+export const RunCommandButton = ({ command }: { command: string }): React.JSX.Element => {
+    const [isPending, startTransition] = useTransition()
+
+    const runCommand = async () => {
+
+        startTransition(async () => {
+            try {
+                await invoke("adb_command", { command: `shell ${command}` })
+                toastSuccess("Command executed successfully")
+            } catch (error: any) {
+                logError("RunCommandButton", error.message)
+                toastError(error.message)
+            }
+        })
+
+    }
+
+    const runCommandPromise = async () => {
+        toastPromise(
+            runCommand(),
+            "Running command...",
+            () => "Command executed successfully",
+            (error: any) => error.message
+        )
+    }
+    return (
+        <button disabled={isPending} onClick={runCommandPromise} className="bg-green-600 hover:bg-green-800 text-white p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ">
+            <TerminalIcon className="size-4" />
+        </button>
     )
 }
