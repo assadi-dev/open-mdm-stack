@@ -1,7 +1,8 @@
+import { ENV } from "@config/env";
 import z from "zod";
 
 export const createEnrollmentTokenSchema = z.object({
-    expiresInMinutes: z.coerce.number().int().min(1).optional(),
+    apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),
     // Friendly value; mapped to the Android-accepted token (WPA2/WPA3 -> "WPA")
@@ -11,8 +12,20 @@ export const createEnrollmentTokenSchema = z.object({
         .optional()
         .default("WPA2"),
     // Only needed for non-broadcast (hidden) SSIDs.
-    wifiHidden: z.boolean().optional(),
+    wifiHidden: z.boolean().optional().default(false),
+    systemApps: z.boolean().optional().default(true),
+    policyId: z.string().optional(),
+    groupId: z.string().optional(),
+    checksum: z.string().optional(),
+    skipEncryption: z.boolean().optional().default(false),
+
 });
+
+export const createTokenSchema = z.object({
+    ttlSeconds: z.coerce.number().int().default(Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS)),
+
+
+})
 
 const deviceInfoSchema = z.object({
     model: z.string(),
@@ -54,9 +67,11 @@ export const inventorySchema = z.object({
 });
 
 export type CreateEnrollmentTokenInput = z.infer<typeof createEnrollmentTokenSchema>;
+export type CreateTokenInput = z.infer<typeof createTokenSchema>;
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
+
 
 export const deviceDecoder = {
     createToken: (data: unknown) => createEnrollmentTokenSchema.safeParse(data),

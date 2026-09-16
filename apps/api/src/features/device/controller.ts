@@ -16,36 +16,6 @@ export class DeviceController {
         this.deviceService = new DeviceService();
     }
 
-    // POST /devices/enroll-tokens  (admin)
-    createEnrollmentToken = async (req: Request, res: Response) => {
-        const input = validateCreateEnrollmentTokenInput(req.body ?? {});
-        const result = await this.deviceService.generateEnrollmentToken(input);
-        return res.status(201).json({
-            id: result.id,
-            token: result.token,
-            code: result.code,
-            expiresAt: result.expiresAt,
-            qrUrl: `${API_BASE_URL}/devices/enroll-tokens/${result.id}/qr`,
-            provisioning: result.provisioning,
-        });
-    };
-
-    // GET /devices/enroll-tokens/:id/qr  (admin)
-    getEnrollmentTokenQr = async (req: Request, res: Response) => {
-        const tokenRow = await this.deviceService.getTokenById(req.params.id as string);
-        if (!tokenRow.qrFileName) {
-            throw new HTTPNotFoundException("QR not generated for this token");
-        }
-        const filePath = path.join(process.cwd(), "storage/qrcodes", tokenRow.qrFileName);
-        return res.sendFile(filePath);
-    };
-
-    // POST /devices/enroll  (device, unauthenticated)
-    enroll = async (req: Request, res: Response) => {
-        const input = validateEnrollDeviceInput(req.body);
-        const result = await this.deviceService.enrollDevice(input);
-        return res.status(201).json(result);
-    };
 
     // POST /devices/:deviceId/heartbeat  (device JWT)
     heartbeat = async (req: Request, res: Response) => {

@@ -15,6 +15,10 @@ const env_schema = z.object({
   BETTER_AUTH_URL: z.string().min(1),
 
   // Android Device Owner provisioning (embedded in the enrollment QR).
+  MDM_PACKAGE_NAME: z
+    .string()
+    .min(1)
+    .default("com.openmdm.agent"),
   MDM_DPC_COMPONENT: z
     .string()
     .min(1)
@@ -28,8 +32,9 @@ const env_schema = z.object({
   MDM_APK_URL: z.string().min(1).default("http://10.192.2.9:5573/download/apk/app-debug.apk"),
   // Base URL the enrolled device calls back (goes into the QR admin extras).
   MDM_PUBLIC_BASE_URL: z.string().min(1).default("http://10.192.2.9:5573"),
+  MDM_DEVICE_SECRET: z.string().min(1),
   // Enrollment token lifetime in minutes.
-  ENROLLMENT_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
+  ENROLLMENT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(1).default(900),
 });
 
 const result = env_schema.safeParse(process.env);

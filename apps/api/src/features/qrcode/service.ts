@@ -17,3 +17,9 @@ export const generateQR = async (text: string) => {
         console.error(err)
     }
 };
+
+
+export const generateQrSVG = async (payload: Record<string, unknown>) => {
+    const svg = await QRCode.toString(JSON.stringify(payload), { type: "svg", errorCorrectionLevel: "M", margin: 2 })
+    return svg
+}

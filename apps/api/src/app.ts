@@ -12,7 +12,7 @@ import { auth } from "@lib/auth";
 import { toNodeHandler } from "better-auth/node";
 import authRouter from "@features/auth/route";
 import deviceRouter from "@features/device/route";
-
+import enrollementRouter from "@features/enrollement/route";
 
 
 const PORT = ENV.PORT;
@@ -30,11 +30,12 @@ app.use(cors(corsOptions));
 
 
 // Static files
-app.use(`/download/apk`, express.static("src/download/apk"));
+app.use(`/download/agent`, express.static("src/download/apk"));
 
 app.use(`${API_BASE_URL}`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
 app.use(`${API_BASE_URL}/devices`, deviceRouter);
+app.use(`${API_BASE_URL}/enrollement`, enrollementRouter);
 app.use(errorHandler);
 
 export const server = http.createServer(app);
