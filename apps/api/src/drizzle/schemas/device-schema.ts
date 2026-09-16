@@ -26,6 +26,8 @@ export const enrollmentTokens = pgTable(
     ],
 );
 
+export type EnrollmentTokenSqlInferSelect = typeof enrollmentTokens.$inferSelect;
+export type EnrollmentTokenSqlInferInsert = typeof enrollmentTokens.$inferInsert;
 /**
  * A device enrolled via a token. Holds the identity reported at enrollment and
  * is the `sub` of the long-lived device JWT (deviceToken).

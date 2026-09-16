@@ -1,9 +1,12 @@
 import { ENV } from "@config/env";
-import { HTTPNotFoundException } from "@core/exception";
+import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 import { CreateTokenInput, CreateEnrollmentTokenInput } from "@features/device/dto/schema";
 import { generateQrSVG } from "@features/qrcode/service";
 import { randomBytes } from "crypto";
 import { EnrollmentTokenRepository } from "./repositories";
+import { db } from "@drizzle/instance";
+import { enrollmentTokens } from "@drizzle/schemas/device-schema";
+import { InsertEnrollmentTokenDto } from "./dto/schema";
 
 
 /**
@@ -103,7 +106,20 @@ export class EnrollementService {
         return payload;
     }
 
-
+    consumeToken = async (token: string) => {
+        const existing = await this.enrollmenentRepo.byToken(token);
+        if (!existing) {
+            throw new HTTPNotFoundException("Token not found");
+        }
+        if (existing.consumedAt) {
+            throw new HTTPBadRequestException("Token already consumed");
+        }
+        if (existing.expiresAt < new Date()) {
+            throw new HTTPBadRequestException("Token expired");
+        }
+        const row = await this.enrollmenentRepo.markConsumed(token);
+        return row
+    }
 
 
 

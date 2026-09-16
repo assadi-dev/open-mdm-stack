@@ -29,3 +29,13 @@ export const createTokenSchema = z.object({
 
 export type CreateEnrollmentTokenInput = z.infer<typeof createEnrollmentTokenSchema>;
 export type CreateTokenInput = z.infer<typeof createTokenSchema>;
+
+
+
+export const insertEnrollmentTokenDtoSchema = z.object({
+    token: z.string(),
+    expiresAt: z.coerce.date(),
+    consumedAt: z.coerce.date().optional().nullable(),
+})
+
+export type InsertEnrollmentTokenDto = z.infer<typeof insertEnrollmentTokenDtoSchema>;
