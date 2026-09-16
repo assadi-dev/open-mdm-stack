@@ -27,14 +27,14 @@ services:
     command: /data
 
   postgres:
-    image: pgvector/pgvector:pg17-trixie
+    image: pgvector/pgvector:${DB_VERSION}
     restart: unless-stopped
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DOCKER_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DOCKER_DB_PORT}:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - ./volumes/db-data:/var/lib/postgresql/data
 
