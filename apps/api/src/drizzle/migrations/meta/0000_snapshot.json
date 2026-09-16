@@ -1,5 +1,5 @@
 {
-  "id": "996cbd09-8afe-4f4f-bfb0-92499ed2fa25",
+  "id": "67ae5baf-101f-4fb7-9ff5-f59974479e0a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -427,9 +427,9 @@
         },
         "enrollment_id": {
           "name": "enrollment_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "serial": {
           "name": "serial",
@@ -479,17 +479,49 @@
           "primaryKey": false,
           "notNull": false
         },
-        "status": {
-          "name": "status",
+        "enrollement_status": {
+          "name": "enrollement_status",
           "type": "enrollement_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
         },
+        "enrollement_method": {
+          "name": "enrollement_method",
+          "type": "enrollement_method",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "public_key": {
+          "name": "public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "last_heartbeat_at": {
           "name": "last_heartbeat_at",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agent_version": {
+          "name": "agent_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agent_version_code": {
+          "name": "agent_version_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agent_package_name": {
+          "name": "agent_package_name",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -508,24 +540,33 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {
-        "devices_enrollment_id_enrollment_tokens_id_fk": {
-          "name": "devices_enrollment_id_enrollment_tokens_id_fk",
-          "tableFrom": "devices",
-          "tableTo": "enrollment_tokens",
-          "columnsFrom": [
-            "enrollment_id"
+      "indexes": {
+        "enrollment_id_idx": {
+          "name": "enrollment_id_idx",
+          "columns": [
+            {
+              "expression": "enrollment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
           ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "devices_enrollment_id_unique": {
+          "name": "devices_enrollment_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "enrollment_id"
+          ]
+        },
         "devices_android_id_unique": {
           "name": "devices_android_id_unique",
           "nullsNotDistinct": false,
@@ -714,6 +755,15 @@
     }
   },
   "enums": {
+    "public.enrollement_method": {
+      "name": "enrollement_method",
+      "schema": "public",
+      "values": [
+        "qr",
+        "manual",
+        "usb"
+      ]
+    },
     "public.enrollement_status": {
       "name": "enrollement_status",
       "schema": "public",

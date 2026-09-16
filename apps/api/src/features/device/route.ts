@@ -3,6 +3,7 @@ import { DeviceController } from "./controller";
 import { requireAuth } from "@middleware/authMiddleware";
 import { requireDeviceAuth } from "@middleware/deviceAuthMiddleware";
 
+
 const deviceRouter = Router();
 const controller = new DeviceController();
 
