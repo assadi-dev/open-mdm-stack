@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1782430633133,
-      "tag": "0000_cute_prima",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1782503920535,
-      "tag": "0001_chilly_taskmaster",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1782518276247,
-      "tag": "0002_overrated_bullseye",
+      "when": 1789566157835,
+      "tag": "0000_flowery_rhino",
       "breakpoints": true
     }
   ]
