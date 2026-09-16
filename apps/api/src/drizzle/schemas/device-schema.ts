@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, uuid, index, pgEnum } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema";
 import { updatedAndCreatedAt } from "../timestampable";
 
 export const enrollementStatus = ["pending", "enrolled", "revoked", "unenrolled"] as const;
