@@ -3,6 +3,7 @@ import { HTTPNotFoundException } from "@core/exception";
 import { CreateTokenInput, CreateEnrollmentTokenInput } from "@features/device/dto/schema";
 import { generateQrSVG } from "@features/qrcode/service";
 import { randomBytes } from "crypto";
+import { EnrollmentTokenRepository } from "./repositories";
 
 
 /**
@@ -21,7 +22,10 @@ const WIFI_SECURITY_TYPE_MAP: Record<string, "NONE" | "WPA" | "WEP" | "EAP"> = {
 
 
 export class EnrollementService {
-    constructor() { }
+    enrollmenentRepo: EnrollmentTokenRepository
+    constructor() {
+        this.enrollmenentRepo = new EnrollmentTokenRepository();
+    }
 
 
 
@@ -45,9 +49,17 @@ export class EnrollementService {
         const token = randomBytes(32).toString("base64url");
         const ttlSeconds = input.ttlSeconds ?? ENV.ENROLLMENT_TOKEN_TTL_SECONDS
         const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
-        return {
+
+        //TODO : store in database
+        await this.enrollmenentRepo.create({
             token,
             expiresAt,
+            consumedAt: null,
+        });
+
+        return {
+            token,
+            expiresAt: expiresAt.toISOString(),
             ttlSeconds,
         };
     }

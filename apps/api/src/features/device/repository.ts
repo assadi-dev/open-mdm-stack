@@ -14,20 +14,7 @@ export class DeviceRepository {
         status: typeof enrollementStatus[number];
         androidId: string;
     }) {
-        const rows = (await db
-            .insert(devices)
-            .values({
-                enrollmentId: input.enrollmentId,
-                serial: input.serial,
-                model: input.model,
-                manufacturer: input.manufacturer,
-                osVersion: input.osVersion,
-                androidId: input.androidId,
-                status: input.status,
 
-            })
-            .returning()) as Array<typeof devices.$inferSelect>;
-        return rows[0];
     }
 
     async findDeviceById(id: string) {

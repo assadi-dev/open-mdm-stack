@@ -22,7 +22,7 @@ export const createEnrollmentTokenSchema = z.object({
 });
 
 export const createTokenSchema = z.object({
-    ttlSeconds: z.coerce.number().int().default(Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS)),
+    ttlSeconds: z.coerce.number().int().optional().default(Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS)),
 
 
 })
