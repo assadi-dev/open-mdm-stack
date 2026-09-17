@@ -7,7 +7,7 @@ import { EnrollmentTokenRepository } from "./repositories";
 import { db } from "@drizzle/instance";
 import { enrollmentTokens } from "@drizzle/schemas/device-schema";
 import { InsertEnrollmentTokenDto } from "./dto/schema";
-import { buildProvisioningPayload, generateRandomToken } from "./utils/generators";
+import { buildProvisioningPayload, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
 import { Request, Response } from "express";
 import { enrollementValidator } from "./dto/validation";
 
@@ -39,6 +39,23 @@ export class EnrollementService {
         };
     }
 
+    generateOTP = async () => {
+        const ttl = ENV.ENROLLMENT_OTP_TTL_SECONDS
+        const { token, expiresAt } = await OTPGenerator(ttl);
+        return {
+            token,
+            expiresAt: expiresAt.toISOString(),
+            ttl,
+        }
+    }
+
+    verifyOTP = async ({ otp, ttlSeconds }: { otp: string, ttlSeconds?: number }) => {
+        const isValid = await OTPVerifier(otp);
+        if (!isValid) {
+            throw new HTTPBadRequestException("Invalid OTP");
+        }
+        return this.generateToken({ ttlSeconds })
+    }
 
 
     consumeToken = async (token: string) => {

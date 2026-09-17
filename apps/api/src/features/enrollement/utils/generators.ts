@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import { CreateEnrollmentTokenInput, CreateTokenInput } from "../dto/schema";
 import { ENV } from "@config/env";
+import { generateSecret, generate, verify, generateURI } from "otplib";
+
 
 
 /**
@@ -73,4 +75,28 @@ export const buildProvisioningPayload = (input: CreateEnrollmentTokenInput) => {
         }
     }
     return payload;
+}
+
+
+
+export const OTPGenerator = async (ttl: number = 600) => {
+    // Generate a secret
+    const secret = ENV.MDM_OTP_SECRET;
+    // Generate a TOTP token
+    const token = await generate({ secret });
+    const expiresAt = new Date(Date.now() + ttl * 1000);
+
+
+    return {
+        token,
+        ttl,
+        expiresAt,
+    }
+
+}
+
+
+export const OTPVerifier = async (otp: string) => {
+    const secret = ENV.MDM_OTP_SECRET;
+    return verify({ token: otp, secret });
 }

@@ -11,7 +11,7 @@ const controller = new EnrollementController();
 enrollementRouter.post("/store", controller.store);
 enrollementRouter.get("/token-generate", controller.getEnrollmentToken);
 enrollementRouter.post("/display-provisioning", controller.displayEnrollmentProvisioning);
-enrollementRouter.get("/otp-generate", controller.getOtpCode);
+enrollementRouter.get("/otp-generate", controller.otpGenerate);
 enrollementRouter.post("/otp-verify", controller.otpVerify);
 
 export default enrollementRouter;

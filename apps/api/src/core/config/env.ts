@@ -34,8 +34,10 @@ const env_schema = z.object({
   // Base URL the enrolled device calls back (goes into the QR admin extras).
   MDM_PUBLIC_BASE_URL: z.string().min(1).default("http://10.192.2.9:5573"),
   MDM_DEVICE_SECRET: z.string().min(1),
+  MDM_OTP_SECRET: z.string().min(1),
   // Enrollment token lifetime in minutes.
   ENROLLMENT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(1).default(900),
+  ENROLLMENT_OTP_TTL_SECONDS: z.coerce.number().int().min(1).default(300),
 });
 
 const result = env_schema.safeParse(process.env);
