@@ -9,7 +9,9 @@ const controller = new EnrollementController();
 //enroll (public) then authenticated check-ins
 
 enrollementRouter.post("/store", controller.store);
-enrollementRouter.post("/token", controller.getEnrollmentToken);
-enrollementRouter.post("/provisioning", controller.displayEnrollmentProvisioning);
+enrollementRouter.get("/token-generate", controller.getEnrollmentToken);
+enrollementRouter.post("/display-provisioning", controller.displayEnrollmentProvisioning);
+enrollementRouter.get("/otp-generate", controller.getOtpCode);
+enrollementRouter.post("/otp-verify", controller.otpVerify);
 
 export default enrollementRouter;

@@ -40,6 +40,34 @@ export class EnrollementController {
 
     };
 
+    getOtpCode = async (req: Request, res: Response) => {
+        const { token } = req.params as { token: string }
+        if (!token) {
+            throw new HTTPBadRequestException("Token is required");
+        }
+        const otp = await this.enrollementService.getOtpCode(token);
+        return res.json(otp);
+    }
+
+    otpProvisioning = async (req: Request, res: Response) => {
+        const { token } = req.params as { token: string }
+        if (!token) {
+            throw new HTTPBadRequestException("Token is required");
+        }
+        const otp = await this.enrollementService.getOtpCode(token);
+        return res.json(otp);
+    }
+
+
+    otpVerify = async (req: Request, res: Response) => {
+        const { token, otp } = req.body as { token: string, otp: string }
+        if (!token || !otp) {
+            throw new HTTPBadRequestException("Token and otp are required");
+        }
+        const otp = await this.enrollementService.getOtpCode(token);
+        return res.json(otp);
+    }
+
     store = async (req: Request, res: Response) => {
 
     };
