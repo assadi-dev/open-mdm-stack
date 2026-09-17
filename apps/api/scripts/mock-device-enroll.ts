@@ -8,6 +8,8 @@
  *   MOCK_BASE_URL=http://localhost:5573 npx tsx scripts/mock-device-enroll.ts
  */
 
+import { generateMockDevicePublicKey } from "../src/features/enrollement/utils/mock-device-keys";
+
 const BASE_URL = process.env.MOCK_BASE_URL ?? "http://localhost:5573";
 
 const FICTIONAL_DEVICE = {
@@ -15,6 +17,8 @@ const FICTIONAL_DEVICE = {
     manufacturer: "Google",
     osVersion: "Android 14 (API 34)",
     serial: `MOCK-${Date.now()}`,
+    enrollementMethod: "manual" as const,
+    publicKey: generateMockDevicePublicKey(),
 };
 
 async function callJson(method: string, path: string, options: { body?: unknown; token?: string } = {}) {
@@ -41,10 +45,13 @@ async function callJson(method: string, path: string, options: { body?: unknown;
 
 async function main() {
     console.log(`Mock device enrollment against ${BASE_URL}`);
-    console.log("Fictional device:", FICTIONAL_DEVICE);
+    console.log("Fictional device:", {
+        ...FICTIONAL_DEVICE,
+        publicKey: `${FICTIONAL_DEVICE.publicKey.slice(0, 24)}...`,
+    });
 
-    console.log("\n1) GET /api/v1/enrollement/token-generate");
-    const { token } = await callJson("GET", "/api/v1/enrollement/token-generate");
+    console.log("\n1) POST /api/v1/enrollement/token-generate");
+    const { token } = await callJson("POST", "/api/v1/enrollement/token-generate", { body: {} });
     console.log("   -> enrollmentToken:", token);
 
     console.log("\n2) POST /api/v1/devices/enroll");

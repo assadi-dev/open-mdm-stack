@@ -1,5 +1,5 @@
 import { db as defaultDb } from "@drizzle/instance";
-import { devices, enrollementStatus } from "@drizzle/schemas/device-schema";
+import { devices, enrollementMethod, enrollementStatus } from "@drizzle/schemas/device-schema";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
@@ -15,7 +15,12 @@ export class DeviceRepository {
         manufacturer: string;
         osVersion: string;
         status: typeof enrollementStatus[number];
+        enrollementMethod: typeof enrollementMethod[number];
         androidId?: string;
+        publicKey?: string;
+        agentVersionName?: string;
+        agentVersionCode?: number;
+        agentPackage?: string;
     }) {
         const [row] = await this.db
             .insert(devices)
@@ -26,7 +31,12 @@ export class DeviceRepository {
                 manufacturer: input.manufacturer,
                 osVersion: input.osVersion,
                 enrollementStatus: input.status,
+                enrollementMethod: input.enrollementMethod,
                 androidId: input.androidId,
+                publicKey: input.publicKey,
+                agentVersionName: input.agentVersionName,
+                agentVersionCode: input.agentVersionCode,
+                agentPackage: input.agentPackage,
             })
             .returning();
         return row;

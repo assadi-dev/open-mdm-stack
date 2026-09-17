@@ -18,7 +18,11 @@ const deviceInfoSchema = z.object({
     agentVersionName: z.string().optional(),
     agentVersionCode: z.number().optional(),
     agentPackage: z.string().optional(),
-    enrollementId: z.string(),
+    // Not known by the client at initial enrollment — the server assigns it
+    // from the consumed token's id (see DeviceService.create). Only present
+    // here for other consumers of this shape (inventory/agent updates) once
+    // the device already exists.
+    enrollementId: z.string().optional(),
 
 
 });

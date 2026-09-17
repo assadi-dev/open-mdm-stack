@@ -32,9 +32,9 @@ describe("POST /api/v1/enrollement", () => {
         repoMock.create.mockResolvedValue({ id: "row-id" });
     });
 
-    it("GET /token-generate issues a single-use enrollment token without touching a real database", async () => {
+    it("POST /token-generate issues a single-use enrollment token without touching a real database", async () => {
         const res = await request(app)
-            .get("/api/v1/enrollement/token-generate")
+            .post("/api/v1/enrollement/token-generate")
             .send({ ttlSeconds: 120 })
             .expect(200);
 
