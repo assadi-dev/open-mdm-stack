@@ -1,9 +1,10 @@
 # Open MDM Agent — Provisioning & Dev Guide
 
 Android agent provisioned as **Device Owner** (custom DPC). First cut covers:
-enrollment, periodic heartbeat and device inventory. Remote commands and policy
-enforcement are not implemented yet (the device-admin policies are declared
-up front in `res/xml/device_admin_policies.xml` for that follow-up work).
+pinned-key enrollment, periodic heartbeat and device inventory. Remote commands
+and policy enforcement are not implemented yet (the device-admin policies are
+declared up front in `res/xml/device_admin_policies.xml` for that follow-up
+work).
 
 ## Architecture (first cut)
 
@@ -11,21 +12,25 @@ up front in `res/xml/device_admin_policies.xml` for that follow-up work).
 MdmAgentApp (Application)
   └─ AppContainer (manual DI)
        ├─ SecureDeviceStore        EncryptedSharedPreferences: deviceId + device JWT + baseUrl
+       ├─ DeviceKeyStore           AndroidKeyStore EC key pair (secp256r1), generated once, persisted
        ├─ DeviceApi                Retrofit (real) or MockDeviceApi (BuildConfig.USE_MOCK)
-       ├─ InventoryCollector       model/OS/serial/storage/battery/apps
-       └─ DeviceRepository         enroll → heartbeat → inventory
+       ├─ InventoryCollector       model/brand/OS/serial/androidId/storage/battery/apps/agent version
+       └─ DeviceRepository         challenge → sign → enroll → inventory → heartbeat
   └─ WorkManager (MdmWorkerFactory)
-       ├─ EnrollWorker             one-off, triggered by provisioning callback
+       ├─ EnrollWorker             one-off, triggered by provisioning callback or manual UI
        └─ HeartbeatWorker          periodic (15 min) + BootReceiver re-arm
+security/
+  ├─ CanonicalMessage              builds the pipe-separated message signed at enrollment
+  └─ EcdsaSigner                   SHA256withECDSA (DER) signing/verification over a PrivateKey/PublicKey
 device/
-  ├─ MdmDeviceAdminReceiver        onProfileProvisioningComplete → reads admin extras → enqueues enroll
+  ├─ MdmDeviceAdminReceiver        onProfileProvisioningComplete → reads serverBaseUrl → enqueues enroll
   └─ DeviceOwnerManager            isDeviceOwner / isAdminActive
-ui/ AgentScreen + AgentViewModel   status + dev manual-enrollment fallback
+ui/ AgentScreen + AgentViewModel   status + enroll (tap or QR scan), no token entry
 ```
 
 ### Deviations from the original plan (toolchain-forced)
 
-The project is on a bleeding-edge toolchain (AGP 9.1.1 / Kotlin 2.2.10 with
+The project is on a bleeding-edge toolchain (AGP 9.2.1 / Kotlin 2.2.10 with
 AGP's built-in Kotlin). Two planned libraries are incompatible with it and were
 dropped:
 
@@ -39,30 +44,74 @@ dropped:
 The scaffold's androidx versions required `compileSdk 37` (not installed); they
 were pinned down to `compileSdk 36`-compatible versions in `libs.versions.toml`.
 
+If Android Studio complains that it only supports an older AGP than the one
+pinned in `gradle/libs.versions.toml`, that's a local IDE/AGP mismatch, not a
+project issue — update Android Studio, or temporarily pin `agp` down to what
+your IDE supports (Gradle 9.4.1, the wrapper version, comfortably supports
+either).
+
 ## Build
 
 ```bash
 cd apps/android-agent
 ./gradlew :app:assembleDebug      # APK at app/build/outputs/apk/debug/app-debug.apk
-./gradlew :app:testDebugUnitTest  # wire-contract tests (MockWebServer)
+./gradlew :app:testDebugUnitTest  # wire-contract + crypto tests (MockWebServer, JVM-only EC keys)
 ```
 
-`BuildConfig.USE_MOCK` defaults to **true** so the full enroll/heartbeat/
-inventory flow runs without a backend. Set it to `false` (and point
-`MDM_BASE_URL`, default `http://10.0.2.2:5573/`) once the server device
-endpoints exist.
+`BuildConfig.USE_MOCK` defaults to **false** — the agent talks to a real
+backend at `BuildConfig.MDM_SERVER_URL` (default `http://10.192.2.120:5573/`,
+set in `app/build.gradle.kts`) unless overridden by a `serverBaseUrl` received
+via QR provisioning. Set `USE_MOCK` to `true` to run the full
+enroll/heartbeat/inventory flow against `MockDeviceApi` without any backend.
 
 > Stable signing identity for QR provisioning lives in `keystore/mdm-dev.jks`
 > (dev-only, committed on purpose so the signature checksum is constant).
 
-## Wire contract (backend to implement later)
+## Wire contract (implemented server-side, see `apps/api/src/features/enrollment` and `apps/api/src/features/device`)
+
+There is **no admin-issued enrollment token**. A single-use, short-lived
+challenge (fetched live, right before enrolling) is the sole authorization,
+and the device proves possession of its own Keystore key by signing a
+canonical message that binds its identity to that challenge — a re-enrollment
+of a known `androidId` must present the same `publicKey` it enrolled with the
+first time, or the server rejects it (`400`).
 
 ```
-POST /api/v1/devices/enroll            { enrollmentToken, device:{model,manufacturer,osVersion,serial} }
+GET  /api/v1/enrollment/challenge      -> { challenge, ttlSeconds, expiresAt }
+
+POST /api/v1/devices/enroll            { challenge, timestamp, signature, device }
                                        -> { deviceId, deviceToken }            # deviceToken = device JWT
+
 POST /api/v1/devices/{id}/heartbeat    Bearer deviceToken | { battery, storageFreeBytes, online, ts } -> { ok }
 POST /api/v1/devices/{id}/inventory    Bearer deviceToken | { os, model, manufacturer, serial, storage, apps[] } -> { ok }
 ```
+
+`device` (see `DeviceInfoDto`) — only `model`/`manufacturer`/`osVersion`/
+`publicKey` are required, the rest is best-effort and omitted (never sent as
+JSON `null`) when unreadable:
+
+```
+androidId, brand, model, manufacturer, osVersion, serial, imei, macAddress,
+ipAddress, enrollmentStatus, enrollmentMethod ("qr"|"manual"|"usb"), publicKey,
+agentPackage, agentVersionName, agentVersionCode
+```
+
+`agentPackage`/`agentVersionName`/`agentVersionCode` are the agent APK's own
+identity (`context.packageName` + `PackageInfo.versionName`/`longVersionCode`),
+read by `InventoryCollector` and sent on every enrollment — lets the server
+tell which build of the agent a device is running.
+
+`signature` = ECDSA/SHA-256 (DER-encoded, `Signature.getInstance("SHA256withECDSA")`),
+base64-encoded, over the canonical message built by `CanonicalMessage.build(...)`:
+
+```
+model|manufacturer|osVersion|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
+```
+
+(pipe-separated, exact field order, missing optional values as `""`). The
+private key never leaves the Android Keystore (`DeviceKeyStore`, EC/secp256r1,
+alias generated once and reused for the app's lifetime — regenerating it would
+break re-enrollment against the server's pinned key).
 
 ## Provisioning A — QR code (production path)
 
@@ -78,7 +127,6 @@ this JSON. Host `app-debug.apk` at an HTTPS URL reachable by the device.
   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
     "uvZWxNiL69K71LKebOhMCv8Jecs7RD5U7yMm5LsRDCw",
   "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-    "enrollmentToken": "TOKEN_FROM_SERVER",
     "serverBaseUrl": "https://YOUR_MDM_SERVER/"
   },
   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
@@ -91,8 +139,13 @@ this JSON. Host `app-debug.apk` at an HTTPS URL reachable by the device.
   keytool -exportcert -keystore keystore/mdm-dev.jks -alias mdmdev -storepass mdmdevpass \
     | openssl dgst -sha256 -binary | openssl base64 | tr '+/' '-_' | tr -d '='
   ```
-- On success, `MdmDeviceAdminReceiver.onProfileProvisioningComplete` reads
-  `enrollmentToken` + `serverBaseUrl` from the extras and enqueues `EnrollWorker`.
+- The server may still embed a `challenge` in this payload (see
+  `buildProvisioningPayload`), but `MdmDeviceAdminReceiver` deliberately
+  ignores it: its TTL (120s by default) can easily be outlived by Device Owner
+  provisioning (wipe + DPC install + boot). On success,
+  `onProfileProvisioningComplete` reads only `serverBaseUrl` from the extras
+  and enqueues `EnrollWorker`, which fetches a fresh challenge itself right
+  before enrolling — exactly like the manual UI path below.
 
 ## Provisioning B — ADB (dev, no factory reset of QR flow)
 
@@ -104,14 +157,18 @@ adb shell dpm set-device-owner com.openmdm.agent/com.openmdm.agent.device.MdmDev
 adb shell dumpsys device_policy | grep -i "Device Owner"   # verify
 ```
 
-ADB `set-device-owner` does **not** deliver provisioning extras, so enroll from
-the app's **Manual enrollment (dev)** card: enter the token (+ optional base
-URL) and tap *Enroll*. This arms the periodic heartbeat.
+ADB `set-device-owner` does **not** deliver provisioning extras. Enroll from
+the app itself: no code to enter — tap **Enrôler** (uses the compiled-in
+`BuildConfig.MDM_SERVER_URL`), or **Scanner** a QR carrying `serverBaseUrl` if
+pointing at a non-default server. Either arms the periodic heartbeat on
+success.
 
 ## Verify the flow
 
 1. Launch the app → status card shows `Device Owner: yes` after Provisioning B.
-2. Enroll (QR auto, or manual card) → `Enrolled: yes` and a `Device id` appear.
+2. Tap **Enrôler** (or scan a QR) → `Enrolled: yes` and a `Device id` appear.
+   Re-launching and enrolling again re-uses the same Keystore key pair and
+   re-enrolls the same device record (same `deviceId`) rather than failing or
+   creating a duplicate.
 3. Tap **Heartbeat** / **Inventory** → with `USE_MOCK=true` they succeed
    immediately; with a real backend, watch the OkHttp logs / server.
-```

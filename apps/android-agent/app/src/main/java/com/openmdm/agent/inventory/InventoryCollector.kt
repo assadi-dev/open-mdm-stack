@@ -2,6 +2,7 @@ package com.openmdm.agent.inventory
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
@@ -32,17 +33,23 @@ class InventoryCollector(private val context: Context) {
         publicKey: String = "",
         enrollmentMethod: String? = null,
         enrollmentStatus: String? = null,
-    ): DeviceInfoDto = DeviceInfoDto(
-        androidId = readAndroidId(),
-        brand = Build.BRAND,
-        model = Build.MODEL,
-        manufacturer = Build.MANUFACTURER,
-        osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-        serial = readSerial(),
-        publicKey = publicKey,
-        enrollmentMethod = enrollmentMethod,
-        enrollmentStatus = enrollmentStatus,
-    )
+    ): DeviceInfoDto {
+        val agentPackageInfo = readAgentPackageInfo()
+        return DeviceInfoDto(
+            androidId = readAndroidId(),
+            brand = Build.BRAND,
+            model = Build.MODEL,
+            manufacturer = Build.MANUFACTURER,
+            osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+            serial = readSerial(),
+            publicKey = publicKey,
+            enrollmentMethod = enrollmentMethod,
+            enrollmentStatus = enrollmentStatus,
+            agentPackage = context.packageName,
+            agentVersionName = agentPackageInfo?.versionName,
+            agentVersionCode = agentPackageInfo?.longVersionCode?.toInt(),
+        )
+    }
 
     fun fullInventory(): InventoryRequest {
         val info = deviceInfo()
@@ -82,6 +89,13 @@ class InventoryCollector(private val context: Context) {
         Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
             ?.takeIf { it.isNotBlank() }
     } catch (_: Exception) {
+        null
+    }
+
+    /** The agent's own package info (name/versionName/versionCode) — static per install, always readable. */
+    private fun readAgentPackageInfo(): PackageInfo? = try {
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    } catch (_: PackageManager.NameNotFoundException) {
         null
     }
 
