@@ -68,6 +68,12 @@ export class DeviceService {
                     manufacturer: input.device.manufacturer,
                     osVersion: input.device.osVersion,
                     status: "enrolled",
+                    enrollementMethod: input.device.enrollementMethod,
+                    androidId: input.device.androidId,
+                    publicKey: input.device.publicKey,
+                    agentVersionName: input.device.agentVersionName,
+                    agentVersionCode: input.device.agentVersionCode,
+                    agentPackage: input.device.agentPackage,
                 });
             } catch (error) {
                 if (isUniqueViolation(error)) {
@@ -88,8 +94,8 @@ export class DeviceService {
     private async signDeviceJWT(deviceId: string) {
         const payload: JWTPayload & Required<Pick<JWTPayload, "sub" | "aud">> = {
             sub: deviceId,
-            aud: ENV.MDM_AUDIENCE,
-            iss: ENV.MDM_AUDIENCE,
+            aud: ENV.BETTER_AUTH_URL,
+            iss: ENV.BETTER_AUTH_URL,
             type: "device",
             exp: Math.floor(Date.now() / 1000) + 365 * ONE_DAY_SECONDS,
             iat: Math.floor(Date.now() / 1000),
