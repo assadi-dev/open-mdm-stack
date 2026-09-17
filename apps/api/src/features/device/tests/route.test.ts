@@ -4,11 +4,18 @@ import request from "supertest";
 // End-to-end through the real Express app + requireDeviceAuth middleware;
 // only the repository and the better-auth JWT verification are mocked, so
 // no real Postgres connection or JWT keyset is ever touched.
-const { repoMock, verifyJWTMock } = vi.hoisted(() => ({
+const { repoMock, challengeRepoMock, verifyJWTMock } = vi.hoisted(() => ({
     repoMock: {
         createDevice: vi.fn(),
         findDeviceById: vi.fn(),
+        findByAndroidId: vi.fn(),
+        reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
+    },
+    challengeRepoMock: {
+        create: vi.fn(),
+        byChallenge: vi.fn(),
+        markConsumed: vi.fn(),
     },
     verifyJWTMock: vi.fn(),
 }));
@@ -21,6 +28,15 @@ vi.mock("@features/device/repository", () => ({
     }),
 }));
 
+vi.mock("@features/enrollement/repositories", () => ({
+    EnrollmentTokenRepository: vi.fn(function () {
+        return {};
+    }),
+    ChallengeRepository: vi.fn(function () {
+        return challengeRepoMock;
+    }),
+}));
+
 vi.mock("@lib/auth", () => ({
     auth: { api: { verifyJWT: verifyJWTMock } },
 }));
@@ -28,6 +44,22 @@ vi.mock("@lib/auth", () => ({
 import { app } from "../../../app";
 
 const heartbeatBody = { battery: 80, storageFreeBytes: 1_000, online: true, ts: Date.now() };
+
+describe("GET /api/v1/devices/enroll/challenge", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("issues a single-use challenge without touching a real database", async () => {
+        challengeRepoMock.create.mockResolvedValue({ id: "challenge-row-id" });
+
+        const res = await request(app).get("/api/v1/devices/enroll/challenge").expect(200);
+
+        expect(typeof res.body.challenge).toBe("string");
+        expect(res.body.challenge.length).toBeGreaterThan(0);
+        expect(challengeRepoMock.create).toHaveBeenCalledTimes(1);
+    });
+});
 
 describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
     beforeEach(() => {

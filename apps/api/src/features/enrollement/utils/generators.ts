@@ -41,6 +41,18 @@ export const generateRandomToken = (inputs: CreateTokenInput) => {
 
 }
 
+/** Anti-replay nonce for the pinned-key enrollment handshake (single-use, short TTL). */
+export const generateRandomChallenge = (ttlSeconds: number = ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS) => {
+    const challenge = randomBytes(32).toString("base64url");
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+
+    return {
+        challenge,
+        ttlSeconds,
+        expiresAt,
+    }
+}
+
 
 
 

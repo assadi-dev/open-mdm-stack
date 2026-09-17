@@ -1,8 +1,8 @@
 import { ENV } from "@config/env";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 import { generateQrSVG } from "@features/qrcode/service";
-import { EnrollmentTokenRepository } from "./repositories";
-import { buildProvisioningPayload, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
+import { ChallengeRepository, EnrollmentTokenRepository } from "./repositories";
+import { buildProvisioningPayload, generateRandomChallenge, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
 import { enrollementValidator } from "./dto/validation";
 import { CreateEnrollmentTokenInput, CreateTokenInput } from "./dto/schema";
 
@@ -11,8 +11,13 @@ import { CreateEnrollmentTokenInput, CreateTokenInput } from "./dto/schema";
 
 export class EnrollementService {
     enrollmenentRepo: EnrollmentTokenRepository
-    constructor(enrollmentTokenRepo: EnrollmentTokenRepository = new EnrollmentTokenRepository()) {
+    challengeRepo: ChallengeRepository
+    constructor(
+        enrollmentTokenRepo: EnrollmentTokenRepository = new EnrollmentTokenRepository(),
+        challengeRepo: ChallengeRepository = new ChallengeRepository(),
+    ) {
         this.enrollmenentRepo = enrollmentTokenRepo;
+        this.challengeRepo = challengeRepo;
     }
 
 
@@ -75,6 +80,33 @@ export class EnrollementService {
         await this.assertTokenValid(token);
         const row = await this.enrollmenentRepo.markConsumed(token);
         return row
+    }
+
+    /** Issues a single-use, short-lived nonce for the pinned-key enrollment handshake. */
+    generateChallenge = async () => {
+        const { challenge, ttlSeconds, expiresAt } = generateRandomChallenge();
+        await this.challengeRepo.create({ challenge, expiresAt, consumedAt: null });
+        return { challenge, ttlSeconds, expiresAt: expiresAt.toISOString() };
+    }
+
+    /** Looks up a challenge and checks it's usable, without consuming it. */
+    assertChallengeValid = async (challenge: string) => {
+        const existing = await this.challengeRepo.byChallenge(challenge);
+        if (!existing) {
+            throw new HTTPNotFoundException("Challenge not found");
+        }
+        if (existing.consumedAt) {
+            throw new HTTPBadRequestException("Challenge already consumed");
+        }
+        if (existing.expiresAt < new Date()) {
+            throw new HTTPBadRequestException("Challenge expired");
+        }
+        return existing;
+    }
+
+    consumeChallenge = async (challenge: string) => {
+        const row = await this.challengeRepo.markConsumed(challenge);
+        return row;
     }
 
 

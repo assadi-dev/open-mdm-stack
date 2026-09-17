@@ -31,9 +31,16 @@ const deviceInfoSchema = z.object({
 
 export const enrollDeviceSchema = z.object({
     enrollmentToken: z.string().min(1),
-    // Proof of possession: signature over `enrollmentToken`, produced by the
-    // private key matching `device.publicKey`. Verified before the token is
-    // consumed (see DeviceService.create).
+    // Single-use anti-replay nonce fetched from GET /devices/enroll/challenge,
+    // included in the signed canonical message below.
+    challenge: z.string().min(1, "challenge is required"),
+    // Must match the `timestamp` field used to build the signed canonical
+    // message — opaque to the server beyond that (see canonical-message.ts).
+    timestamp: z.string().min(1, "timestamp is required"),
+    // Proof of possession: signature over the canonical message (device
+    // identity + method + timestamp + publicKey + challenge), produced by
+    // the private key matching `device.publicKey`. Verified before the
+    // token/challenge are consumed (see DeviceService.create).
     signature: z.string().min(1, "signature is required"),
     device: deviceInfoSchema,
 });

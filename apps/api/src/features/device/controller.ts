@@ -15,6 +15,12 @@ export class DeviceController {
         this.deviceService = new DeviceService();
     }
 
+    // GET /devices/enroll/challenge  (public — anti-replay nonce for the pinned-key handshake)
+    challenge = async (req: Request, res: Response) => {
+        const result = await this.deviceService.issueChallenge();
+        return res.json(result);
+    };
+
     // POST /devices/enroll  (public — gated by a single-use enrollment token)
     enroll = async (req: Request, res: Response) => {
         const input = validateEnrollDeviceInput(req.body);

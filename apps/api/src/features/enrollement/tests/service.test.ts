@@ -5,7 +5,7 @@ import type { CreateTokenInput } from "../dto/schema";
 
 // `vi.hoisted` runs alongside the hoisted `vi.mock` below, so `repoMock` is
 // already initialized when the mock factory references it.
-const { repoMock } = vi.hoisted(() => ({
+const { repoMock, challengeRepoMock } = vi.hoisted(() => ({
     repoMock: {
         create: vi.fn(),
         getOne: vi.fn(),
@@ -15,6 +15,11 @@ const { repoMock } = vi.hoisted(() => ({
         update: vi.fn(),
         delete: vi.fn(),
     },
+    challengeRepoMock: {
+        create: vi.fn(),
+        byChallenge: vi.fn(),
+        markConsumed: vi.fn(),
+    },
 }));
 
 vi.mock("@features/enrollement/repositories", () => ({
@@ -22,6 +27,9 @@ vi.mock("@features/enrollement/repositories", () => ({
     // stand in for a class constructor here.
     EnrollmentTokenRepository: vi.fn(function () {
         return repoMock;
+    }),
+    ChallengeRepository: vi.fn(function () {
+        return challengeRepoMock;
     }),
 }));
 
@@ -99,6 +107,53 @@ describe("EnrollementService", () => {
 
             expect(repoMock.markConsumed).toHaveBeenCalledWith("valid");
             expect(result.consumedAt).not.toBeNull();
+        });
+    });
+
+    describe("generateChallenge", () => {
+        it("stores a random single-use challenge", async () => {
+            challengeRepoMock.create.mockResolvedValue({ id: "challenge-row" });
+
+            const result = await service.generateChallenge();
+
+            expect(typeof result.challenge).toBe("string");
+            expect(result.challenge.length).toBeGreaterThan(0);
+            expect(challengeRepoMock.create).toHaveBeenCalledWith(
+                expect.objectContaining({ challenge: result.challenge, consumedAt: null }),
+            );
+        });
+    });
+
+    describe("assertChallengeValid", () => {
+        it("throws HTTPNotFoundException when the challenge does not exist", async () => {
+            challengeRepoMock.byChallenge.mockResolvedValue(undefined);
+
+            await expect(service.assertChallengeValid("missing")).rejects.toBeInstanceOf(HTTPNotFoundException);
+        });
+
+        it("throws HTTPBadRequestException when the challenge was already consumed", async () => {
+            challengeRepoMock.byChallenge.mockResolvedValue({
+                consumedAt: new Date(),
+                expiresAt: new Date(Date.now() + 60_000),
+            });
+
+            await expect(service.assertChallengeValid("used")).rejects.toBeInstanceOf(HTTPBadRequestException);
+        });
+
+        it("throws HTTPBadRequestException when the challenge has expired", async () => {
+            challengeRepoMock.byChallenge.mockResolvedValue({
+                consumedAt: null,
+                expiresAt: new Date(Date.now() - 1_000),
+            });
+
+            await expect(service.assertChallengeValid("expired")).rejects.toBeInstanceOf(HTTPBadRequestException);
+        });
+
+        it("returns the row when the challenge is valid and unused", async () => {
+            const row = { id: "challenge-id", consumedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+            challengeRepoMock.byChallenge.mockResolvedValue(row);
+
+            await expect(service.assertChallengeValid("valid")).resolves.toEqual(row);
         });
     });
 

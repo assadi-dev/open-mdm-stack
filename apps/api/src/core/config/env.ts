@@ -39,6 +39,9 @@ const env_schema = z.object({
   ENROLLMENT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(1).default(900),
   ENROLLMENT_OTP_TTL_SECONDS: z.coerce.number().int().min(1).default(300),
   ENROLLMENT_MAX_OTP_ATTEMPTS: z.coerce.number().int().min(1).default(5),
+  // Anti-replay nonce for the pinned-key enrollment handshake: short-lived,
+  // single-use, fetched via GET /devices/enroll/challenge.
+  ENROLLMENT_CHALLENGE_TTL_SECONDS: z.coerce.number().int().min(1).default(120),
 
 });
 

@@ -4,7 +4,7 @@ import request from "supertest";
 // End-to-end through the real Express app (routing + validation + error
 // handler all run for real); only the repository is mocked, so no real
 // Postgres connection is ever opened.
-const { repoMock } = vi.hoisted(() => ({
+const { repoMock, challengeRepoMock } = vi.hoisted(() => ({
     repoMock: {
         create: vi.fn(),
         getOne: vi.fn(),
@@ -14,6 +14,11 @@ const { repoMock } = vi.hoisted(() => ({
         update: vi.fn(),
         delete: vi.fn(),
     },
+    challengeRepoMock: {
+        create: vi.fn(),
+        byChallenge: vi.fn(),
+        markConsumed: vi.fn(),
+    },
 }));
 
 vi.mock("@features/enrollement/repositories", () => ({
@@ -21,6 +26,9 @@ vi.mock("@features/enrollement/repositories", () => ({
     // stand in for a class constructor here.
     EnrollmentTokenRepository: vi.fn(function () {
         return repoMock;
+    }),
+    ChallengeRepository: vi.fn(function () {
+        return challengeRepoMock;
     }),
 }));
 
@@ -30,6 +38,7 @@ describe("POST /api/v1/enrollement", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         repoMock.create.mockResolvedValue({ id: "row-id" });
+        challengeRepoMock.create.mockResolvedValue({ id: "challenge-row-id" });
     });
 
     it("POST /token-generate issues a single-use enrollment token without touching a real database", async () => {

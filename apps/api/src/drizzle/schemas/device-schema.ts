@@ -28,6 +28,29 @@ export const enrollmentTokens = pgTable(
 
 export type EnrollmentTokenSqlInferSelect = typeof enrollmentTokens.$inferSelect;
 export type EnrollmentTokenSqlInferInsert = typeof enrollmentTokens.$inferInsert;
+
+/**
+ * Single-use anti-replay nonce for the pinned-key enrollment handshake.
+ * Fetched via GET /devices/enroll/challenge, then included (and signed) in
+ * the canonical message the agent submits to POST /devices/enroll.
+ */
+export const enrollmentChallenges = pgTable(
+    "enrollment_challenges",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        challenge: text("challenge").notNull().unique(),
+        expiresAt: timestamp("expires_at").notNull(),
+        consumedAt: timestamp("consumed_at"),
+        ...updatedAndCreatedAt,
+    },
+    (table) => [
+        index("enrollment_challenge_idx").on(table.challenge),
+    ],
+);
+
+export type EnrollmentChallengeSqlInferSelect = typeof enrollmentChallenges.$inferSelect;
+export type EnrollmentChallengeSqlInferInsert = typeof enrollmentChallenges.$inferInsert;
+
 /**
  * A device enrolled via a token. Holds the identity reported at enrollment and
  * is the `sub` of the long-lived device JWT (deviceToken).
