@@ -1,7 +1,7 @@
 import { generateKeyPairSync, sign } from "crypto";
 
 
-const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const caracteres = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 /**
  * Mock-only: simulates the EC key pair an Android agent generates in its
@@ -28,5 +28,5 @@ export const generateMockAndroidId = () => {
 
     const randomValues = (count: number) => Array.from(crypto.getRandomValues(new Uint32Array(count))).map(x => caracteres[x % caracteres.length]).join("");
 
-    return randomValues(12).toLowerCase().trim();
+    return randomValues(16).toLowerCase().trim();
 }
