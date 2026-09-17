@@ -7,6 +7,7 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.provider.Settings
 import com.openmdm.agent.data.remote.dto.DeviceInfoDto
 import com.openmdm.agent.data.remote.dto.InstalledAppDto
 import com.openmdm.agent.data.remote.dto.InventoryRequest
@@ -19,11 +20,28 @@ import com.openmdm.agent.data.remote.dto.StorageDto
  */
 class InventoryCollector(private val context: Context) {
 
-    fun deviceInfo(): DeviceInfoDto = DeviceInfoDto(
+    /**
+     * Device facts only — [publicKey]/[enrollmentMethod]/[enrollmentStatus]
+     * are not facts this collector can know on its own; callers that build
+     * the enrollment request (see
+     * [com.openmdm.agent.data.repository.DeviceRepository.enroll]) pass them
+     * in explicitly. Callers that only need the facts for display or
+     * inventory derivation use the defaults.
+     */
+    fun deviceInfo(
+        publicKey: String = "",
+        enrollmentMethod: String? = null,
+        enrollmentStatus: String? = null,
+    ): DeviceInfoDto = DeviceInfoDto(
+        androidId = readAndroidId(),
+        brand = Build.BRAND,
         model = Build.MODEL,
         manufacturer = Build.MANUFACTURER,
         osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
         serial = readSerial(),
+        publicKey = publicKey,
+        enrollmentMethod = enrollmentMethod,
+        enrollmentStatus = enrollmentStatus,
     )
 
     fun fullInventory(): InventoryRequest {
@@ -32,7 +50,7 @@ class InventoryCollector(private val context: Context) {
             os = info.osVersion,
             model = info.model,
             manufacturer = info.manufacturer,
-            serial = info.serial,
+            serial = info.serial.orEmpty(),
             storage = readStorage(),
             apps = readInstalledApps(),
         )
@@ -53,6 +71,18 @@ class InventoryCollector(private val context: Context) {
         Build.UNKNOWN
     } catch (_: Exception) {
         Build.UNKNOWN
+    }
+
+    /**
+     * 64-bit hex string, unique per app-signing-key/user/device — used as the
+     * key-pinning identity by the server (see DeviceKeyStore). Optional on
+     * the wire; tolerate it being unreadable rather than failing enrollment.
+     */
+    private fun readAndroidId(): String? = try {
+        Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+            ?.takeIf { it.isNotBlank() }
+    } catch (_: Exception) {
+        null
     }
 
     private fun readStorage(): StorageDto {

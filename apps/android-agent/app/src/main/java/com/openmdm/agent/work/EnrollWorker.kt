@@ -20,11 +20,11 @@ class EnrollWorker(
             MdmWork.schedulePeriodicHeartbeat(appContext)
             return Result.success()
         }
-        val token = inputData.getString(MdmWork.KEY_ENROLLMENT_TOKEN)
-            ?: return Result.failure()
         val baseUrl = inputData.getString(MdmWork.KEY_BASE_URL)
+        val enrollmentMethod = inputData.getString(MdmWork.KEY_ENROLLMENT_METHOD)
+            ?: MdmWork.METHOD_MANUAL
 
-        return repository.enroll(token, baseUrl).fold(
+        return repository.enroll(baseUrl, enrollmentMethod).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
                 Result.success()

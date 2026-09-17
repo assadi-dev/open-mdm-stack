@@ -13,12 +13,21 @@ import com.openmdm.agent.work.MdmWork
  * Device-admin / Device Owner entry point.
  *
  * For QR (or NFC) provisioning, the management server embeds an admin-extras
- * bundle in the QR JSON under PROVISIONING_ADMIN_EXTRAS_BUNDLE carrying the
- * enrollment token + server URL; it is delivered here in
- * [onProfileProvisioningComplete] once the app becomes Device Owner.
+ * bundle in the QR JSON under PROVISIONING_ADMIN_EXTRAS_BUNDLE carrying a
+ * `challenge` + `serverBaseUrl` (see
+ * apps/api/src/features/enrollment/utils/generators.ts#buildProvisioningPayload),
+ * delivered here in [onProfileProvisioningComplete] once the app becomes
+ * Device Owner. The embedded `challenge` is deliberately NOT used: it is
+ * short-lived (120s by default) and provisioning (wipe + DPC install + boot)
+ * can easily outlast that TTL, so it would likely already be expired or
+ * consumed by the time the agent starts. Only `serverBaseUrl` is read from
+ * the extras; [MdmWork.enqueueEnrollment] fetches a fresh challenge itself
+ * right before enrolling, exactly like the manual UI path.
  *
  * For the ADB dev path (`adb shell dpm set-device-owner ...`) no extras are
- * delivered — enrollment is then driven manually from the UI fallback screen.
+ * delivered; enrollment then falls back to the configured default server URL
+ * (see di/AppContainer.kt), still driven through the same self-service
+ * challenge handshake — no separate manual UI step is required.
  */
 class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
 
@@ -35,21 +44,15 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
         Log.i(TAG, "Provisioning complete")
         val extras: PersistableBundle? =
             intent.getParcelableExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE)
-        val token = extras?.getString(EXTRA_ENROLLMENT_TOKEN)
         val baseUrl = extras?.getString(EXTRA_SERVER_BASE_URL)
 
-        if (token.isNullOrBlank()) {
-            Log.w(TAG, "No enrollment token in provisioning extras; awaiting manual enrollment")
-            return
-        }
-        MdmWork.enqueueEnrollment(context.applicationContext, token, baseUrl)
+        MdmWork.enqueueEnrollment(context.applicationContext, baseUrl, MdmWork.METHOD_QR)
     }
 
     companion object {
         private const val TAG = "MdmDeviceAdmin"
 
-        /** Keys expected inside PROVISIONING_ADMIN_EXTRAS_BUNDLE. */
-        const val EXTRA_ENROLLMENT_TOKEN = "enrollmentToken"
+        /** Key expected inside PROVISIONING_ADMIN_EXTRAS_BUNDLE. */
         const val EXTRA_SERVER_BASE_URL = "serverBaseUrl"
     }
 }

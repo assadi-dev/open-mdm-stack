@@ -12,6 +12,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -19,8 +20,10 @@ import retrofit2.Retrofit
 
 /**
  * Validates the Android wire contract against a fake HTTP server, independent
- * of the (not-yet-implemented) real backend: endpoint paths, request bodies and
- * response deserialization.
+ * of the real backend: endpoint paths, request bodies and response
+ * deserialization for the pinned-key enrollment handshake (challenge + signed
+ * canonical message — no admin-issued enrollment token, see
+ * apps/api/src/features/device/dto/schema.ts#enrollDeviceSchema).
  */
 class DeviceApiContractTest {
 
@@ -32,9 +35,17 @@ class DeviceApiContractTest {
         server = MockWebServer()
         server.start()
         val contentType = "application/json".toMediaType()
+        // Mirrors di/AppContainer.kt's Json config: optional fields must be
+        // omitted (not sent as explicit `null`) since the server validates
+        // with zod's `.optional()`, which rejects `null`.
+        val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            explicitNulls = false
+        }
         api = Retrofit.Builder()
             .baseUrl(server.url("/"))
-            .addConverterFactory(Json { ignoreUnknownKeys = true }.asConverterFactory(contentType))
+            .addConverterFactory(json.asConverterFactory(contentType))
             .build()
             .create(DeviceApi::class.java)
     }
@@ -45,7 +56,25 @@ class DeviceApiContractTest {
     }
 
     @Test
-    fun enroll_sendsTokenAndParsesIdentity() = runTest {
+    fun challenge_fetchesASingleUseNonce() = runTest {
+        server.enqueue(
+            MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("""{"challenge":"chal-1","ttlSeconds":120,"expiresAt":"2026-01-01T00:02:00.000Z"}""")
+        )
+
+        val response = api.challenge()
+
+        assertEquals("chal-1", response.challenge)
+        assertEquals(120, response.ttlSeconds)
+
+        val recorded = server.takeRequest()
+        assertEquals("GET", recorded.method)
+        assertEquals("/api/v1/enrollment/challenge", recorded.path)
+    }
+
+    @Test
+    fun enroll_sendsChallengeTimestampSignatureAndParsesIdentity() = runTest {
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "application/json")
@@ -54,8 +83,19 @@ class DeviceApiContractTest {
 
         val response = api.enroll(
             EnrollRequest(
-                enrollmentToken = "enroll-token",
-                device = DeviceInfoDto("Pixel", "Google", "Android 16", "SER123"),
+                challenge = "chal-1",
+                timestamp = "2026-01-01T00:00:00.000Z",
+                signature = "c2lnbmF0dXJl",
+                device = DeviceInfoDto(
+                    androidId = "abc123",
+                    brand = "Google",
+                    model = "Pixel",
+                    manufacturer = "Google",
+                    osVersion = "Android 16",
+                    serial = "SER123",
+                    enrollmentMethod = "manual",
+                    publicKey = "cHVibGljS2V5",
+                ),
             )
         )
 
@@ -66,8 +106,15 @@ class DeviceApiContractTest {
         assertEquals("POST", recorded.method)
         assertEquals("/api/v1/devices/enroll", recorded.path)
         val body = recorded.body.readUtf8()
-        assertTrue(body.contains("enroll-token"))
+        assertTrue(body.contains("\"challenge\":\"chal-1\""))
+        assertTrue(body.contains("\"timestamp\":\"2026-01-01T00:00:00.000Z\""))
+        assertTrue(body.contains("\"signature\":\"c2lnbmF0dXJl\""))
+        assertTrue(body.contains("\"publicKey\":\"cHVibGljS2V5\""))
         assertTrue(body.contains("SER123"))
+        // No enrollmentToken concept anymore, and absent optional fields
+        // (e.g. imei/macAddress here) must be omitted, not sent as `null`.
+        assertFalse(body.contains("enrollmentToken"))
+        assertFalse(body.contains("null"))
     }
 
     @Test

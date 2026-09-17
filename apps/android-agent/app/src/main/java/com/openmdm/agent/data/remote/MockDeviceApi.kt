@@ -1,11 +1,13 @@
 package com.openmdm.agent.data.remote
 
+import com.openmdm.agent.data.remote.dto.ChallengeResponse
 import com.openmdm.agent.data.remote.dto.EnrollRequest
 import com.openmdm.agent.data.remote.dto.EnrollResponse
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.data.remote.dto.InventoryRequest
 import com.openmdm.agent.data.remote.dto.SimpleOkResponse
 import kotlinx.coroutines.delay
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -14,6 +16,15 @@ import java.util.UUID
  * heartbeat → inventory flow run on a device/emulator without a server.
  */
 class MockDeviceApi : DeviceApi {
+
+    override suspend fun challenge(): ChallengeResponse {
+        delay(100)
+        return ChallengeResponse(
+            challenge = "mock-challenge-" + UUID.randomUUID(),
+            ttlSeconds = 120,
+            expiresAt = Instant.now().plusSeconds(120).toString(),
+        )
+    }
 
     override suspend fun enroll(body: EnrollRequest): EnrollResponse {
         delay(300)

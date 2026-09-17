@@ -19,8 +19,12 @@ object MdmWork {
     const val HEARTBEAT_WORK = "mdm_heartbeat"
     const val ENROLL_WORK = "mdm_enroll"
 
-    const val KEY_ENROLLMENT_TOKEN = "enrollment_token"
+    const val KEY_ENROLLMENT_METHOD = "enrollment_method"
     const val KEY_BASE_URL = "base_url"
+
+    /** Values accepted by the server's `device.enrollmentMethod`. */
+    const val METHOD_MANUAL = "manual"
+    const val METHOD_QR = "qr"
 
     private const val HEARTBEAT_INTERVAL_MINUTES = 15L
 
@@ -28,14 +32,22 @@ object MdmWork {
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
-    /** Enqueues a one-off enrollment, used from the device-admin provisioning callback. */
-    fun enqueueEnrollment(context: Context, enrollmentToken: String, baseUrl: String?) {
+    /**
+     * Enqueues a one-off enrollment, used from the device-admin provisioning
+     * callback (QR/NFC path) or the dev UI fallback. There is no admin-issued
+     * token to carry here: the worker fetches its own single-use challenge
+     * from the server right before enrolling (see
+     * [com.openmdm.agent.data.repository.DeviceRepository.enroll]) — this
+     * only transports the server [baseUrl] (if provisioned) and the
+     * [enrollmentMethod] to report/sign.
+     */
+    fun enqueueEnrollment(context: Context, baseUrl: String?, enrollmentMethod: String = METHOD_MANUAL) {
         val request = OneTimeWorkRequestBuilder<EnrollWorker>()
             .setConstraints(networkConstraints)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .setInputData(
                 Data.Builder()
-                    .putString(KEY_ENROLLMENT_TOKEN, enrollmentToken)
+                    .putString(KEY_ENROLLMENT_METHOD, enrollmentMethod)
                     .putString(KEY_BASE_URL, baseUrl)
                     .build()
             )

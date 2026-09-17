@@ -53,20 +53,21 @@ class AgentViewModel(
                 lastHeartbeatAt = repository.lastHeartbeatAt,
                 deviceModel = "${info.manufacturer} ${info.model}",
                 osVersion = info.osVersion,
-                serial = info.serial,
+                serial = info.serial.orEmpty(),
             )
         }
     }
 
-    /** Dev fallback enrollment (when provisioned via ADB rather than QR). */
-    fun enrollManually(token: String, baseUrl: String) {
-        if (token.isBlank()) {
-            _state.update { it.copy(message = "Enrollment token is required") }
-            return
-        }
+    /**
+     * Self-service enrollment: no token/code required, only an optional
+     * server base URL override. Used both from the manual UI fallback and
+     * after scanning a QR (see [EnrollmentQrParser], which only extracts a
+     * `serverBaseUrl`).
+     */
+    fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.enroll(token.trim(), baseUrl.trim().ifBlank { null })
+            val result = repository.enroll(baseUrl.trim().ifBlank { null }, method)
             result.onSuccess {
                 MdmWork.schedulePeriodicHeartbeat(getApplication())
             }

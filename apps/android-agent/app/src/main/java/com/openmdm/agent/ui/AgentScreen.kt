@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openmdm.agent.work.MdmWork
 import java.text.DateFormat
 import java.util.Date
 
@@ -56,7 +57,7 @@ fun AgentScreen(
         if (!state.isEnrolled) {
             ManualEnrollmentCard(
                 busy = state.busy,
-                onEnroll = viewModel::enrollManually,
+                onEnroll = viewModel::enroll,
             )
         }
 
@@ -120,16 +121,15 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ManualEnrollmentCard(
     busy: Boolean,
-    onEnroll: (token: String, baseUrl: String) -> Unit,
+    onEnroll: (baseUrl: String, method: String) -> Unit,
 ) {
-    var code by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("") }
     var showAdvanced by remember { mutableStateOf(false) }
 
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         val contents = result.contents ?: return@rememberLauncherForActivityResult
         EnrollmentQrParser.parse(contents)?.let { parsed ->
-            onEnroll(parsed.tokenOrCode, parsed.baseUrl ?: baseUrl)
+            onEnroll(parsed.baseUrl ?: baseUrl, MdmWork.METHOD_QR)
         }
     }
 
@@ -140,15 +140,8 @@ private fun ManualEnrollmentCard(
         ) {
             Text("Enrôlement", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Saisis le code d'enrôlement, ou scanne le QR.",
+                "Aucun code requis : appuie sur Enrôler, ou scanne le QR du serveur.",
                 style = MaterialTheme.typography.bodySmall,
-            )
-            OutlinedTextField(
-                value = code,
-                onValueChange = { code = it.uppercase() },
-                label = { Text("Code d'enrôlement") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
             )
 
             if (showAdvanced) {
@@ -163,8 +156,8 @@ private fun ManualEnrollmentCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { onEnroll(code, baseUrl) },
-                    enabled = !busy && code.isNotBlank(),
+                    onClick = { onEnroll(baseUrl, MdmWork.METHOD_MANUAL) },
+                    enabled = !busy,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(if (busy) "Enrôlement…" else "Enrôler")

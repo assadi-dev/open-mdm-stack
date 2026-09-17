@@ -3,21 +3,69 @@ package com.openmdm.agent.data.remote.dto
 import kotlinx.serialization.Serializable
 
 /**
- * Wire contract shared with the (not-yet-implemented) MDM backend.
- * See the plan: POST /api/v1/devices/enroll | heartbeat | inventory.
+ * Wire contract shared with the MDM backend (pinned-key enrollment, see
+ * apps/api/src/features/enrollment and apps/api/src/features/device):
+ * GET enrollment/challenge, POST devices/enroll | heartbeat | inventory.
  */
 
+/**
+ * Device identity/facts, embedded as the `device` object of [EnrollRequest].
+ * All fields but [model]/[manufacturer]/[osVersion]/[publicKey] are optional
+ * per the server's `deviceInfoSchema` — an absent optional value must be
+ * omitted from the JSON (not sent as `null`; zod's `.optional()` rejects an
+ * explicit null), which is why the Retrofit [kotlinx.serialization.json.Json]
+ * instance building this request is configured with `explicitNulls = false`
+ * (see di/AppContainer.kt).
+ *
+ * [publicKey] is required by the server schema but is not a fact
+ * [com.openmdm.agent.inventory.InventoryCollector] can know on its own (it
+ * comes from [com.openmdm.agent.data.local.DeviceKeyStore]); callers that
+ * only need the device facts for display/inventory use the default `""` and
+ * never send that instance to `enroll`.
+ */
 @Serializable
 data class DeviceInfoDto(
+    val androidId: String? = null,
+    val brand: String? = null,
     val model: String,
     val manufacturer: String,
     val osVersion: String,
-    val serial: String,
+    val serial: String? = null,
+    val imei: String? = null,
+    val macAddress: String? = null,
+    val ipAddress: String? = null,
+    val enrollmentStatus: String? = null,
+    val enrollmentMethod: String? = null,
+    val publicKey: String = "",
+    val agentVersionName: String? = null,
+    val agentVersionCode: Int? = null,
+    val agentPackage: String? = null,
 )
 
+/**
+ * Single-use, short-lived anti-replay nonce fetched right before enrolling
+ * (never cached/reused — see [com.openmdm.agent.data.repository.DeviceRepository.enroll]).
+ */
+@Serializable
+data class ChallengeResponse(
+    val challenge: String,
+    val ttlSeconds: Int,
+    val expiresAt: String,
+)
+
+/**
+ * Pinned-key enrollment request. There is no admin-issued enrollment token:
+ * [challenge] (single-use, fetched from `GET enrollment/challenge`) is the
+ * sole authorization, and [signature] is the proof-of-possession signature
+ * (ECDSA/SHA-256, DER, base64) over the canonical message built by
+ * [com.openmdm.agent.security.CanonicalMessage] with the private key backing
+ * `device.publicKey`.
+ */
 @Serializable
 data class EnrollRequest(
-    val enrollmentToken: String,
+    val challenge: String,
+    val timestamp: String,
+    val signature: String,
     val device: DeviceInfoDto,
 )
 
