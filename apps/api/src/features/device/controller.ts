@@ -16,6 +16,12 @@ export class DeviceController {
         this.deviceService = new DeviceService();
     }
 
+    // POST /devices/enroll  (public — gated by a single-use enrollment token)
+    enroll = async (req: Request, res: Response) => {
+        const input = validateEnrollDeviceInput(req.body);
+        const result = await this.deviceService.create(input);
+        return res.status(201).json(result);
+    };
 
     // POST /devices/:deviceId/heartbeat  (device JWT)
     heartbeat = async (req: Request, res: Response) => {

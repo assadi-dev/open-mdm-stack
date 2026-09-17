@@ -1,38 +1,26 @@
-import { ENV } from "@config/env";
+import { enrollementMethod, enrollementStatus } from "@drizzle/schemas/device-schema";
 import z from "zod";
 
-export const createEnrollmentTokenSchema = z.object({
-    token: z.string().min(1, "Token is required"),
-    apkUrl: z.string().optional(),
-    wifiSsid: z.string().optional(),
-    wifiPassword: z.string().optional(),
-    // Friendly value; mapped to the Android-accepted token (WPA2/WPA3 -> "WPA")
-    // in the provisioning payload. Defaults to WPA2 when a Wi-Fi SSID is set.
-    wifiSecurityType: z
-        .enum(["NONE", "WEP", "WPA", "WPA2", "WPA3", "EAP"])
-        .optional()
-        .default("WPA2"),
-    // Only needed for non-broadcast (hidden) SSIDs.
-    wifiHidden: z.boolean().optional().default(false),
-    systemApps: z.boolean().optional().default(true),
-    policyId: z.string().optional(),
-    groupId: z.string().optional(),
-    checksum: z.string().optional(),
-    skipEncryption: z.boolean().optional().default(false),
 
-});
-
-export const createTokenSchema = z.object({
-    ttlSeconds: z.coerce.number().int().optional().default(Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS)),
-
-
-})
 
 const deviceInfoSchema = z.object({
+    androidId: z.string().optional(),
     model: z.string(),
     manufacturer: z.string(),
     osVersion: z.string(),
-    serial: z.string(),
+    serial: z.string().optional(),
+    imei: z.string().optional(),
+    macAddress: z.string().optional(),
+    ipAddress: z.string().optional(),
+    enrollmentStatus: z.enum(enrollementStatus).optional(),
+    enrollementMethod: z.enum(enrollementMethod).optional(),
+    publicKey: z.string().optional(),
+    agentVersionName: z.string().optional(),
+    agentVersionCode: z.number().optional(),
+    agentPackage: z.string().optional(),
+    enrollementId: z.string(),
+
+
 });
 
 export const enrollDeviceSchema = z.object({
@@ -67,15 +55,12 @@ export const inventorySchema = z.object({
     apps: z.array(installedAppSchema),
 });
 
-export type CreateEnrollmentTokenInput = z.infer<typeof createEnrollmentTokenSchema>;
-export type CreateTokenInput = z.infer<typeof createTokenSchema>;
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
 
 
 export const deviceDecoder = {
-    createToken: (data: unknown) => createEnrollmentTokenSchema.safeParse(data),
     enroll: (data: unknown) => enrollDeviceSchema.safeParse(data),
     heartbeat: (data: unknown) => heartbeatSchema.safeParse(data),
     inventory: (data: unknown) => inventorySchema.safeParse(data),

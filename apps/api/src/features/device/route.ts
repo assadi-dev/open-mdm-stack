@@ -10,6 +10,7 @@ const controller = new DeviceController();
 
 
 
+deviceRouter.post("/enroll", controller.enroll);
 deviceRouter.post("/:deviceId/heartbeat", requireDeviceAuth, controller.heartbeat);
 deviceRouter.post("/:deviceId/inventory", requireDeviceAuth, controller.inventory);
 

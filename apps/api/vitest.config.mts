@@ -23,6 +23,8 @@ export default defineConfig({
             BETTER_AUTH_SECRET: "test-better-auth-secret",
             BETTER_AUTH_URL: "http://localhost:5550",
             MDM_DEVICE_SECRET: "test-mdm-device-secret",
+            // Valid Base32 (RFC 4648) — otplib decodes it as the TOTP/HOTP secret.
+            MDM_OTP_SECRET: "GEZDGNBVGY3TQOJQGEZDGNBVGY",
         },
     },
 });

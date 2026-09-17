@@ -11,8 +11,8 @@ import { enrollementValidator } from "./dto/validation";
 
 export class EnrollementService {
     enrollmenentRepo: EnrollmentTokenRepository
-    constructor() {
-        this.enrollmenentRepo = new EnrollmentTokenRepository();
+    constructor(enrollmentTokenRepo: EnrollmentTokenRepository = new EnrollmentTokenRepository()) {
+        this.enrollmenentRepo = enrollmentTokenRepo;
     }
 
 

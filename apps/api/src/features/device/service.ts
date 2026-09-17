@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 import { JWTPayload } from "better-auth";
 import { auth } from "@lib/auth";
 import { ENV } from "@config/env";
+import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
     HTTPInternalServerErrorException,
@@ -10,6 +11,8 @@ import {
 
 import { DeviceRepository } from "./repository";
 import { EnrollDeviceInput, InventoryInput } from "./dto/schema";
+import { EnrollmentTokenRepository } from "@features/enrollement/repositories";
+import { EnrollementService } from "@features/enrollement/service";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
@@ -53,6 +56,33 @@ export class DeviceService {
      * token used and issues the long-lived device JWT (deviceToken).
      */
     async create(input: EnrollDeviceInput) {
+        const device = await db.transaction(async (tx) => {
+            const enrollementService = new EnrollementService(new EnrollmentTokenRepository(tx));
+            const consumedToken = await enrollementService.consumeToken(input.enrollmentToken);
+
+            try {
+                return await new DeviceRepository(tx).createDevice({
+                    enrollmentId: consumedToken.id,
+                    serial: input.device.serial,
+                    model: input.device.model,
+                    manufacturer: input.device.manufacturer,
+                    osVersion: input.device.osVersion,
+                    status: "enrolled",
+                });
+            } catch (error) {
+                if (isUniqueViolation(error)) {
+                    throw new HTTPBadRequestException("Device already enrolled");
+                }
+                throw error;
+            }
+        });
+
+        const deviceToken = await this.signDeviceJWT(device.id);
+
+        return {
+            deviceId: device.id,
+            deviceToken,
+        };
     }
 
     private async signDeviceJWT(deviceId: string) {

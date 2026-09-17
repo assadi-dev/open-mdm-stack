@@ -21,7 +21,8 @@
     "db:drop": "npx drizzle-kit drop",
     "db:sync": "npm run db:generate && npm run db:migrate",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mock:enroll": "tsx scripts/mock-device-enroll.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",

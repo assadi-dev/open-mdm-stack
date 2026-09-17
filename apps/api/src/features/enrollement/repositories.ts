@@ -1,42 +1,46 @@
-import { db } from "@drizzle/instance";
+import { db as defaultDb } from "@drizzle/instance";
 import { enrollmentTokens, EnrollmentTokenSqlInferInsert } from "@drizzle/schemas/device-schema";
 import { eq } from "drizzle-orm";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 
 export class EnrollmentTokenRepository {
 
+    /** Accepts a transaction handle so token consumption can be committed atomically with device creation. */
+    constructor(private readonly db: NodePgDatabase = defaultDb) { }
+
     async create(input: EnrollmentTokenSqlInferInsert) {
-        const row = await db.insert(enrollmentTokens).values({ ...input }).returning();
+        const row = await this.db.insert(enrollmentTokens).values({ ...input }).returning();
         return row[0];
     }
 
     async getOne(id: string) {
-        const [row] = await db.select().from(enrollmentTokens).where(eq(enrollmentTokens.id, id));
+        const [row] = await this.db.select().from(enrollmentTokens).where(eq(enrollmentTokens.id, id));
         return row;
     }
 
     async byToken(token: string) {
-        const [row] = await db.select().from(enrollmentTokens).where(eq(enrollmentTokens.token, token));
+        const [row] = await this.db.select().from(enrollmentTokens).where(eq(enrollmentTokens.token, token));
         return row;
     }
 
     async markConsumed(token: string) {
-        const [row] = await db.update(enrollmentTokens).set({ consumedAt: new Date() }).where(eq(enrollmentTokens.token, token)).returning();
+        const [row] = await this.db.update(enrollmentTokens).set({ consumedAt: new Date() }).where(eq(enrollmentTokens.token, token)).returning();
         return row;
     }
 
     async markUnused(token: string) {
-        const [row] = await db.update(enrollmentTokens).set({ consumedAt: null }).where(eq(enrollmentTokens.token, token)).returning();
+        const [row] = await this.db.update(enrollmentTokens).set({ consumedAt: null }).where(eq(enrollmentTokens.token, token)).returning();
         return row;
     }
 
     async update(id: string, input: Record<string, any>) {
-        const [row] = await db.update(enrollmentTokens).set(input).where(eq(enrollmentTokens.id, id)).returning();
+        const [row] = await this.db.update(enrollmentTokens).set(input).where(eq(enrollmentTokens.id, id)).returning();
         return row;
     }
 
     async delete(id: string) {
-        await db.delete(enrollmentTokens).where(eq(enrollmentTokens.id, id));
+        await this.db.delete(enrollmentTokens).where(eq(enrollmentTokens.id, id));
     }
 
 

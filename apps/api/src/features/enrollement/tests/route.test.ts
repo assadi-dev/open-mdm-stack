@@ -32,9 +32,9 @@ describe("POST /api/v1/enrollement", () => {
         repoMock.create.mockResolvedValue({ id: "row-id" });
     });
 
-    it("POST /token issues a single-use enrollment token without touching a real database", async () => {
+    it("GET /token-generate issues a single-use enrollment token without touching a real database", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/token")
+            .get("/api/v1/enrollement/token-generate")
             .send({ ttlSeconds: 120 })
             .expect(200);
 
@@ -43,9 +43,9 @@ describe("POST /api/v1/enrollement", () => {
         expect(repoMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it("POST /provisioning?format=svg returns an SVG QR code embedding a freshly generated token", async () => {
+    it("POST /display-provisioning?format=svg returns an SVG QR code embedding a freshly generated token", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/provisioning?format=svg")
+            .post("/api/v1/enrollement/display-provisioning?format=svg")
             .send({})
             .expect(200);
 
@@ -55,9 +55,9 @@ describe("POST /api/v1/enrollement", () => {
         expect(Buffer.from(res.body).toString("utf8")).toContain("<svg");
     });
 
-    it("POST /provisioning returns the raw Device Owner provisioning payload, carrying a freshly generated token", async () => {
+    it("POST /display-provisioning returns the raw Device Owner provisioning payload, carrying a freshly generated token", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/provisioning")
+            .post("/api/v1/enrollement/display-provisioning")
             .send({ policyId: "policy-1" })
             .expect(200);
 
@@ -67,13 +67,13 @@ describe("POST /api/v1/enrollement", () => {
         expect(extras.policyId).toBe("policy-1");
     });
 
-    // Regression test for the crash reported in prod logs: POST /provisioning
+    // Regression test for the crash reported in prod logs: POST /display-provisioning
     // with no ?ttlSeconds= used to throw "RangeError: Invalid time value" —
     // Number(undefined) is NaN, which `??` doesn't catch, so an Invalid Date
     // reached the DB insert. Fixed by resolving the fallback before coercing.
-    it("POST /provisioning without a ttlSeconds query param falls back to the configured TTL instead of crashing", async () => {
+    it("POST /display-provisioning without a ttlSeconds query param falls back to the configured TTL instead of crashing", async () => {
         await request(app)
-            .post("/api/v1/enrollement/provisioning")
+            .post("/api/v1/enrollement/display-provisioning")
             .send({})
             .expect(200);
 
@@ -83,9 +83,9 @@ describe("POST /api/v1/enrollement", () => {
         expect(Number.isNaN(insertedRow.expiresAt.getTime())).toBe(false);
     });
 
-    it("POST /provisioning rejects an invalid body with a 400 instead of a raw 500", async () => {
+    it("POST /display-provisioning rejects an invalid body with a 400 instead of a raw 500", async () => {
         await request(app)
-            .post("/api/v1/enrollement/provisioning")
+            .post("/api/v1/enrollement/display-provisioning")
             .send({ wifiSecurityType: "NOT-A-TYPE" })
             .expect(400);
     });
