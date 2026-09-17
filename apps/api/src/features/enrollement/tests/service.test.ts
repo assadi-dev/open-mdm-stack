@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
-import type { CreateEnrollmentTokenInput } from "../dto/schema";
+import type { CreateTokenInput } from "../dto/schema";
 
 // `vi.hoisted` runs alongside the hoisted `vi.mock` below, so `repoMock` is
 // already initialized when the mock factory references it.
@@ -31,14 +32,13 @@ describe("EnrollementService", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        repoMock.create.mockResolvedValue({ id: "row-1" });
         service = new EnrollementService();
     });
 
     describe("generateToken", () => {
         it("stores a random single-use token with the requested TTL", async () => {
-            repoMock.create.mockResolvedValue({ id: "row-1" });
-
-            const result = await service.generateToken({ ttlSeconds: 120 });
+            const result = await service.generateToken({ ttlSeconds: 120 } as CreateTokenInput);
 
             expect(result.ttlSeconds).toBe(120);
             expect(typeof result.token).toBe("string");
@@ -46,6 +46,16 @@ describe("EnrollementService", () => {
             expect(repoMock.create).toHaveBeenCalledWith(
                 expect.objectContaining({ token: result.token, consumedAt: null }),
             );
+        });
+
+        // Regression test: displayProvisioning calls generateToken({ ttlSeconds })
+        // where ttlSeconds can be undefined — this used to bottom out in
+        // `new Date(NaN)` and crash the DB insert with "Invalid time value".
+        it("falls back to a valid expiry when ttlSeconds is undefined", async () => {
+            const result = await service.generateToken({ ttlSeconds: undefined } as CreateTokenInput);
+
+            expect(Number.isFinite(result.ttlSeconds)).toBe(true);
+            expect(() => new Date(result.expiresAt).toISOString()).not.toThrow();
         });
     });
 
@@ -92,50 +102,39 @@ describe("EnrollementService", () => {
         });
     });
 
-    describe("buildProvisioningPayload", () => {
-        const base: CreateEnrollmentTokenInput = {
-            wifiSecurityType: "WPA2",
-            wifiHidden: false,
-            systemApps: true,
-            skipEncryption: false,
-        };
+    describe("displayProvisioning", () => {
+        it("mints a fresh token and returns the JSON provisioning payload carrying it", async () => {
+            const result = (await service.displayProvisioning({
+                ttlSeconds: 120,
+                body: {},
+            })) as Record<string, unknown>;
 
-        it("maps WPA2/WPA3 to the Android-accepted WPA security type and includes the password", () => {
-            const payload = service.buildProvisioningPayload({
-                ...base,
-                wifiSsid: "Office",
-                wifiSecurityType: "WPA3",
-                wifiPassword: "secret",
-            });
-
-            expect(payload["android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"]).toBe("WPA");
-            expect(payload["android.app.extra.PROVISIONING_WIFI_PASSWORD"]).toBe("secret");
-        });
-
-        it("omits the Wi-Fi password when the security type is NONE", () => {
-            const payload = service.buildProvisioningPayload({
-                ...base,
-                wifiSsid: "Guest",
-                wifiSecurityType: "NONE",
-                wifiPassword: "unused",
-            });
-
-            expect(payload["android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"]).toBe("NONE");
-            expect(payload).not.toHaveProperty("android.app.extra.PROVISIONING_WIFI_PASSWORD");
-        });
-
-        it("forwards policyId/groupId into the admin extras bundle when provided", () => {
-            const payload = service.buildProvisioningPayload({
-                ...base,
-                policyId: "policy-1",
-                groupId: "group-1",
-            });
-
-            const extras = payload[
+            const extras = result[
                 "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
             ] as Record<string, unknown>;
-            expect(extras.policyId).toBe("policy-1");
-            expect(extras.groupId).toBe("group-1");
+            expect(typeof extras.token).toBe("string");
+            expect((extras.token as string).length).toBeGreaterThan(0);
+            expect(repoMock.create).toHaveBeenCalledTimes(1);
+        });
+
+        it("returns an SVG QR code embedding the same payload when format is svg", async () => {
+            const result = await service.displayProvisioning({
+                format: "svg",
+                ttlSeconds: 120,
+                body: {},
+            });
+
+            expect(typeof result).toBe("string");
+            expect(result as string).toContain("<svg");
+        });
+
+        it("rejects an invalid provisioning body with the underlying ZodError", async () => {
+            await expect(
+                service.displayProvisioning({
+                    ttlSeconds: 120,
+                    body: { wifiSecurityType: "NOT-A-TYPE" },
+                }),
+            ).rejects.toBeInstanceOf(ZodError);
         });
     });
 });

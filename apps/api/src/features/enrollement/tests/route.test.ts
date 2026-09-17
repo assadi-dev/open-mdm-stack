@@ -29,11 +29,10 @@ import { app } from "../../../app";
 describe("POST /api/v1/enrollement", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        repoMock.create.mockResolvedValue({ id: "row-id" });
     });
 
     it("POST /token issues a single-use enrollment token without touching a real database", async () => {
-        repoMock.create.mockResolvedValue({ id: "row-id" });
-
         const res = await request(app)
             .post("/api/v1/enrollement/token")
             .send({ ttlSeconds: 120 })
@@ -44,7 +43,7 @@ describe("POST /api/v1/enrollement", () => {
         expect(repoMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it("POST /provisioning?format=svg returns an SVG QR code of the provisioning payload", async () => {
+    it("POST /provisioning?format=svg returns an SVG QR code embedding a freshly generated token", async () => {
         const res = await request(app)
             .post("/api/v1/enrollement/provisioning?format=svg")
             .send({})
@@ -56,13 +55,38 @@ describe("POST /api/v1/enrollement", () => {
         expect(Buffer.from(res.body).toString("utf8")).toContain("<svg");
     });
 
-    it("POST /provisioning returns the raw Device Owner provisioning payload as JSON", async () => {
+    it("POST /provisioning returns the raw Device Owner provisioning payload, carrying a freshly generated token", async () => {
         const res = await request(app)
             .post("/api/v1/enrollement/provisioning")
             .send({ policyId: "policy-1" })
             .expect(200);
 
         const extras = res.body["android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"];
+        expect(typeof extras.token).toBe("string");
+        expect(extras.token.length).toBeGreaterThan(0);
         expect(extras.policyId).toBe("policy-1");
+    });
+
+    // Regression test for the crash reported in prod logs: POST /provisioning
+    // with no ?ttlSeconds= used to throw "RangeError: Invalid time value" —
+    // Number(undefined) is NaN, which `??` doesn't catch, so an Invalid Date
+    // reached the DB insert. Fixed by resolving the fallback before coercing.
+    it("POST /provisioning without a ttlSeconds query param falls back to the configured TTL instead of crashing", async () => {
+        await request(app)
+            .post("/api/v1/enrollement/provisioning")
+            .send({})
+            .expect(200);
+
+        expect(repoMock.create).toHaveBeenCalledTimes(1);
+        const [insertedRow] = repoMock.create.mock.calls[0];
+        expect(insertedRow.expiresAt).toBeInstanceOf(Date);
+        expect(Number.isNaN(insertedRow.expiresAt.getTime())).toBe(false);
+    });
+
+    it("POST /provisioning rejects an invalid body with a 400 instead of a raw 500", async () => {
+        await request(app)
+            .post("/api/v1/enrollement/provisioning")
+            .send({ wifiSecurityType: "NOT-A-TYPE" })
+            .expect(400);
     });
 });
