@@ -1,10 +1,10 @@
 import { ENV } from "@config/env";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
-import { CreateTokenInput, CreateEnrollmentTokenInput } from "@features/device/dto/schema";
 import { generateQrSVG } from "@features/qrcode/service";
 import { EnrollmentTokenRepository } from "./repositories";
 import { buildProvisioningPayload, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
 import { enrollementValidator } from "./dto/validation";
+import { CreateEnrollmentTokenInput, CreateTokenInput } from "./dto/schema";
 
 
 
