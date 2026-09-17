@@ -13,6 +13,7 @@ const env_schema = z.object({
   DATABASE_URL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.string().min(1),
+  MDM_AUDIENCE: z.string().min(1).default("openmdm-aud"),
 
   // Android Device Owner provisioning (embedded in the enrollment QR).
   MDM_PACKAGE_NAME: z

@@ -58,8 +58,8 @@ export class DeviceService {
     private async signDeviceJWT(deviceId: string) {
         const payload: JWTPayload & Required<Pick<JWTPayload, "sub" | "aud">> = {
             sub: deviceId,
-            aud: ENV.BETTER_AUTH_URL,
-            iss: ENV.BETTER_AUTH_URL,
+            aud: ENV.MDM_AUDIENCE,
+            iss: ENV.MDM_AUDIENCE,
             type: "device",
             exp: Math.floor(Date.now() / 1000) + 365 * ONE_DAY_SECONDS,
             iat: Math.floor(Date.now() / 1000),
