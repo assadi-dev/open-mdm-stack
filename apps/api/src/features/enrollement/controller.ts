@@ -17,29 +17,16 @@ export class EnrollementController {
 
 
     displayEnrollmentProvisioning = async (req: Request, res: Response) => {
+        const format = req.query?.format as any;
+        const ttlSeconds = Number(req.query?.ttlSeconds ?? ENV.ENROLLMENT_TOKEN_TTL_SECONDS);
+        const body = req.body as any
 
-        const format = req.query?.format;
-        const ttlSeconds = Number(req.query?.ttlSeconds) ?? Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS);
-
-        const token = await this.enrollementService.generateToken({ ttlSeconds });
-        const input = enrollementValidator.displayEnrollmentProvisioning({
-            ...req.body,
-            token
-        })
-        if (!input.success) {
-            throw input.error
-        }
-
+        const result = await this.enrollementService.displayProvisioning({ format, ttlSeconds, body });
         if (format === "svg") {
-            const svg = await this.enrollementService.generatePayloadProvisioningToSVG(input.data);
             res.appendHeader("Content-Type", "image/svg+xml");
-            return res.send(svg);
-
+            return res.send(result)
         }
-
-        const json = await this.enrollementService.generateProvisioningPayload(input.data);
-        return res.json(json);
-
+        res.json(result)
     };
 
 

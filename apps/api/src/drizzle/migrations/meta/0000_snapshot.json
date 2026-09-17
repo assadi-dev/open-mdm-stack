@@ -1,5 +1,5 @@
 {
-  "id": "67ae5baf-101f-4fb7-9ff5-f59974479e0a",
+  "id": "74613d0f-7ff1-40ee-bb26-a83609eb77a3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -427,7 +427,7 @@
         },
         "enrollment_id": {
           "name": "enrollment_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -507,20 +507,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "agent_version": {
-          "name": "agent_version",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "agent_version_code": {
           "name": "agent_version_code",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "agent_package_name": {
-          "name": "agent_package_name",
+        "agent_version_name": {
+          "name": "agent_version_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agent_package": {
+          "name": "agent_package",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -557,7 +557,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "devices_enrollment_id_enrollment_tokens_id_fk": {
+          "name": "devices_enrollment_id_enrollment_tokens_id_fk",
+          "tableFrom": "devices",
+          "tableTo": "enrollment_tokens",
+          "columnsFrom": [
+            "enrollment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "devices_enrollment_id_unique": {

@@ -8,6 +8,8 @@ import { db } from "@drizzle/instance";
 import { enrollmentTokens } from "@drizzle/schemas/device-schema";
 import { InsertEnrollmentTokenDto } from "./dto/schema";
 import { buildProvisioningPayload, generateRandomToken } from "./utils/generators";
+import { Request, Response } from "express";
+import { enrollementValidator } from "./dto/validation";
 
 
 
@@ -67,5 +69,23 @@ export class EnrollementService {
         return svg
     }
 
+    async displayProvisioning({ format, ttlSeconds, body }: { format?: string, ttlSeconds?: number, body: any }) {
+
+        const { token } = await this.generateToken({ ttlSeconds });
+
+        const payload = enrollementValidator.displayEnrollmentProvisioning({
+            ...body,
+            token
+        })
+        if (!payload.success) {
+            throw payload.error
+        }
+
+        if (format === "svg") {
+            return await this.generatePayloadProvisioningToSVG(payload.data);
+        }
+        return await this.generateProvisioningPayload(payload.data);
+
+    }
 
 }
