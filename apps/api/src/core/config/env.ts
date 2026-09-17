@@ -38,6 +38,8 @@ const env_schema = z.object({
   // Enrollment token lifetime in minutes.
   ENROLLMENT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(1).default(900),
   ENROLLMENT_OTP_TTL_SECONDS: z.coerce.number().int().min(1).default(300),
+  ENROLLMENT_MAX_OTP_ATTEMPTS: z.coerce.number().int().min(1).default(5),
+
 });
 
 const result = env_schema.safeParse(process.env);

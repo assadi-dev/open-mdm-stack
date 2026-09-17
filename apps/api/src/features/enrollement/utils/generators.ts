@@ -1,7 +1,14 @@
 import { randomBytes } from "crypto";
 import { CreateEnrollmentTokenInput, CreateTokenInput } from "../dto/schema";
 import { ENV } from "@config/env";
-import { generateSecret, generate, verify, generateURI } from "otplib";
+import { OTP } from "otplib";
+
+const OTP_CONFIG = { strategy: "totp", digits: 6, secret: ENV.MDM_OTP_SECRET } as {
+    strategy: "hotp" | "totp";
+    digits: number;
+    secret: string;
+};
+
 
 
 
@@ -79,11 +86,12 @@ export const buildProvisioningPayload = (input: CreateEnrollmentTokenInput) => {
 
 
 
-export const OTPGenerator = async (ttl: number = 600) => {
+export const OTPGenerator = async (ttl: number = 300) => {
+    const otp = new OTP({ strategy: OTP_CONFIG.strategy, });
     // Generate a secret
-    const secret = ENV.MDM_OTP_SECRET;
+    const secret = OTP_CONFIG.secret;
     // Generate a TOTP token
-    const token = await generate({ secret });
+    const token = await otp.generate({ secret, period: ttl, digits: OTP_CONFIG.digits });
     const expiresAt = new Date(Date.now() + ttl * 1000);
 
 
@@ -96,7 +104,11 @@ export const OTPGenerator = async (ttl: number = 600) => {
 }
 
 
-export const OTPVerifier = async (otp: string) => {
-    const secret = ENV.MDM_OTP_SECRET;
-    return verify({ token: otp, secret });
+export const OTPVerifier = async (token: string, ttl: number = 300) => {
+    const otp = new OTP({ strategy: OTP_CONFIG.strategy, });
+
+    const secret = OTP_CONFIG.secret;
+    const result = await otp.verify({ token, secret, digits: OTP_CONFIG.digits, period: ttl });
+    return result
+
 }

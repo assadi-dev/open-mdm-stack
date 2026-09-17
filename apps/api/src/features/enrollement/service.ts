@@ -2,13 +2,8 @@ import { ENV } from "@config/env";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 import { CreateTokenInput, CreateEnrollmentTokenInput } from "@features/device/dto/schema";
 import { generateQrSVG } from "@features/qrcode/service";
-import { randomBytes } from "crypto";
 import { EnrollmentTokenRepository } from "./repositories";
-import { db } from "@drizzle/instance";
-import { enrollmentTokens } from "@drizzle/schemas/device-schema";
-import { InsertEnrollmentTokenDto } from "./dto/schema";
 import { buildProvisioningPayload, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
-import { Request, Response } from "express";
 import { enrollementValidator } from "./dto/validation";
 
 
@@ -50,10 +45,13 @@ export class EnrollementService {
     }
 
     verifyOTP = async ({ otp, ttlSeconds }: { otp: string, ttlSeconds?: number }) => {
-        const isValid = await OTPVerifier(otp);
-        if (!isValid) {
+        const { valid } = await OTPVerifier(otp);
+        if (!valid) {
             throw new HTTPBadRequestException("Invalid OTP");
         }
+
+        // TODO: add consumed logic to db for otp and check otp
+
         return this.generateToken({ ttlSeconds })
     }
 
