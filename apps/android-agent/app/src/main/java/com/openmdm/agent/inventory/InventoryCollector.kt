@@ -1,5 +1,6 @@
 package com.openmdm.agent.inventory
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -106,18 +107,44 @@ class InventoryCollector(private val context: Context) {
         return StorageDto(totalBytes = total, freeBytes = free)
     }
 
-    private fun readInstalledApps(): List<InstalledAppDto> = try {
-        context.packageManager
-            .getInstalledPackages(0)
-            .map { pkg ->
-                val isSystem = (pkg.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0
+    @SuppressLint("QueryPermissionsNeeded")
+    private fun readInstalledApps(): List<InstalledAppDto> {
+        return try {
+            val packageManager = context.packageManager
+            val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getInstalledPackages(0)
+            }
+
+            packages.map { packageInfo ->
+                val isSystem = (packageInfo.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0
                 InstalledAppDto(
-                    packageName = pkg.packageName,
-                    versionName = pkg.versionName ?: "",
-                    system = isSystem,
+                    packageName = packageInfo.packageName,
+                    // versionName is a free-form string with no platform length
+                    // limit, but the server stores it in a varchar(50)
+                    // (mdm_device_apps.version in @openmdm/drizzle-adapter) and
+                    // rejects the WHOLE heartbeat when any single app exceeds
+                    // it — Google's TTS app ships a 53-char versionName in the
+                    // wild. Truncate defensively until the server widens the
+                    // column.
+                    versionName = (packageInfo.versionName ?: "unknown").take(MAX_APP_VERSION_LENGTH),
+                    versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        packageInfo.longVersionCode
+                    } else {
+                        @Suppress("DEPRECATION")
+                        packageInfo.versionCode.toLong()
+                    },
+                    system = isSystem
                 )
             }
-    } catch (_: Exception) {
-        emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    companion object {
+        private const val MAX_APP_VERSION_LENGTH = 50
     }
 }

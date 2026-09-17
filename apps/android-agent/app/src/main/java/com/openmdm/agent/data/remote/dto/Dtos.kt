@@ -93,6 +93,7 @@ data class StorageDto(
 data class InstalledAppDto(
     val packageName: String,
     val versionName: String,
+    val versionCode:Long,
     val system: Boolean,
 )
 
