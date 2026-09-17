@@ -27,6 +27,7 @@ android {
         // When true, the network layer is backed by a local stub instead of the
         // (not-yet-implemented) real backend. See di/NetworkModule.
         buildConfigField("boolean", "USE_MOCK", "false")
+         buildConfigField("String", "ENVIRONMENT", "dev")
     }
 
     // Stable signing identity shared across the team so the QR-provisioning
