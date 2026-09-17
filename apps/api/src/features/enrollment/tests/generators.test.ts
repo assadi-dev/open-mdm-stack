@@ -33,20 +33,19 @@ describe("generateRandomChallenge", () => {
 
 describe("buildProvisioningPayload", () => {
     const base: CreateProvisioningPayloadInput = {
-        challenge: "the-enrollment-challenge",
         wifiSecurityType: "WPA2",
         wifiHidden: false,
         systemApps: true,
         skipEncryption: false,
     };
 
-    it("embeds the challenge in the admin extras bundle", () => {
+    it("embeds the server base URL in the admin extras bundle", () => {
         const payload = buildProvisioningPayload(base);
 
         const extras = payload[
             "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
         ] as Record<string, unknown>;
-        expect(extras.challenge).toBe("the-enrollment-challenge");
+        expect(typeof extras.serverBaseUrl).toBe("string");
     });
 
     it("maps WPA2/WPA3 to the Android-accepted WPA security type and includes the password", () => {

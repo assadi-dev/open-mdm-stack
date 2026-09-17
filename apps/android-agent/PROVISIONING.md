@@ -139,13 +139,14 @@ this JSON. Host `app-debug.apk` at an HTTPS URL reachable by the device.
   keytool -exportcert -keystore keystore/mdm-dev.jks -alias mdmdev -storepass mdmdevpass \
     | openssl dgst -sha256 -binary | openssl base64 | tr '+/' '-_' | tr -d '='
   ```
-- The server may still embed a `challenge` in this payload (see
-  `buildProvisioningPayload`), but `MdmDeviceAdminReceiver` deliberately
-  ignores it: its TTL (120s by default) can easily be outlived by Device Owner
-  provisioning (wipe + DPC install + boot). On success,
-  `onProfileProvisioningComplete` reads only `serverBaseUrl` from the extras
-  and enqueues `EnrollWorker`, which fetches a fresh challenge itself right
-  before enrolling — exactly like the manual UI path below.
+- The server deliberately does **not** embed a challenge in this payload (see
+  `buildProvisioningPayload`): its TTL (120s by default) would easily be
+  outlived by Device Owner provisioning (wipe + DPC install + boot), so a
+  pre-baked one would likely already be expired or consumed by the time the
+  agent starts. On success, `onProfileProvisioningComplete` reads only
+  `serverBaseUrl` from the extras and enqueues `EnrollWorker`, which fetches a
+  fresh challenge itself right before enrolling — exactly like the manual UI
+  path below.
 
 ## Provisioning B — ADB (dev, no factory reset of QR flow)
 

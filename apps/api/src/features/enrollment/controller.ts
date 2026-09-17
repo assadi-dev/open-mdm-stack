@@ -18,10 +18,9 @@ export class EnrollmentController {
 
     displayEnrollmentProvisioning = async (req: Request, res: Response) => {
         const format = req.query?.format as any;
-        const ttlSeconds = Number(req.query?.ttlSeconds ?? ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS);
         const body = req.body as any
 
-        const result = await this.enrollmentService.displayProvisioning({ format, ttlSeconds, body });
+        const result = await this.enrollmentService.displayProvisioning({ format, body });
         if (format === "svg") {
             res.appendHeader("Content-Type", "image/svg+xml");
             return res.send(result)

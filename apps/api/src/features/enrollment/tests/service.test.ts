@@ -108,24 +108,25 @@ describe("EnrollmentService", () => {
     });
 
     describe("displayProvisioning", () => {
-        it("mints a fresh challenge and returns the JSON provisioning payload carrying it", async () => {
+        // The provisioning QR is only scanned during Device Owner setup, which can
+        // easily outlast a short-lived challenge — the agent fetches its own fresh
+        // challenge live instead (see MdmDeviceAdminReceiver), so no challenge is
+        // minted/embedded here (and no throwaway DB row is created per QR generated).
+        it("returns the JSON provisioning payload without minting a challenge", async () => {
             const result = (await service.displayProvisioning({
-                ttlSeconds: 120,
                 body: {},
             })) as Record<string, unknown>;
 
             const extras = result[
                 "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
             ] as Record<string, unknown>;
-            expect(typeof extras.challenge).toBe("string");
-            expect((extras.challenge as string).length).toBeGreaterThan(0);
-            expect(challengeRepoMock.create).toHaveBeenCalledTimes(1);
+            expect(extras).not.toHaveProperty("challenge");
+            expect(challengeRepoMock.create).not.toHaveBeenCalled();
         });
 
         it("returns an SVG QR code embedding the same payload when format is svg", async () => {
             const result = await service.displayProvisioning({
                 format: "svg",
-                ttlSeconds: 120,
                 body: {},
             });
 
@@ -136,7 +137,6 @@ describe("EnrollmentService", () => {
         it("rejects an invalid provisioning body with the underlying ZodError", async () => {
             await expect(
                 service.displayProvisioning({
-                    ttlSeconds: 120,
                     body: { wifiSecurityType: "NOT-A-TYPE" },
                 }),
             ).rejects.toBeInstanceOf(ZodError);

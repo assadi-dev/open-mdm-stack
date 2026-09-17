@@ -3,7 +3,6 @@ import z from "zod";
 
 
 export const createProvisioningPayloadSchema = z.object({
-    challenge: z.string().min(1, "challenge is required"),
     apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),

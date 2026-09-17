@@ -52,7 +52,6 @@ export const buildProvisioningPayload = (input: CreateProvisioningPayloadInput) 
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": ENV.MDM_DPC_COMPONENT,
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": input.checksum ?? ENV.MDM_DPC_SIGNATURE_CHECKSUM,
         "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-            challenge: input.challenge,
             serverBaseUrl: ENV.MDM_PUBLIC_BASE_URL,
             ...(input.policyId ? { policyId: input.policyId } : {}),
             ...(input.groupId ? { groupId: input.groupId } : {}),

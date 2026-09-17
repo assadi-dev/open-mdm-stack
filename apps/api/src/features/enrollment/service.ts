@@ -76,14 +76,9 @@ export class EnrollmentService {
         return svg
     }
 
-    async displayProvisioning({ format, ttlSeconds, body }: { format?: string, ttlSeconds?: number, body: any }) {
+    async displayProvisioning({ format, body }: { format?: string, body: any }) {
 
-        const { challenge } = await this.generateChallenge(ttlSeconds);
-
-        const payload = enrollmentValidator.displayEnrollmentProvisioning({
-            ...body,
-            challenge
-        })
+        const payload = enrollmentValidator.displayEnrollmentProvisioning(body)
         if (!payload.success) {
             throw payload.error
         }
