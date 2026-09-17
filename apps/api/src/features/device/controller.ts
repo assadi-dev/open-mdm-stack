@@ -4,7 +4,6 @@ import { API_BASE_URL } from "@config/cors";
 import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
-    validateCreateEnrollmentTokenInput,
     validateEnrollDeviceInput,
     validateInventoryInput,
 } from "./validator";

@@ -14,7 +14,9 @@ const deviceInfoSchema = z.object({
     ipAddress: z.string().optional(),
     enrollmentStatus: z.enum(enrollementStatus).optional(),
     enrollementMethod: z.enum(enrollementMethod).optional(),
-    publicKey: z.string().optional(),
+    // SPKI/DER-encoded public key, base64 — required so the server can verify
+    // the proof-of-possession signature (see enrollDeviceSchema.signature).
+    publicKey: z.string().min(1, "publicKey is required"),
     agentVersionName: z.string().optional(),
     agentVersionCode: z.number().optional(),
     agentPackage: z.string().optional(),
@@ -29,6 +31,10 @@ const deviceInfoSchema = z.object({
 
 export const enrollDeviceSchema = z.object({
     enrollmentToken: z.string().min(1),
+    // Proof of possession: signature over `enrollmentToken`, produced by the
+    // private key matching `device.publicKey`. Verified before the token is
+    // consumed (see DeviceService.create).
+    signature: z.string().min(1, "signature is required"),
     device: deviceInfoSchema,
 });
 

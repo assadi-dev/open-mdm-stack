@@ -56,7 +56,8 @@ export class EnrollementService {
     }
 
 
-    consumeToken = async (token: string) => {
+    /** Looks up a token and checks it's usable, without consuming it. */
+    assertTokenValid = async (token: string) => {
         const existing = await this.enrollmenentRepo.byToken(token);
         if (!existing) {
             throw new HTTPNotFoundException("Token not found");
@@ -67,6 +68,11 @@ export class EnrollementService {
         if (existing.expiresAt < new Date()) {
             throw new HTTPBadRequestException("Token expired");
         }
+        return existing;
+    }
+
+    consumeToken = async (token: string) => {
+        await this.assertTokenValid(token);
         const row = await this.enrollmenentRepo.markConsumed(token);
         return row
     }

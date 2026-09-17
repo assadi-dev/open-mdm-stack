@@ -1,3 +1,4 @@
+import { generateKeyPairSync, sign as cryptoSign } from "crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 
@@ -46,11 +47,25 @@ vi.mock("@lib/auth", () => ({
 
 import { DeviceService } from "../service";
 
+// Real EC key pair — exercises the actual verifyDeviceSignature path (Node's
+// crypto module) rather than mocking it away.
+function makeMockKeyPair() {
+    const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+    return {
+        publicKeyBase64: publicKey.export({ type: "spki", format: "der" }).toString("base64"),
+        sign: (data: string) => cryptoSign("sha256", Buffer.from(data), privateKey).toString("base64"),
+    };
+}
+
+const keyPair = makeMockKeyPair();
+const otherKeyPair = makeMockKeyPair();
+
 const deviceInfo = {
     model: "Pixel 8",
     manufacturer: "Google",
     osVersion: "Android 14",
     serial: "abc123",
+    publicKey: keyPair.publicKeyBase64,
 };
 
 describe("DeviceService", () => {
@@ -63,7 +78,7 @@ describe("DeviceService", () => {
     });
 
     describe("create", () => {
-        it("consumes the enrollment token, creates the device, and issues a device JWT", async () => {
+        it("verifies the proof-of-possession signature, consumes the token, creates the device, and issues a device JWT", async () => {
             tokenRepoMock.byToken.mockResolvedValue({
                 id: "token-uuid",
                 consumedAt: null,
@@ -74,6 +89,7 @@ describe("DeviceService", () => {
 
             const result = await service.create({
                 enrollmentToken: "the-token",
+                signature: keyPair.sign("the-token"),
                 device: deviceInfo,
             });
 
@@ -86,6 +102,7 @@ describe("DeviceService", () => {
                     model: deviceInfo.model,
                     manufacturer: deviceInfo.manufacturer,
                     osVersion: deviceInfo.osVersion,
+                    publicKey: deviceInfo.publicKey,
                 }),
             );
             expect(result).toEqual({ deviceId: "device-uuid", deviceToken: "signed-device-jwt" });
@@ -95,7 +112,11 @@ describe("DeviceService", () => {
             tokenRepoMock.byToken.mockResolvedValue(undefined);
 
             await expect(
-                service.create({ enrollmentToken: "missing", device: deviceInfo }),
+                service.create({
+                    enrollmentToken: "missing",
+                    signature: keyPair.sign("missing"),
+                    device: deviceInfo,
+                }),
             ).rejects.toBeInstanceOf(HTTPNotFoundException);
             expect(repoMock.createDevice).not.toHaveBeenCalled();
         });
@@ -108,8 +129,31 @@ describe("DeviceService", () => {
             });
 
             await expect(
-                service.create({ enrollmentToken: "used", device: deviceInfo }),
+                service.create({
+                    enrollmentToken: "used",
+                    signature: keyPair.sign("used"),
+                    device: deviceInfo,
+                }),
             ).rejects.toBeInstanceOf(HTTPBadRequestException);
+            expect(repoMock.createDevice).not.toHaveBeenCalled();
+        });
+
+        it("rejects an invalid signature without consuming the token (so it can be retried)", async () => {
+            tokenRepoMock.byToken.mockResolvedValue({
+                id: "token-uuid",
+                consumedAt: null,
+                expiresAt: new Date(Date.now() + 60_000),
+            });
+
+            await expect(
+                service.create({
+                    enrollmentToken: "the-token",
+                    // Signed by a *different* key pair than the one declared in `device.publicKey`.
+                    signature: otherKeyPair.sign("the-token"),
+                    device: deviceInfo,
+                }),
+            ).rejects.toBeInstanceOf(HTTPBadRequestException);
+            expect(tokenRepoMock.markConsumed).not.toHaveBeenCalled();
             expect(repoMock.createDevice).not.toHaveBeenCalled();
         });
 
@@ -123,7 +167,11 @@ describe("DeviceService", () => {
             repoMock.createDevice.mockRejectedValue({ code: "23505" });
 
             await expect(
-                service.create({ enrollmentToken: "the-token", device: deviceInfo }),
+                service.create({
+                    enrollmentToken: "the-token",
+                    signature: keyPair.sign("the-token"),
+                    device: deviceInfo,
+                }),
             ).rejects.toBeInstanceOf(HTTPBadRequestException);
         });
     });

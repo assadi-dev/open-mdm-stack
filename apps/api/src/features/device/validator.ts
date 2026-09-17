@@ -1,18 +1,12 @@
 import {
-    CreateEnrollmentTokenInput,
+
     deviceDecoder,
     EnrollDeviceInput,
     HeartbeatInput,
     InventoryInput,
 } from "./dto/schema";
 
-export const validateCreateEnrollmentTokenInput = (body: unknown): CreateEnrollmentTokenInput => {
-    const result = deviceDecoder.createToken(body);
-    if (!result.success) {
-        throw result.error;
-    }
-    return result.data;
-};
+
 
 export const validateEnrollDeviceInput = (body: unknown): EnrollDeviceInput => {
     const result = deviceDecoder.enroll(body);

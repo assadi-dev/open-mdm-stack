@@ -1,16 +1,19 @@
 /**
  * Simulates a fictional Android device going through the enrollment
- * provisioning flow against a running dev server: obtain a token, enroll,
- * then send one heartbeat with the issued device JWT.
+ * provisioning flow against a running dev server: obtain a token, sign it
+ * with a mock Keystore key pair (proof of possession), enroll, then send one
+ * heartbeat with the issued device JWT.
  *
  * Usage:
  *   npx tsx scripts/mock-device-enroll.ts
  *   MOCK_BASE_URL=http://localhost:5573 npx tsx scripts/mock-device-enroll.ts
  */
 
-import { generateMockDevicePublicKey } from "../src/features/enrollement/utils/mock-device-keys";
+import { generateMockDeviceKeyPair } from "../src/features/enrollement/utils/mock-device-keys";
 
 const BASE_URL = process.env.MOCK_BASE_URL ?? "http://localhost:5573";
+
+const mockKeyPair = generateMockDeviceKeyPair();
 
 const FICTIONAL_DEVICE = {
     model: "Pixel 8 (mock)",
@@ -18,7 +21,7 @@ const FICTIONAL_DEVICE = {
     osVersion: "Android 14 (API 34)",
     serial: `MOCK-${Date.now()}`,
     enrollementMethod: "manual" as const,
-    publicKey: generateMockDevicePublicKey(),
+    publicKey: mockKeyPair.publicKey,
 };
 
 async function callJson(method: string, path: string, options: { body?: unknown; token?: string } = {}) {
@@ -54,14 +57,18 @@ async function main() {
     const { token } = await callJson("POST", "/api/v1/enrollement/token-generate", { body: {} });
     console.log("   -> enrollmentToken:", token);
 
-    console.log("\n2) POST /api/v1/devices/enroll");
+    console.log("\n2) Sign the enrollment token with the mock Keystore key (proof of possession)");
+    const signature = mockKeyPair.sign(token);
+    console.log("   -> signature:", `${signature.slice(0, 24)}...`);
+
+    console.log("\n3) POST /api/v1/devices/enroll");
     const { deviceId, deviceToken } = await callJson("POST", "/api/v1/devices/enroll", {
-        body: { enrollmentToken: token, device: FICTIONAL_DEVICE },
+        body: { enrollmentToken: token, signature, device: FICTIONAL_DEVICE },
     });
     console.log("   -> deviceId:", deviceId);
     console.log("   -> deviceToken:", `${(deviceToken as string).slice(0, 24)}...`);
 
-    console.log(`\n3) POST /api/v1/devices/${deviceId}/heartbeat`);
+    console.log(`\n4) POST /api/v1/devices/${deviceId}/heartbeat`);
     const heartbeatResult = await callJson("POST", `/api/v1/devices/${deviceId}/heartbeat`, {
         token: deviceToken,
         body: { battery: 87, storageFreeBytes: 12_345_678, online: true, ts: Date.now() },

@@ -13,6 +13,7 @@ import { DeviceRepository } from "./repository";
 import { EnrollDeviceInput, InventoryInput } from "./dto/schema";
 import { EnrollmentTokenRepository } from "@features/enrollement/repositories";
 import { EnrollementService } from "@features/enrollement/service";
+import { verifyDeviceSignature } from "./utils/keys";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
@@ -57,12 +58,28 @@ export class DeviceService {
      */
     async create(input: EnrollDeviceInput) {
         const device = await db.transaction(async (tx) => {
-            const enrollementService = new EnrollementService(new EnrollmentTokenRepository(tx));
-            const consumedToken = await enrollementService.consumeToken(input.enrollmentToken);
+            const tokenRepo = new EnrollmentTokenRepository(tx);
+            const enrollementService = new EnrollementService(tokenRepo);
+
+            // Look up the token without consuming it yet: an invalid signature
+            // is the caller's fault, so a still-valid token shouldn't be burned
+            // on a failed proof-of-possession attempt.
+            const tokenRow = await enrollementService.assertTokenValid(input.enrollmentToken);
+
+            const signatureValid = verifyDeviceSignature({
+                publicKeyBase64: input.device.publicKey,
+                signatureBase64: input.signature,
+                data: input.enrollmentToken,
+            });
+            if (!signatureValid) {
+                throw new HTTPBadRequestException("Invalid enrollment signature");
+            }
+
+            await tokenRepo.markConsumed(input.enrollmentToken);
 
             try {
                 return await new DeviceRepository(tx).createDevice({
-                    enrollmentId: consumedToken.id,
+                    enrollmentId: tokenRow.id,
                     serial: input.device.serial,
                     model: input.device.model,
                     manufacturer: input.device.manufacturer,
