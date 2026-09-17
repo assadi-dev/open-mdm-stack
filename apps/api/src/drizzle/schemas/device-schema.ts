@@ -34,7 +34,7 @@ export type EnrollmentTokenSqlInferInsert = typeof enrollmentTokens.$inferInsert
  */
 export const devices = pgTable("devices", {
     id: uuid("id").primaryKey().defaultRandom(),
-    enrollmentId: text("enrollment_id").unique().notNull(),
+    enrollmentId: uuid("enrollment_id").references(() => enrollmentTokens.id, { onDelete: "restrict" }).unique().notNull(),
     serial: text("serial"),
     androidId: text("android_id").unique(),
     model: text("model"),
@@ -49,9 +49,8 @@ export const devices = pgTable("devices", {
     lastHeartbeatAt: timestamp("last_heartbeat_at"),
     //policyId: uuid("policy_id"),
     //groupId: uuid("group_id"),
-    agentVersion: text("agent_version"),
-    agentVersionCode: integer("agent_version_code"),
-    agentPackageName: text("agent_package_name"),
+    agentVersion: integer("agent_version"),
+    agentPackage: text("agent_package"),
 
     ...updatedAndCreatedAt,
 },
