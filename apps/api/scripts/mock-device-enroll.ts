@@ -12,15 +12,17 @@
  */
 
 import { generateCanonicalMessage } from "../src/features/enrollment/utils/canonical-message";
-import { generateMockDeviceKeyPair } from "../src/features/enrollment/utils/mock-device-keys";
+import { generateMockAndroidId, generateMockDeviceKeyPair } from "../src/features/enrollment/utils/mock-device-keys";
 
 const BASE_URL = process.env.MOCK_BASE_URL ?? "http://localhost:5573";
 
 const mockKeyPair = generateMockDeviceKeyPair();
 
 const FICTIONAL_DEVICE = {
+    androidId: `${generateMockAndroidId()}`,
     model: "Pixel 8 (mock)",
     manufacturer: "Google",
+    brand: "google",
     osVersion: "Android 14 (API 34)",
     serial: `MOCK-${Date.now()}`,
     enrollmentMethod: "manual" as const,
@@ -69,7 +71,7 @@ async function main() {
         serialNumber: FICTIONAL_DEVICE.serial,
         imei: "",
         macAddress: "",
-        androidId: "",
+        androidId: FICTIONAL_DEVICE.androidId,
         method: FICTIONAL_DEVICE.enrollmentMethod,
         timestamp,
         publicKey: mockKeyPair.publicKey,

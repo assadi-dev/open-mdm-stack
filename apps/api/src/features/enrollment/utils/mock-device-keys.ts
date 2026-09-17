@@ -1,5 +1,8 @@
 import { generateKeyPairSync, sign } from "crypto";
 
+
+const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 /**
  * Mock-only: simulates the EC key pair an Android agent generates in its
  * Keystore at enrollment (secp256r1, matching AndroidKeyStore's default EC
@@ -19,3 +22,11 @@ export const generateMockDeviceKeyPair = () => {
         sign: (data: string) => sign("sha256", Buffer.from(data), privateKey).toString("base64"),
     };
 };
+
+
+export const generateMockAndroidId = () => {
+
+    const randomValues = (count: number) => Array.from(crypto.getRandomValues(new Uint32Array(count))).map(x => caracteres[x % caracteres.length]).join("");
+
+    return randomValues(12).toLowerCase().trim();
+}

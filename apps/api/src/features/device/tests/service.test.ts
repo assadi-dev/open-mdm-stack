@@ -64,6 +64,7 @@ const deviceInfo = {
     manufacturer: "Google",
     osVersion: "Android 14",
     serial: "abc123",
+    brand: "google",
     publicKey: keyPair.publicKeyBase64,
 };
 
@@ -124,6 +125,7 @@ describe("DeviceService", () => {
                     model: deviceInfo.model,
                     manufacturer: deviceInfo.manufacturer,
                     osVersion: deviceInfo.osVersion,
+                    brand: deviceInfo.brand,
                     publicKey: deviceInfo.publicKey,
                 }),
             );

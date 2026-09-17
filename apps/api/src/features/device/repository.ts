@@ -17,6 +17,7 @@ export class DeviceRepository {
         status: typeof enrollmentStatus[number];
         enrollmentMethod: typeof enrollmentMethod[number];
         androidId?: string;
+        brand?: string;
         publicKey?: string;
         agentVersionName?: string;
         agentVersionCode?: number;
@@ -33,6 +34,7 @@ export class DeviceRepository {
                 enrollmentStatus: input.status,
                 enrollmentMethod: input.enrollmentMethod,
                 androidId: input.androidId,
+                brand: input.brand,
                 publicKey: input.publicKey,
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
@@ -64,6 +66,7 @@ export class DeviceRepository {
         manufacturer: string;
         osVersion: string;
         enrollmentMethod: typeof enrollmentMethod[number];
+        brand?: string;
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
@@ -78,6 +81,7 @@ export class DeviceRepository {
                 osVersion: input.osVersion,
                 enrollmentStatus: "enrolled",
                 enrollmentMethod: input.enrollmentMethod,
+                brand: input.brand,
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,

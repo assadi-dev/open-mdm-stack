@@ -5,6 +5,7 @@ import z from "zod";
 
 const deviceInfoSchema = z.object({
     androidId: z.string().optional(),
+    brand: z.string().optional(),
     model: z.string(),
     manufacturer: z.string(),
     osVersion: z.string(),
