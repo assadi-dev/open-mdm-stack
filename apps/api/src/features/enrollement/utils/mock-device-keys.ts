@@ -1,4 +1,5 @@
 import { generateKeyPairSync, sign } from "crypto";
+import { CanonicalMessage } from "../entities/generators";
 
 /**
  * Mock-only: simulates the EC key pair an Android agent generates in its
@@ -19,3 +20,12 @@ export const generateMockDeviceKeyPair = () => {
         sign: (data: string) => sign("sha256", Buffer.from(data), privateKey).toString("base64"),
     };
 };
+
+
+
+
+export const generateCanonicalMessage = (request: CanonicalMessage): string => {
+    const message = Object.values(request).join('|');
+    return message
+
+}    
