@@ -1,4 +1,4 @@
-import { enrollementMethod, enrollementStatus } from "@drizzle/schemas/device-schema";
+import { enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
 import z from "zod";
 
 
@@ -12,27 +12,20 @@ const deviceInfoSchema = z.object({
     imei: z.string().optional(),
     macAddress: z.string().optional(),
     ipAddress: z.string().optional(),
-    enrollmentStatus: z.enum(enrollementStatus).optional(),
-    enrollementMethod: z.enum(enrollementMethod).optional(),
+    enrollmentStatus: z.enum(enrollmentStatus).optional(),
+    enrollmentMethod: z.enum(enrollmentMethod).optional(),
     // SPKI/DER-encoded public key, base64 — required so the server can verify
     // the proof-of-possession signature (see enrollDeviceSchema.signature).
     publicKey: z.string().min(1, "publicKey is required"),
     agentVersionName: z.string().optional(),
     agentVersionCode: z.number().optional(),
     agentPackage: z.string().optional(),
-    // Not known by the client at initial enrollment — the server assigns it
-    // from the consumed token's id (see DeviceService.create). Only present
-    // here for other consumers of this shape (inventory/agent updates) once
-    // the device already exists.
-    enrollementId: z.string().optional(),
-
-
 });
 
 export const enrollDeviceSchema = z.object({
-    enrollmentToken: z.string().min(1),
     // Single-use anti-replay nonce fetched from GET /devices/enroll/challenge,
-    // included in the signed canonical message below.
+    // included in the signed canonical message below. The sole enrollment
+    // authorization — there's no separate admin-issued token.
     challenge: z.string().min(1, "challenge is required"),
     // Must match the `timestamp` field used to build the signed canonical
     // message — opaque to the server beyond that (see canonical-message.ts).
@@ -40,7 +33,7 @@ export const enrollDeviceSchema = z.object({
     // Proof of possession: signature over the canonical message (device
     // identity + method + timestamp + publicKey + challenge), produced by
     // the private key matching `device.publicKey`. Verified before the
-    // token/challenge are consumed (see DeviceService.create).
+    // challenge is consumed (see DeviceService.create).
     signature: z.string().min(1, "signature is required"),
     device: deviceInfoSchema,
 });

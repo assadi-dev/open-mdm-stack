@@ -1,17 +1,18 @@
 /**
  * Simulates a fictional Android device going through the pinned-key
- * enrollment flow against a running dev server: obtain a token, fetch an
- * anti-replay challenge, sign the canonical identity message with a mock
- * Keystore key pair (proof of possession), enroll, then send one heartbeat
- * with the issued device JWT.
+ * enrollment flow against a running dev server: fetch an anti-replay
+ * challenge (the sole enrollment authorization — no admin-issued token),
+ * sign the canonical identity message with a mock Keystore key pair (proof
+ * of possession), enroll, then send one heartbeat with the issued device
+ * JWT.
  *
  * Usage:
  *   npx tsx scripts/mock-device-enroll.ts
  *   MOCK_BASE_URL=http://localhost:5573 npx tsx scripts/mock-device-enroll.ts
  */
 
-import { generateCanonicalMessage } from "../src/features/enrollement/utils/canonical-message";
-import { generateMockDeviceKeyPair } from "../src/features/enrollement/utils/mock-device-keys";
+import { generateCanonicalMessage } from "../src/features/enrollment/utils/canonical-message";
+import { generateMockDeviceKeyPair } from "../src/features/enrollment/utils/mock-device-keys";
 
 const BASE_URL = process.env.MOCK_BASE_URL ?? "http://localhost:5573";
 
@@ -22,7 +23,7 @@ const FICTIONAL_DEVICE = {
     manufacturer: "Google",
     osVersion: "Android 14 (API 34)",
     serial: `MOCK-${Date.now()}`,
-    enrollementMethod: "manual" as const,
+    enrollmentMethod: "manual" as const,
     publicKey: mockKeyPair.publicKey,
 };
 
@@ -55,15 +56,11 @@ async function main() {
         publicKey: `${FICTIONAL_DEVICE.publicKey.slice(0, 24)}...`,
     });
 
-    console.log("\n1) POST /api/v1/enrollement/token-generate");
-    const { token } = await callJson("POST", "/api/v1/enrollement/token-generate", { body: {} });
-    console.log("   -> enrollmentToken:", token);
-
-    console.log("\n2) GET /api/v1/devices/enroll/challenge");
-    const { challenge } = await callJson("GET", "/api/v1/devices/enroll/challenge");
+    console.log("\n1) GET /api/v1/enrollment/challenge");
+    const { challenge } = await callJson("GET", "/api/v1/enrollment/challenge");
     console.log("   -> challenge:", `${(challenge as string).slice(0, 24)}...`);
 
-    console.log("\n3) Sign the canonical identity message with the mock Keystore key (proof of possession)");
+    console.log("\n2) Sign the canonical identity message with the mock Keystore key (proof of possession)");
     const timestamp = new Date().toISOString();
     const canonicalMessage = generateCanonicalMessage({
         model: FICTIONAL_DEVICE.model,
@@ -73,7 +70,7 @@ async function main() {
         imei: "",
         macAddress: "",
         androidId: "",
-        method: FICTIONAL_DEVICE.enrollementMethod,
+        method: FICTIONAL_DEVICE.enrollmentMethod,
         timestamp,
         publicKey: mockKeyPair.publicKey,
         challenge,
@@ -81,14 +78,14 @@ async function main() {
     const signature = mockKeyPair.sign(canonicalMessage);
     console.log("   -> signature:", `${signature.slice(0, 24)}...`);
 
-    console.log("\n4) POST /api/v1/devices/enroll");
+    console.log("\n3) POST /api/v1/devices/enroll");
     const { deviceId, deviceToken } = await callJson("POST", "/api/v1/devices/enroll", {
-        body: { enrollmentToken: token, challenge, timestamp, signature, device: FICTIONAL_DEVICE },
+        body: { challenge, timestamp, signature, device: FICTIONAL_DEVICE },
     });
     console.log("   -> deviceId:", deviceId);
     console.log("   -> deviceToken:", `${(deviceToken as string).slice(0, 24)}...`);
 
-    console.log(`\n5) POST /api/v1/devices/${deviceId}/heartbeat`);
+    console.log(`\n4) POST /api/v1/devices/${deviceId}/heartbeat`);
     const heartbeatResult = await callJson("POST", `/api/v1/devices/${deviceId}/heartbeat`, {
         token: deviceToken,
         body: { battery: 87, storageFreeBytes: 12_345_678, online: true, ts: Date.now() },

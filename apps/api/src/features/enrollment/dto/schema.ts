@@ -2,8 +2,8 @@ import { ENV } from "@config/env";
 import z from "zod";
 
 
-export const createEnrollmentTokenSchema = z.object({
-    token: z.string().min(1, "Token is required"),
+export const createProvisioningPayloadSchema = z.object({
+    challenge: z.string().min(1, "challenge is required"),
     apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),
@@ -23,20 +23,10 @@ export const createEnrollmentTokenSchema = z.object({
 
 });
 
-export const createTokenSchema = z.object({
-    ttlSeconds: z.coerce.number().int().default(Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS)),
+export const createChallengeSchema = z.object({
+    ttlSeconds: z.coerce.number().int().default(Number(ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS)),
 })
 
 
-export type CreateEnrollmentTokenInput = z.infer<typeof createEnrollmentTokenSchema>;
-export type CreateTokenInput = z.infer<typeof createTokenSchema>;
-
-
-
-export const insertEnrollmentTokenDtoSchema = z.object({
-    token: z.string(),
-    expiresAt: z.coerce.date(),
-    consumedAt: z.coerce.date().optional().nullable(),
-})
-
-export type InsertEnrollmentTokenDto = z.infer<typeof insertEnrollmentTokenDtoSchema>;
+export type CreateProvisioningPayloadInput = z.infer<typeof createProvisioningPayloadSchema>;
+export type CreateChallengeInput = z.infer<typeof createChallengeSchema>;

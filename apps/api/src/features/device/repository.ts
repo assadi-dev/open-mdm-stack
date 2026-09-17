@@ -1,21 +1,21 @@
 import { db as defaultDb } from "@drizzle/instance";
-import { devices, enrollementMethod, enrollementStatus } from "@drizzle/schemas/device-schema";
+import { devices, enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 export class DeviceRepository {
 
-    /** Accepts a transaction handle so device creation can be committed atomically with token consumption. */
+    /** Accepts a transaction handle so device creation can be committed atomically with challenge consumption. */
     constructor(private readonly db: NodePgDatabase = defaultDb) { }
 
     async createDevice(input: {
-        enrollmentId: string;
+        enrollmentIdentity: string;
         serial: string;
         model: string;
         manufacturer: string;
         osVersion: string;
-        status: typeof enrollementStatus[number];
-        enrollementMethod: typeof enrollementMethod[number];
+        status: typeof enrollmentStatus[number];
+        enrollmentMethod: typeof enrollmentMethod[number];
         androidId?: string;
         publicKey?: string;
         agentVersionName?: string;
@@ -25,13 +25,13 @@ export class DeviceRepository {
         const [row] = await this.db
             .insert(devices)
             .values({
-                enrollmentId: input.enrollmentId,
+                enrollmentIdentity: input.enrollmentIdentity,
                 serial: input.serial,
                 model: input.model,
                 manufacturer: input.manufacturer,
                 osVersion: input.osVersion,
-                enrollementStatus: input.status,
-                enrollementMethod: input.enrollementMethod,
+                enrollmentStatus: input.status,
+                enrollmentMethod: input.enrollmentMethod,
                 androidId: input.androidId,
                 publicKey: input.publicKey,
                 agentVersionName: input.agentVersionName,
@@ -54,16 +54,16 @@ export class DeviceRepository {
 
     /**
      * Re-enrolls a device whose pinned public key matched (see
-     * DeviceService.create): links it to the new enrollment token and
-     * refreshes its reported metadata, without touching `publicKey`.
+     * DeviceService.create): refreshes its reported metadata and the
+     * enrollmentIdentity audit stamp, without touching `publicKey`.
      */
     async reEnrollDevice(id: string, input: {
-        enrollmentId: string;
+        enrollmentIdentity: string;
         serial?: string;
         model: string;
         manufacturer: string;
         osVersion: string;
-        enrollementMethod: typeof enrollementMethod[number];
+        enrollmentMethod: typeof enrollmentMethod[number];
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
@@ -71,13 +71,13 @@ export class DeviceRepository {
         const [row] = await this.db
             .update(devices)
             .set({
-                enrollmentId: input.enrollmentId,
+                enrollmentIdentity: input.enrollmentIdentity,
                 serial: input.serial,
                 model: input.model,
                 manufacturer: input.manufacturer,
                 osVersion: input.osVersion,
-                enrollementStatus: "enrolled",
-                enrollementMethod: input.enrollementMethod,
+                enrollmentStatus: "enrolled",
+                enrollmentMethod: input.enrollmentMethod,
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,

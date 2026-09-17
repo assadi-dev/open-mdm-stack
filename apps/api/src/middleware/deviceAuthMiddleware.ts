@@ -35,7 +35,7 @@ export const requireDeviceAuth = async (req: Request, res: Response, next: NextF
         }
 
         const device = await new DeviceRepository().findDeviceById(deviceId);
-        if (!device || device.enrollementStatus !== "enrolled") {
+        if (!device || device.enrollmentStatus !== "enrolled") {
             return res.status(401).json({ message: "Unauthorized" });
         }
 

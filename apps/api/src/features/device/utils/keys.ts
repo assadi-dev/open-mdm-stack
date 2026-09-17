@@ -7,7 +7,7 @@ import { createPublicKey, verify as verifySignature } from "crypto";
  *
  * `publicKeyBase64` is the SPKI/DER-encoded public key, base64-encoded (as
  * produced by Android Keystore's KeyFactory, or by
- * enrollement/utils/mock-device-keys.ts for the mock agent). `signatureBase64`
+ * enrollment/utils/mock-device-keys.ts for the mock agent). `signatureBase64`
  * is the SHA-256/ECDSA signature over `data`, base64-encoded.
  */
 export const verifyDeviceSignature = (params: {

@@ -28,10 +28,7 @@ vi.mock("@features/device/repository", () => ({
     }),
 }));
 
-vi.mock("@features/enrollement/repositories", () => ({
-    EnrollmentTokenRepository: vi.fn(function () {
-        return {};
-    }),
+vi.mock("@features/enrollment/repositories", () => ({
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
     }),
@@ -44,22 +41,6 @@ vi.mock("@lib/auth", () => ({
 import { app } from "../../../app";
 
 const heartbeatBody = { battery: 80, storageFreeBytes: 1_000, online: true, ts: Date.now() };
-
-describe("GET /api/v1/devices/enroll/challenge", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    it("issues a single-use challenge without touching a real database", async () => {
-        challengeRepoMock.create.mockResolvedValue({ id: "challenge-row-id" });
-
-        const res = await request(app).get("/api/v1/devices/enroll/challenge").expect(200);
-
-        expect(typeof res.body.challenge).toBe("string");
-        expect(res.body.challenge.length).toBeGreaterThan(0);
-        expect(challengeRepoMock.create).toHaveBeenCalledTimes(1);
-    });
-});
 
 describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
     beforeEach(() => {
@@ -89,7 +70,7 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
 
     it("rejects a heartbeat for a device that isn't enrolled", async () => {
         verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
-        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollementStatus: "pending" });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "pending" });
 
         await request(app)
             .post("/api/v1/devices/device-1/heartbeat")
@@ -102,7 +83,7 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
 
     it("accepts a heartbeat for an enrolled device and refreshes its last-seen timestamp", async () => {
         verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
-        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollementStatus: "enrolled" });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });
 
         const res = await request(app)
             .post("/api/v1/devices/device-1/heartbeat")

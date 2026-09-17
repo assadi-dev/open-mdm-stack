@@ -1,23 +1,14 @@
 import { generateKeyPairSync, sign as cryptoSign } from "crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
+import { HTTPBadRequestException } from "@core/exception";
 
-const { repoMock, tokenRepoMock, challengeRepoMock, signJWTMock } = vi.hoisted(() => ({
+const { repoMock, challengeRepoMock, signJWTMock } = vi.hoisted(() => ({
     repoMock: {
         createDevice: vi.fn(),
         findDeviceById: vi.fn(),
         findByAndroidId: vi.fn(),
         reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
-    },
-    tokenRepoMock: {
-        create: vi.fn(),
-        getOne: vi.fn(),
-        byToken: vi.fn(),
-        markConsumed: vi.fn(),
-        markUnused: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -35,10 +26,7 @@ vi.mock("@features/device/repository", () => ({
     }),
 }));
 
-vi.mock("@features/enrollement/repositories", () => ({
-    EnrollmentTokenRepository: vi.fn(function () {
-        return tokenRepoMock;
-    }),
+vi.mock("@features/enrollment/repositories", () => ({
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
     }),
@@ -55,7 +43,7 @@ vi.mock("@lib/auth", () => ({
     auth: { api: { signJWT: signJWTMock } },
 }));
 
-import { generateCanonicalMessage } from "@features/enrollement/utils/canonical-message";
+import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
 import { DeviceService } from "../service";
 
 // Real EC key pair — exercises the actual verifyDeviceSignature path (Node's
@@ -117,28 +105,20 @@ describe("DeviceService", () => {
     });
 
     describe("create", () => {
-        it("verifies the proof-of-possession signature, consumes the token and challenge, creates the device, and issues a device JWT", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
-                consumedAt: null,
-                expiresAt: new Date(Date.now() + 60_000),
-            });
-            tokenRepoMock.markConsumed.mockResolvedValue({ id: "token-uuid", consumedAt: new Date() });
+        it("verifies the proof-of-possession signature, consumes the challenge, creates the device, and issues a device JWT", async () => {
             repoMock.createDevice.mockResolvedValue({ id: "device-uuid" });
 
             const result = await service.create({
-                enrollmentToken: "the-token",
                 challenge: CHALLENGE,
                 timestamp: TIMESTAMP,
                 signature: signEnrollment(keyPair),
                 device: deviceInfo,
             });
 
-            expect(tokenRepoMock.markConsumed).toHaveBeenCalledWith("the-token");
             expect(challengeRepoMock.markConsumed).toHaveBeenCalledWith(CHALLENGE);
             expect(repoMock.createDevice).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    enrollmentId: "token-uuid",
+                    enrollmentIdentity: `:${deviceInfo.publicKey}`,
                     status: "enrolled",
                     serial: deviceInfo.serial,
                     model: deviceInfo.model,
@@ -150,46 +130,7 @@ describe("DeviceService", () => {
             expect(result).toEqual({ deviceId: "device-uuid", deviceToken: "signed-device-jwt" });
         });
 
-        it("rejects with HTTPNotFoundException and never creates a device when the token doesn't exist", async () => {
-            tokenRepoMock.byToken.mockResolvedValue(undefined);
-
-            await expect(
-                service.create({
-                    enrollmentToken: "missing",
-                    challenge: CHALLENGE,
-                    timestamp: TIMESTAMP,
-                    signature: signEnrollment(keyPair),
-                    device: deviceInfo,
-                }),
-            ).rejects.toBeInstanceOf(HTTPNotFoundException);
-            expect(repoMock.createDevice).not.toHaveBeenCalled();
-        });
-
-        it("rejects with HTTPBadRequestException and never creates a device when the token is already consumed", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
-                consumedAt: new Date(),
-                expiresAt: new Date(Date.now() + 60_000),
-            });
-
-            await expect(
-                service.create({
-                    enrollmentToken: "used",
-                    challenge: CHALLENGE,
-                    timestamp: TIMESTAMP,
-                    signature: signEnrollment(keyPair),
-                    device: deviceInfo,
-                }),
-            ).rejects.toBeInstanceOf(HTTPBadRequestException);
-            expect(repoMock.createDevice).not.toHaveBeenCalled();
-        });
-
-        it("rejects with HTTPBadRequestException and never consumes the token when the challenge is already consumed", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
-                consumedAt: null,
-                expiresAt: new Date(Date.now() + 60_000),
-            });
+        it("rejects with HTTPBadRequestException and never creates a device when the challenge is already consumed", async () => {
             challengeRepoMock.byChallenge.mockResolvedValue({
                 consumedAt: new Date(),
                 expiresAt: new Date(Date.now() + 60_000),
@@ -197,27 +138,35 @@ describe("DeviceService", () => {
 
             await expect(
                 service.create({
-                    enrollmentToken: "the-token",
                     challenge: CHALLENGE,
                     timestamp: TIMESTAMP,
                     signature: signEnrollment(keyPair),
                     device: deviceInfo,
                 }),
             ).rejects.toBeInstanceOf(HTTPBadRequestException);
-            expect(tokenRepoMock.markConsumed).not.toHaveBeenCalled();
             expect(repoMock.createDevice).not.toHaveBeenCalled();
         });
 
-        it("rejects an invalid signature without consuming the token or challenge (so it can be retried)", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
+        it("rejects with HTTPBadRequestException and never creates a device when the challenge has expired", async () => {
+            challengeRepoMock.byChallenge.mockResolvedValue({
                 consumedAt: null,
-                expiresAt: new Date(Date.now() + 60_000),
+                expiresAt: new Date(Date.now() - 1_000),
             });
 
             await expect(
                 service.create({
-                    enrollmentToken: "the-token",
+                    challenge: CHALLENGE,
+                    timestamp: TIMESTAMP,
+                    signature: signEnrollment(keyPair),
+                    device: deviceInfo,
+                }),
+            ).rejects.toBeInstanceOf(HTTPBadRequestException);
+            expect(repoMock.createDevice).not.toHaveBeenCalled();
+        });
+
+        it("rejects an invalid signature without consuming the challenge (so it can be retried)", async () => {
+            await expect(
+                service.create({
                     challenge: CHALLENGE,
                     timestamp: TIMESTAMP,
                     // Signed by a *different* key pair than the one declared in `device.publicKey`.
@@ -225,21 +174,13 @@ describe("DeviceService", () => {
                     device: deviceInfo,
                 }),
             ).rejects.toBeInstanceOf(HTTPBadRequestException);
-            expect(tokenRepoMock.markConsumed).not.toHaveBeenCalled();
             expect(challengeRepoMock.markConsumed).not.toHaveBeenCalled();
             expect(repoMock.createDevice).not.toHaveBeenCalled();
         });
 
         it("rejects a signature computed over a tampered field (e.g. a different challenge than the one validated)", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
-                consumedAt: null,
-                expiresAt: new Date(Date.now() + 60_000),
-            });
-
             await expect(
                 service.create({
-                    enrollmentToken: "the-token",
                     challenge: CHALLENGE,
                     timestamp: TIMESTAMP,
                     // Signed over a different challenge than the one submitted/validated.
@@ -251,17 +192,10 @@ describe("DeviceService", () => {
         });
 
         it("turns a unique-constraint violation on device creation into HTTPBadRequestException", async () => {
-            tokenRepoMock.byToken.mockResolvedValue({
-                id: "token-uuid",
-                consumedAt: null,
-                expiresAt: new Date(Date.now() + 60_000),
-            });
-            tokenRepoMock.markConsumed.mockResolvedValue({ id: "token-uuid", consumedAt: new Date() });
             repoMock.createDevice.mockRejectedValue({ code: "23505" });
 
             await expect(
                 service.create({
-                    enrollmentToken: "the-token",
                     challenge: CHALLENGE,
                     timestamp: TIMESTAMP,
                     signature: signEnrollment(keyPair),
@@ -277,21 +211,11 @@ describe("DeviceService", () => {
                 return signEnrollment(kp, { androidId: "android-id-1" });
             }
 
-            beforeEach(() => {
-                tokenRepoMock.byToken.mockResolvedValue({
-                    id: "token-uuid-2",
-                    consumedAt: null,
-                    expiresAt: new Date(Date.now() + 60_000),
-                });
-                tokenRepoMock.markConsumed.mockResolvedValue({ id: "token-uuid-2", consumedAt: new Date() });
-            });
-
             it("re-enrolls in place when the same androidId presents the same pinned public key", async () => {
                 repoMock.findByAndroidId.mockResolvedValue({ id: "existing-device-uuid", publicKey: keyPair.publicKeyBase64 });
                 repoMock.reEnrollDevice.mockResolvedValue({ id: "existing-device-uuid" });
 
                 const result = await service.create({
-                    enrollmentToken: "the-token",
                     challenge: CHALLENGE,
                     timestamp: TIMESTAMP,
                     signature: signPinned(keyPair),
@@ -300,7 +224,7 @@ describe("DeviceService", () => {
 
                 expect(repoMock.reEnrollDevice).toHaveBeenCalledWith(
                     "existing-device-uuid",
-                    expect.objectContaining({ enrollmentId: "token-uuid-2" }),
+                    expect.objectContaining({ enrollmentIdentity: `android-id-1:${keyPair.publicKeyBase64}` }),
                 );
                 expect(repoMock.createDevice).not.toHaveBeenCalled();
                 expect(result).toEqual({ deviceId: "existing-device-uuid", deviceToken: "signed-device-jwt" });
@@ -311,7 +235,6 @@ describe("DeviceService", () => {
 
                 await expect(
                     service.create({
-                        enrollmentToken: "the-token",
                         challenge: CHALLENGE,
                         timestamp: TIMESTAMP,
                         signature: signPinned(keyPair),

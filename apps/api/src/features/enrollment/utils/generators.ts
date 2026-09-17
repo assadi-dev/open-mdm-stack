@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { CreateEnrollmentTokenInput, CreateTokenInput } from "../dto/schema";
+import { CreateProvisioningPayloadInput } from "../dto/schema";
 import { ENV } from "@config/env";
 import { OTP } from "otplib";
 
@@ -28,19 +28,6 @@ export const WIFI_SECURITY_TYPE_MAP: Record<string, "NONE" | "WPA" | "WEP" | "EA
 
 
 
-export const generateRandomToken = (inputs: CreateTokenInput) => {
-    const token = randomBytes(32).toString("base64url");
-    const ttlSeconds = inputs.ttlSeconds ?? ENV.ENROLLMENT_TOKEN_TTL_SECONDS
-    const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
-
-    return {
-        token,
-        ttlSeconds,
-        expiresAt,
-    }
-
-}
-
 /** Anti-replay nonce for the pinned-key enrollment handshake (single-use, short TTL). */
 export const generateRandomChallenge = (ttlSeconds: number = ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS) => {
     const challenge = randomBytes(32).toString("base64url");
@@ -58,14 +45,14 @@ export const generateRandomChallenge = (ttlSeconds: number = ENV.ENROLLMENT_CHAL
 
 
 /** Android Device Owner provisioning extras, encoded into the QR. */
-export const buildProvisioningPayload = (input: CreateEnrollmentTokenInput) => {
+export const buildProvisioningPayload = (input: CreateProvisioningPayloadInput) => {
 
     const payload: Record<string, unknown> = {
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME": ENV.MDM_PACKAGE_NAME,
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": ENV.MDM_DPC_COMPONENT,
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": input.checksum ?? ENV.MDM_DPC_SIGNATURE_CHECKSUM,
         "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-            token: input.token,
+            challenge: input.challenge,
             serverBaseUrl: ENV.MDM_PUBLIC_BASE_URL,
             ...(input.policyId ? { policyId: input.policyId } : {}),
             ...(input.groupId ? { groupId: input.groupId } : {}),

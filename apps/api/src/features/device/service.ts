@@ -11,9 +11,9 @@ import {
 
 import { DeviceRepository } from "./repository";
 import { EnrollDeviceInput, InventoryInput } from "./dto/schema";
-import { ChallengeRepository, EnrollmentTokenRepository } from "@features/enrollement/repositories";
-import { EnrollementService } from "@features/enrollement/service";
-import { generateCanonicalMessage } from "@features/enrollement/utils/canonical-message";
+import { ChallengeRepository } from "@features/enrollment/repositories";
+import { EnrollmentService } from "@features/enrollment/service";
+import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
 import { verifyDeviceSignature } from "./utils/keys";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
@@ -44,38 +44,31 @@ function isUniqueViolation(error: unknown): boolean {
 
 export class DeviceService {
     private repository: DeviceRepository;
-    private enrollementService: EnrollementService;
+    private enrollmentService: EnrollmentService;
 
     constructor() {
         this.repository = new DeviceRepository();
-        this.enrollementService = new EnrollementService();
-    }
-
-    /** GET /devices/enroll/challenge — issues the anti-replay nonce the agent must sign into its canonical message. */
-    async issueChallenge() {
-        return this.enrollementService.generateChallenge();
+        this.enrollmentService = new EnrollmentService();
     }
 
 
     /**
-     * Pinned-key enrollment: validates the single-use token and challenge,
-     * verifies proof of possession over the canonical device-identity
-     * message, pins (or checks continuity of) the device's public key, then
-     * issues the long-lived device JWT (deviceToken).
+     * Pinned-key enrollment: validates the single-use challenge, verifies
+     * proof of possession over the canonical device-identity message, pins
+     * (or checks continuity of) the device's public key, then issues the
+     * long-lived device JWT (deviceToken). The challenge is the sole
+     * enrollment authorization — there's no separate admin-issued token.
      */
     async create(input: EnrollDeviceInput) {
         const device = await db.transaction(async (tx) => {
-            const tokenRepo = new EnrollmentTokenRepository(tx);
             const challengeRepo = new ChallengeRepository(tx);
-            const enrollementService = new EnrollementService(tokenRepo, challengeRepo);
+            const enrollmentService = new EnrollmentService(challengeRepo);
             const deviceRepo = new DeviceRepository(tx);
 
-            // Look up the token/challenge without consuming them yet: an
-            // invalid signature is the caller's fault, so a still-valid
-            // token/challenge shouldn't be burned on a failed proof-of-possession
-            // attempt.
-            const tokenRow = await enrollementService.assertTokenValid(input.enrollmentToken);
-            await enrollementService.assertChallengeValid(input.challenge);
+            // Look up the challenge without consuming it yet: an invalid
+            // signature is the caller's fault, so a still-valid challenge
+            // shouldn't be burned on a failed proof-of-possession attempt.
+            await enrollmentService.assertChallengeValid(input.challenge);
 
             const canonicalMessage = generateCanonicalMessage({
                 model: input.device.model,
@@ -85,7 +78,7 @@ export class DeviceService {
                 imei: input.device.imei ?? "",
                 macAddress: input.device.macAddress ?? "",
                 androidId: input.device.androidId ?? "",
-                method: input.device.enrollementMethod ?? "",
+                method: input.device.enrollmentMethod ?? "",
                 timestamp: input.timestamp,
                 publicKey: input.device.publicKey,
                 challenge: input.challenge,
@@ -100,14 +93,15 @@ export class DeviceService {
                 throw new HTTPBadRequestException("Invalid enrollment signature");
             }
 
-            await tokenRepo.markConsumed(input.enrollmentToken);
-            await enrollementService.consumeChallenge(input.challenge);
+            await enrollmentService.consumeChallenge(input.challenge);
+
+            const enrollmentIdentity = `${input.device.androidId ?? ""}:${input.device.publicKey}`;
 
             // Key pinning: a re-enrollment of a known androidId must present
             // the same public key it enrolled with the first time. A mismatch
-            // means the token/serial was replayed by a different device (or
-            // the real device's key was rotated without admin action) — treat
-            // it as a rejection rather than silently overwriting the pin.
+            // means the identity was replayed/spoofed by a different device
+            // (or the real device's key was rotated without admin action) —
+            // treat it as a rejection rather than silently overwriting the pin.
             if (input.device.androidId) {
                 const existing = await deviceRepo.findByAndroidId(input.device.androidId);
                 if (existing) {
@@ -117,12 +111,12 @@ export class DeviceService {
                         );
                     }
                     return await deviceRepo.reEnrollDevice(existing.id, {
-                        enrollmentId: tokenRow.id,
+                        enrollmentIdentity,
                         serial: input.device.serial,
                         model: input.device.model,
                         manufacturer: input.device.manufacturer,
                         osVersion: input.device.osVersion,
-                        enrollementMethod: input.device.enrollementMethod,
+                        enrollmentMethod: input.device.enrollmentMethod,
                         agentVersionName: input.device.agentVersionName,
                         agentVersionCode: input.device.agentVersionCode,
                         agentPackage: input.device.agentPackage,
@@ -132,13 +126,13 @@ export class DeviceService {
 
             try {
                 return await deviceRepo.createDevice({
-                    enrollmentId: tokenRow.id,
+                    enrollmentIdentity,
                     serial: input.device.serial,
                     model: input.device.model,
                     manufacturer: input.device.manufacturer,
                     osVersion: input.device.osVersion,
                     status: "enrolled",
-                    enrollementMethod: input.device.enrollementMethod,
+                    enrollmentMethod: input.device.enrollmentMethod,
                     androidId: input.device.androidId,
                     publicKey: input.device.publicKey,
                     agentVersionName: input.device.agentVersionName,

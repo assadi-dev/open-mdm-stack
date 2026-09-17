@@ -1,35 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { generateRandomToken, buildProvisioningPayload } from "../utils/generators";
-import type { CreateEnrollmentTokenInput, CreateTokenInput } from "../dto/schema";
+import { generateRandomChallenge, buildProvisioningPayload } from "../utils/generators";
+import type { CreateProvisioningPayloadInput } from "../dto/schema";
 
-describe("generateRandomToken", () => {
-    it("produces a random single-use token expiring `ttlSeconds` from now", () => {
+describe("generateRandomChallenge", () => {
+    it("produces a random single-use challenge expiring `ttlSeconds` from now", () => {
         const before = Date.now();
 
-        const result = generateRandomToken({ ttlSeconds: 120 } as CreateTokenInput);
+        const result = generateRandomChallenge(120);
 
         const after = Date.now();
-        expect(typeof result.token).toBe("string");
-        expect(result.token.length).toBeGreaterThan(0);
+        expect(typeof result.challenge).toBe("string");
+        expect(result.challenge.length).toBeGreaterThan(0);
         expect(result.ttlSeconds).toBe(120);
         expect(result.expiresAt.getTime()).toBeGreaterThanOrEqual(before + 120_000);
         expect(result.expiresAt.getTime()).toBeLessThanOrEqual(after + 120_000);
     });
 
-    it("generates a different token on every call", () => {
-        const a = generateRandomToken({ ttlSeconds: 60 } as CreateTokenInput);
-        const b = generateRandomToken({ ttlSeconds: 60 } as CreateTokenInput);
+    it("generates a different challenge on every call", () => {
+        const a = generateRandomChallenge(60);
+        const b = generateRandomChallenge(60);
 
-        expect(a.token).not.toBe(b.token);
+        expect(a.challenge).not.toBe(b.challenge);
     });
 
-    // Regression test: the caller (EnrollementService.generateToken) can pass
-    // an object whose `ttlSeconds` is undefined even though the TS type says
-    // it's always a number — that's exactly what reached this function when
-    // POST /provisioning was called with no ?ttlSeconds= query param, and it
-    // used to produce `new Date(NaN)` (crashed later on insert).
-    it("falls back to the configured TTL, with a valid (non-NaN) expiry, when ttlSeconds is missing", () => {
-        const result = generateRandomToken({} as CreateTokenInput);
+    it("falls back to the configured TTL, with a valid (non-NaN) expiry, when called with no ttlSeconds", () => {
+        const result = generateRandomChallenge();
 
         expect(Number.isFinite(result.ttlSeconds)).toBe(true);
         expect(Number.isNaN(result.expiresAt.getTime())).toBe(false);
@@ -37,21 +32,21 @@ describe("generateRandomToken", () => {
 });
 
 describe("buildProvisioningPayload", () => {
-    const base: CreateEnrollmentTokenInput = {
-        token: "the-enrollment-token",
+    const base: CreateProvisioningPayloadInput = {
+        challenge: "the-enrollment-challenge",
         wifiSecurityType: "WPA2",
         wifiHidden: false,
         systemApps: true,
         skipEncryption: false,
     };
 
-    it("embeds the enrollment token in the admin extras bundle", () => {
+    it("embeds the challenge in the admin extras bundle", () => {
         const payload = buildProvisioningPayload(base);
 
         const extras = payload[
             "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
         ] as Record<string, unknown>;
-        expect(extras.token).toBe("the-enrollment-token");
+        expect(extras.challenge).toBe("the-enrollment-challenge");
     });
 
     it("maps WPA2/WPA3 to the Android-accepted WPA security type and includes the password", () => {

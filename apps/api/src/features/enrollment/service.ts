@@ -1,42 +1,18 @@
 import { ENV } from "@config/env";
 import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
 import { generateQrSVG } from "@features/qrcode/service";
-import { ChallengeRepository, EnrollmentTokenRepository } from "./repositories";
-import { buildProvisioningPayload, generateRandomChallenge, generateRandomToken, OTPGenerator, OTPVerifier } from "./utils/generators";
-import { enrollementValidator } from "./dto/validation";
-import { CreateEnrollmentTokenInput, CreateTokenInput } from "./dto/schema";
+import { ChallengeRepository } from "./repositories";
+import { buildProvisioningPayload, generateRandomChallenge, OTPGenerator, OTPVerifier } from "./utils/generators";
+import { enrollmentValidator } from "./dto/validation";
+import { CreateProvisioningPayloadInput } from "./dto/schema";
 
 
 
 
-export class EnrollementService {
-    enrollmenentRepo: EnrollmentTokenRepository
+export class EnrollmentService {
     challengeRepo: ChallengeRepository
-    constructor(
-        enrollmentTokenRepo: EnrollmentTokenRepository = new EnrollmentTokenRepository(),
-        challengeRepo: ChallengeRepository = new ChallengeRepository(),
-    ) {
-        this.enrollmenentRepo = enrollmentTokenRepo;
+    constructor(challengeRepo: ChallengeRepository = new ChallengeRepository()) {
         this.challengeRepo = challengeRepo;
-    }
-
-
-    /**
-   * Generate a random token
-   */
-    async generateToken(input?: CreateTokenInput) {
-        const { token, ttlSeconds, expiresAt } = generateRandomToken(input);
-        await this.enrollmenentRepo.create({
-            token,
-            expiresAt,
-            consumedAt: null,
-        });
-
-        return {
-            token,
-            expiresAt: expiresAt.toISOString(),
-            ttlSeconds,
-        };
     }
 
     generateOTP = async () => {
@@ -57,36 +33,14 @@ export class EnrollementService {
 
         // TODO: add consumed logic to db for otp and check otp
 
-        return this.generateToken({ ttlSeconds })
-    }
-
-
-    /** Looks up a token and checks it's usable, without consuming it. */
-    assertTokenValid = async (token: string) => {
-        const existing = await this.enrollmenentRepo.byToken(token);
-        if (!existing) {
-            throw new HTTPNotFoundException("Token not found");
-        }
-        if (existing.consumedAt) {
-            throw new HTTPBadRequestException("Token already consumed");
-        }
-        if (existing.expiresAt < new Date()) {
-            throw new HTTPBadRequestException("Token expired");
-        }
-        return existing;
-    }
-
-    consumeToken = async (token: string) => {
-        await this.assertTokenValid(token);
-        const row = await this.enrollmenentRepo.markConsumed(token);
-        return row
+        return this.generateChallenge(ttlSeconds)
     }
 
     /** Issues a single-use, short-lived nonce for the pinned-key enrollment handshake. */
-    generateChallenge = async () => {
-        const { challenge, ttlSeconds, expiresAt } = generateRandomChallenge();
+    generateChallenge = async (ttlSeconds?: number) => {
+        const { challenge, ttlSeconds: resolvedTtlSeconds, expiresAt } = generateRandomChallenge(ttlSeconds ?? ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS);
         await this.challengeRepo.create({ challenge, expiresAt, consumedAt: null });
-        return { challenge, ttlSeconds, expiresAt: expiresAt.toISOString() };
+        return { challenge, ttlSeconds: resolvedTtlSeconds, expiresAt: expiresAt.toISOString() };
     }
 
     /** Looks up a challenge and checks it's usable, without consuming it. */
@@ -110,13 +64,13 @@ export class EnrollementService {
     }
 
 
-    async generateProvisioningPayload(input: CreateEnrollmentTokenInput) {
+    async generateProvisioningPayload(input: CreateProvisioningPayloadInput) {
         const payload = buildProvisioningPayload(input);
         return payload
 
     }
 
-    async generatePayloadProvisioningToSVG(input: CreateEnrollmentTokenInput) {
+    async generatePayloadProvisioningToSVG(input: CreateProvisioningPayloadInput) {
         const payload = buildProvisioningPayload(input);
         const svg = generateQrSVG(payload)
         return svg
@@ -124,11 +78,11 @@ export class EnrollementService {
 
     async displayProvisioning({ format, ttlSeconds, body }: { format?: string, ttlSeconds?: number, body: any }) {
 
-        const { token } = await this.generateToken({ ttlSeconds });
+        const { challenge } = await this.generateChallenge(ttlSeconds);
 
-        const payload = enrollementValidator.displayEnrollmentProvisioning({
+        const payload = enrollmentValidator.displayEnrollmentProvisioning({
             ...body,
-            token
+            challenge
         })
         if (!payload.success) {
             throw payload.error

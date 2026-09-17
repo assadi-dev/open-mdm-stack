@@ -4,16 +4,7 @@ import request from "supertest";
 // End-to-end through the real Express app (routing + validation + error
 // handler all run for real); only the repository is mocked, so no real
 // Postgres connection is ever opened.
-const { repoMock, challengeRepoMock } = vi.hoisted(() => ({
-    repoMock: {
-        create: vi.fn(),
-        getOne: vi.fn(),
-        byToken: vi.fn(),
-        markConsumed: vi.fn(),
-        markUnused: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-    },
+const { challengeRepoMock } = vi.hoisted(() => ({
     challengeRepoMock: {
         create: vi.fn(),
         byChallenge: vi.fn(),
@@ -21,12 +12,9 @@ const { repoMock, challengeRepoMock } = vi.hoisted(() => ({
     },
 }));
 
-vi.mock("@features/enrollement/repositories", () => ({
+vi.mock("@features/enrollment/repositories", () => ({
     // `new`-able: a plain arrow function has no [[Construct]] and can't
     // stand in for a class constructor here.
-    EnrollmentTokenRepository: vi.fn(function () {
-        return repoMock;
-    }),
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
     }),
@@ -34,27 +22,25 @@ vi.mock("@features/enrollement/repositories", () => ({
 
 import { app } from "../../../app";
 
-describe("POST /api/v1/enrollement", () => {
+describe("POST /api/v1/enrollment", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        repoMock.create.mockResolvedValue({ id: "row-id" });
         challengeRepoMock.create.mockResolvedValue({ id: "challenge-row-id" });
     });
 
-    it("POST /token-generate issues a single-use enrollment token without touching a real database", async () => {
+    it("GET /challenge issues a single-use anti-replay challenge without touching a real database", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/token-generate")
-            .send({ ttlSeconds: 120 })
+            .get("/api/v1/enrollment/challenge")
             .expect(200);
 
-        expect(res.body.ttlSeconds).toBe(120);
-        expect(typeof res.body.token).toBe("string");
-        expect(repoMock.create).toHaveBeenCalledTimes(1);
+        expect(typeof res.body.challenge).toBe("string");
+        expect(res.body.challenge.length).toBeGreaterThan(0);
+        expect(challengeRepoMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it("POST /display-provisioning?format=svg returns an SVG QR code embedding a freshly generated token", async () => {
+    it("POST /display-provisioning?format=svg returns an SVG QR code embedding a freshly generated challenge", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/display-provisioning?format=svg")
+            .post("/api/v1/enrollment/display-provisioning?format=svg")
             .send({})
             .expect(200);
 
@@ -64,15 +50,15 @@ describe("POST /api/v1/enrollement", () => {
         expect(Buffer.from(res.body).toString("utf8")).toContain("<svg");
     });
 
-    it("POST /display-provisioning returns the raw Device Owner provisioning payload, carrying a freshly generated token", async () => {
+    it("POST /display-provisioning returns the raw Device Owner provisioning payload, carrying a freshly generated challenge", async () => {
         const res = await request(app)
-            .post("/api/v1/enrollement/display-provisioning")
+            .post("/api/v1/enrollment/display-provisioning")
             .send({ policyId: "policy-1" })
             .expect(200);
 
         const extras = res.body["android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"];
-        expect(typeof extras.token).toBe("string");
-        expect(extras.token.length).toBeGreaterThan(0);
+        expect(typeof extras.challenge).toBe("string");
+        expect(extras.challenge.length).toBeGreaterThan(0);
         expect(extras.policyId).toBe("policy-1");
     });
 
@@ -82,19 +68,19 @@ describe("POST /api/v1/enrollement", () => {
     // reached the DB insert. Fixed by resolving the fallback before coercing.
     it("POST /display-provisioning without a ttlSeconds query param falls back to the configured TTL instead of crashing", async () => {
         await request(app)
-            .post("/api/v1/enrollement/display-provisioning")
+            .post("/api/v1/enrollment/display-provisioning")
             .send({})
             .expect(200);
 
-        expect(repoMock.create).toHaveBeenCalledTimes(1);
-        const [insertedRow] = repoMock.create.mock.calls[0];
+        expect(challengeRepoMock.create).toHaveBeenCalledTimes(1);
+        const [insertedRow] = challengeRepoMock.create.mock.calls[0];
         expect(insertedRow.expiresAt).toBeInstanceOf(Date);
         expect(Number.isNaN(insertedRow.expiresAt.getTime())).toBe(false);
     });
 
     it("POST /display-provisioning rejects an invalid body with a 400 instead of a raw 500", async () => {
         await request(app)
-            .post("/api/v1/enrollement/display-provisioning")
+            .post("/api/v1/enrollment/display-provisioning")
             .send({ wifiSecurityType: "NOT-A-TYPE" })
             .expect(400);
     });
