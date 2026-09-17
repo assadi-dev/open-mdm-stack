@@ -1,11 +1,8 @@
 import express from "express";
-import { ZodError } from "zod";
 import morgan from "morgan";
 import cors from "cors";
-import { ENV } from "@config/env";
-import { registerDependencies } from "./injection/di";
 import http from "http";
-import { API_BASE_URL, API_VERSION, corsOptions } from "@config/cors";
+import { API_BASE_URL, corsOptions } from "@config/cors";
 import { errorHandler } from "./lib/global";
 import qrcodeRouter from "@features/qrcode/router";
 import { auth } from "@lib/auth";
@@ -15,15 +12,14 @@ import deviceRouter from "@features/device/route";
 import enrollementRouter from "@features/enrollement/route";
 
 
-const PORT = ENV.PORT;
-const app = express();
+export const app = express();
 //app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(morgan("dev"));
-
-
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan("dev"));
+}
 
 app.use(cors(corsOptions));
 
@@ -38,18 +34,7 @@ app.use(`${API_BASE_URL}/devices`, deviceRouter);
 app.use(`${API_BASE_URL}/enrollement`, enrollementRouter);
 app.use(errorHandler);
 
+// http.Server wrapping `app`; listening is started from main.ts so this
+// module can be imported (e.g. by supertest) without binding a real port.
 export const server = http.createServer(app);
-
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`API Version: ${API_VERSION}`);
-
-
-});
-
-server.on("error", (e) => {
-  console.error("Error occurred while starting the server", e);
-});
-
-registerDependencies(server);
 
