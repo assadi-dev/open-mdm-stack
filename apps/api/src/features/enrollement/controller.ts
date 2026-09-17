@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { EnrollementService } from "./service";
 import { enrollementValidator } from "./dto/validation";
 import { HTTPBadRequestException } from "@core/exception";
+import { ENV } from "@config/env";
 
 
 
@@ -18,14 +19,25 @@ export class EnrollementController {
     displayEnrollmentProvisioning = async (req: Request, res: Response) => {
 
         const format = req.query?.format;
+        const ttlSeconds = Number(req.query?.ttlSeconds) ?? Number(ENV.ENROLLMENT_TOKEN_TTL_SECONDS);
+
+        const token = await this.enrollementService.generateToken({ ttlSeconds });
+        const input = enrollementValidator.displayEnrollmentProvisioning({
+            ...req.body,
+            token
+        })
+        if (!input.success) {
+            throw input.error
+        }
+
         if (format === "svg") {
-            const svg = await this.enrollementService.generateQrProvisioning(req.body);
+            const svg = await this.enrollementService.generatePayloadProvisioningToSVG(input.data);
             res.appendHeader("Content-Type", "image/svg+xml");
             return res.send(svg);
 
         }
 
-        const json = await this.enrollementService.buildProvisioningPayload(req.body);
+        const json = await this.enrollementService.generateProvisioningPayload(input.data);
         return res.json(json);
 
     };

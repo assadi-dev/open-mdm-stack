@@ -49,7 +49,8 @@ export const devices = pgTable("devices", {
     lastHeartbeatAt: timestamp("last_heartbeat_at"),
     //policyId: uuid("policy_id"),
     //groupId: uuid("group_id"),
-    agentVersion: integer("agent_version"),
+    agentVersionCode: integer("agent_version_code"),
+    agentVersionName: text("agent_version_name"),
     agentPackage: text("agent_package"),
 
     ...updatedAndCreatedAt,

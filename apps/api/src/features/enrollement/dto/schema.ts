@@ -3,6 +3,7 @@ import z from "zod";
 
 
 export const createEnrollmentTokenSchema = z.object({
+    token: z.string().min(1, "Token is required"),
     apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),
