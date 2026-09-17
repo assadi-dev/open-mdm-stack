@@ -87,6 +87,7 @@ data class HeartbeatRequest(
 data class StorageDto(
     val totalBytes: Long,
     val freeBytes: Long,
+    val usedBytes: Long,
 )
 
 @Serializable

@@ -69,6 +69,25 @@ class InventoryCollector(private val context: Context) {
         return bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
     }
 
+    private fun isCharging(): Boolean {
+        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        return status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL
+    }
+
+    private fun getBatteryHealth(): String? {
+        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        return when (intent?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)) {
+            BatteryManager.BATTERY_HEALTH_GOOD -> "good"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "overheat"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "dead"
+            BatteryManager.BATTERY_HEALTH_COLD -> "cold"
+            else -> "unknown"
+        }
+    }
+
+
     fun freeStorageBytes(): Long = readStorage().freeBytes
 
     private fun readSerial(): String = try {
@@ -100,11 +119,29 @@ class InventoryCollector(private val context: Context) {
         null
     }
 
-    private fun readStorage(): StorageDto {
+
+    private fun getStorageTotal(): Long {
         val stat = StatFs(Environment.getDataDirectory().path)
-        val total = stat.blockCountLong * stat.blockSizeLong
-        val free = stat.availableBlocksLong * stat.blockSizeLong
-        return StorageDto(totalBytes = total, freeBytes = free)
+        return stat.blockCountLong * stat.blockSizeLong
+    }
+
+    private fun getFreeStorageBytes(): Long {
+        val stat = StatFs(Environment.getDataDirectory().path)
+        return stat.availableBlocksLong * stat.blockSizeLong
+    }
+
+    private fun getStorageUsed(): Long {
+        val total = getStorageTotal()
+        val available = getFreeStorageBytes()
+        return total - available
+    }
+
+
+    private fun readStorage(): StorageDto {
+        val total = getStorageTotal()
+        val free = getFreeStorageBytes()
+        val used = getStorageUsed()
+        return StorageDto(totalBytes = total, freeBytes = free, usedBytes = used)
     }
 
     @SuppressLint("QueryPermissionsNeeded")
