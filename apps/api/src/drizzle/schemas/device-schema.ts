@@ -42,6 +42,7 @@ export const devices = pgTable("devices", {
     enrollmentIdentity: text("enrollment_identity").notNull(),
     serial: text("serial"),
     androidId: text("android_id").unique(),
+    brand: text("brand"),
     model: text("model"),
     manufacturer: text("manufacturer"),
     osVersion: text("os_version"),

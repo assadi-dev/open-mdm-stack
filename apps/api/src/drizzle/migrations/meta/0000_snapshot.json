@@ -1,5 +1,5 @@
 {
-  "id": "74613d0f-7ff1-40ee-bb26-a83609eb77a3",
+  "id": "a024ac42-dae9-44d9-b53d-4c204b2a2ba5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -425,9 +425,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "enrollment_id": {
-          "name": "enrollment_id",
-          "type": "uuid",
+        "enrollment_identity": {
+          "name": "enrollment_identity",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -439,6 +439,12 @@
         },
         "android_id": {
           "name": "android_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brand": {
+          "name": "brand",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -479,17 +485,17 @@
           "primaryKey": false,
           "notNull": false
         },
-        "enrollement_status": {
-          "name": "enrollement_status",
-          "type": "enrollement_status",
+        "enrollment_status": {
+          "name": "enrollment_status",
+          "type": "enrollment_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
         },
-        "enrollement_method": {
-          "name": "enrollement_method",
-          "type": "enrollement_method",
+        "enrollment_method": {
+          "name": "enrollment_method",
+          "type": "enrollment_method",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -541,11 +547,41 @@
         }
       },
       "indexes": {
-        "enrollment_id_idx": {
-          "name": "enrollment_id_idx",
+        "device_android_id_idx": {
+          "name": "device_android_id_idx",
           "columns": [
             {
-              "expression": "enrollment_id",
+              "expression": "android_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "device_enrollment_method_idx": {
+          "name": "device_enrollment_method_idx",
+          "columns": [
+            {
+              "expression": "enrollment_method",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "device_enrollment_identity_idx": {
+          "name": "device_enrollment_identity_idx",
+          "columns": [
+            {
+              "expression": "enrollment_identity",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -557,30 +593,9 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "devices_enrollment_id_enrollment_tokens_id_fk": {
-          "name": "devices_enrollment_id_enrollment_tokens_id_fk",
-          "tableFrom": "devices",
-          "tableTo": "enrollment_tokens",
-          "columnsFrom": [
-            "enrollment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "devices_enrollment_id_unique": {
-          "name": "devices_enrollment_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "enrollment_id"
-          ]
-        },
         "devices_android_id_unique": {
           "name": "devices_android_id_unique",
           "nullsNotDistinct": false,
@@ -593,8 +608,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.enrollment_tokens": {
-      "name": "enrollment_tokens",
+    "public.enrollment_challenges": {
+      "name": "enrollment_challenges",
       "schema": "",
       "columns": {
         "id": {
@@ -604,8 +619,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "token": {
-          "name": "token",
+        "challenge": {
+          "name": "challenge",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -638,11 +653,11 @@
         }
       },
       "indexes": {
-        "enrollment_token_idx": {
-          "name": "enrollment_token_idx",
+        "enrollment_challenge_idx": {
+          "name": "enrollment_challenge_idx",
           "columns": [
             {
-              "expression": "token",
+              "expression": "challenge",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -657,11 +672,11 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "enrollment_tokens_token_unique": {
-          "name": "enrollment_tokens_token_unique",
+        "enrollment_challenges_challenge_unique": {
+          "name": "enrollment_challenges_challenge_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "token"
+            "challenge"
           ]
         }
       },
@@ -769,8 +784,8 @@
     }
   },
   "enums": {
-    "public.enrollement_method": {
-      "name": "enrollement_method",
+    "public.enrollment_method": {
+      "name": "enrollment_method",
       "schema": "public",
       "values": [
         "qr",
@@ -778,8 +793,8 @@
         "usb"
       ]
     },
-    "public.enrollement_status": {
-      "name": "enrollement_status",
+    "public.enrollment_status": {
+      "name": "enrollment_status",
       "schema": "public",
       "values": [
         "pending",
