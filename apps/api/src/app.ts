@@ -26,7 +26,7 @@ app.use(cors(corsOptions));
 
 
 // Static files
-app.use(`/download/agent`, express.static("src/download/apk"));
+app.use(`/downloads/agent`, express.static("src/downloads/apk"));
 
 app.use(`${API_BASE_URL}`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
