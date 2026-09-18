@@ -21,7 +21,10 @@
       "Bash(\"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool\" -exportcert -keystore keystore/mdm-dev.jks -alias mdmdev -storepass mdmdevpass)",
       "Bash(grep -n \"JAVA_HOME\\\\|Android Studio.app/Contents/jbr\" ~/.zshrc 2>/dev/null)",
       "Read(//Users/assadi/**)",
-      "Bash(cat)"
+      "Bash(cat)",
+      "Bash(adb devices *)",
+      "Read(//Users/assadi/Library/Android/sdk/platform-tools/**)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)"
     ]
   }
 }
