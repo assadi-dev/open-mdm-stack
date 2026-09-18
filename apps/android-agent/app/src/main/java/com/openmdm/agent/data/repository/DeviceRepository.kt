@@ -89,8 +89,8 @@ class DeviceRepository(
         api.heartbeat(
             id,
             HeartbeatRequest(
-                battery = inventory.batteryLevel(),
-                storageFreeBytes = inventory.freeStorageBytes(),
+                battery = inventory.batteryInventory.batteryLevel(),
+                storageFreeBytes = inventory.storageInventory.getFreeStorageBytes(),
                 online = true,
                 ts = System.currentTimeMillis(),
             ),
