@@ -47,7 +47,6 @@ class EnrollWorker(
         return repository.enroll(baseUrl, enrollmentMethod).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
-                notifyEnrollmentSuccess()
                 Result.success()
             },
             onFailure = { Result.retry() },
