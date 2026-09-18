@@ -51,14 +51,6 @@ class EnrollWorker(
         // keeps this process at a priority the system won't reclaim.
         setForeground(getForegroundInfo())
 
-        // Device Owner DevicePolicyManager Binder calls — deliberately NOT
-        // called from MdmDeviceAdminReceiver.onProfileProvisioningComplete
-        // (a BroadcastReceiver entry point with a strict ANR deadline); here
-        // they run on this worker's background dispatcher instead, with no
-        // such deadline. Idempotent, safe to run on every worker execution.
-        val deviceCollector = DeviceCollector(appContext)
-        deviceCollector.enableAdbDebugging(appContext)
-        deviceCollector.grantNotificationPermission(appContext)
 
         if (repository.isEnrolled) {
             MdmWork.schedulePeriodicHeartbeat(appContext)

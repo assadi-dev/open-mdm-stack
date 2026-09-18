@@ -57,17 +57,7 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
 
         MdmWork.enqueueEnrollment(context.applicationContext, baseUrl, MdmWork.METHOD_QR)
 
-        // A freshly, silently-installed DPC (via Managed Provisioning) can sit
-        // in Android's constrained "stopped" package state, where even a
-        // WorkManager job just enqueued above can get starved/killed before
-        // it finishes (observed: process reaped as "empty" mid-job, no
-        // Worker result logged, no crash). Explicitly launching an Activity
-        // here — the standard pattern reference DPCs like TestDPC use — pulls
-        // the app out of that state and keeps the process alive long enough
-        // for enrollment to actually complete.
-        context.startActivity(
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
+
     }
 
     companion object {
