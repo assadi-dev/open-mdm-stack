@@ -57,7 +57,6 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
 
         MdmWork.enqueueEnrollment(context.applicationContext, baseUrl, MdmWork.METHOD_QR)
 
-
     }
 
     companion object {
