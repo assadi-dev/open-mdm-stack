@@ -17,7 +17,7 @@ import com.openmdm.agent.data.remote.dto.InventoryRequest
  */
 class InventoryCollector(private val context: Context) {
 
-    lateinit var storageInventory:StorageCollector
+    lateinit var storageInventory: StorageCollector
     lateinit var appInventory: PackageCollector
     lateinit var networkInventory: NetworkCollector
 
@@ -52,7 +52,7 @@ class InventoryCollector(private val context: Context) {
             model = Build.MODEL,
             manufacturer = Build.MANUFACTURER,
             osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-            os = Build.VERSION.RELEASE,
+            release = Build.VERSION.RELEASE,
             sdkVersion = Build.VERSION.SDK_INT,
             serial = readSerial(),
             publicKey = publicKey,
@@ -142,7 +142,6 @@ class InventoryCollector(private val context: Context) {
             null
         }
     }
-
 
 
 }

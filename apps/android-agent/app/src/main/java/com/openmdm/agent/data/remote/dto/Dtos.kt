@@ -30,7 +30,7 @@ data class DeviceInfoDto(
     val model: String,
     val manufacturer: String,
     val osVersion: String,
-    val os: String,
+    val release: String,
     val sdkVersion: Int,
     val serial: String? = null,
     val imei: String? = null,
