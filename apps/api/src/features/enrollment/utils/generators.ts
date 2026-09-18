@@ -56,11 +56,9 @@ export const buildProvisioningPayload = (input: CreateProvisioningPayloadInput) 
             ...(input.policyId ? { policyId: input.policyId } : {}),
             ...(input.groupId ? { groupId: input.groupId } : {}),
         },
-
+        "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": input.skipEncryption,
     };
-    if (input.skipEncryption) {
-        payload["android.app.extra.PROVISIONING_SKIP_ENCRYPTION"] = input.skipEncryption;
-    }
+
     if (input?.systemApps) {
         payload["android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED"] = input?.systemApps
     }

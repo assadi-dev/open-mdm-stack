@@ -24,7 +24,10 @@
       "Bash(cat)",
       "Bash(adb devices *)",
       "Read(//Users/assadi/Library/Android/sdk/platform-tools/**)",
-      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)"
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)",
+      "Bash(curl -s -o /dev/null -w \"mdm-agent.apk -> HTTP %{http_code}\\\\n\" http://10.192.2.120:5573/downloads/agent/mdm-agent.apk)",
+      "Bash(curl -s -o /dev/null -w \"app-debug.apk -> HTTP %{http_code}\\\\n\" http://10.192.2.120:5573/downloads/agent/app-debug.apk)",
+      "Bash(/Users/assadi/Library/Android/sdk/build-tools/36.0.0/aapt2 dump *)"
     ]
   }
 }
