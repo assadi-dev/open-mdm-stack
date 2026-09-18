@@ -27,8 +27,7 @@ const env_schema = z.object({
   // URL-safe base64 SHA-256 of the APK signing certificate (dev keystore default).
   MDM_DPC_SIGNATURE_CHECKSUM: z
     .string()
-    .min(1)
-    .default("uvZWxNiL69K71LKebOhMCv8Jecs7RD5U7yMm5LsRDCw"),
+    .min(1, "the MDM_DPC_SIGNATURE_CHECKSUM is required"),
   // HTTPS location the device downloads the agent APK from during provisioning.
   MDM_APK_URL: z.string().min(1).default("http://10.192.2.9:5573/download/apk/app-debug.apk"),
   // Base URL the enrolled device calls back (goes into the QR admin extras).

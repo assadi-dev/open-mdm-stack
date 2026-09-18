@@ -12,7 +12,16 @@
       "Bash(./gradlew compileDebugUnitTestKotlin --console=plain)",
       "Bash(./gradlew testDebugUnitTest --console=plain)",
       "Bash(shasum -a 256 /Users/assadi/Projects/turbo/open-mdm-stack/apps/android-agent/app/debug/app-debug.apk)",
-      "Bash(xxd -r -p)"
+      "Bash(xxd -r -p)",
+      "Bash(openssl dgst *)",
+      "Bash(openssl base64 *)",
+      "Bash(keytool -exportcert -keystore keystore/mdm-dev.jks -alias mdmdev -storepass mdmdevpass)",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(/usr/libexec/java_home -V)",
+      "Bash(\"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool\" -exportcert -keystore keystore/mdm-dev.jks -alias mdmdev -storepass mdmdevpass)",
+      "Bash(grep -n \"JAVA_HOME\\\\|Android Studio.app/Contents/jbr\" ~/.zshrc 2>/dev/null)",
+      "Read(//Users/assadi/**)",
+      "Bash(cat)"
     ]
   }
 }

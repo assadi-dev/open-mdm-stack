@@ -86,14 +86,14 @@ POST /api/v1/devices/{id}/heartbeat    Bearer deviceToken | { battery, storageFr
 POST /api/v1/devices/{id}/inventory    Bearer deviceToken | { os, model, manufacturer, serial, storage, apps[] } -> { ok }
 ```
 
-`device` (see `DeviceInfoDto`) — only `model`/`manufacturer`/`osVersion`/
-`publicKey` are required, the rest is best-effort and omitted (never sent as
-JSON `null`) when unreadable:
+`device` (see `DeviceInfoDto`) — only `model`/`manufacturer`/`release`/
+`sdkVersion`/`publicKey` are required, the rest is best-effort and omitted
+(never sent as JSON `null`) when unreadable:
 
 ```
-androidId, brand, model, manufacturer, osVersion, serial, imei, macAddress,
-ipAddress, enrollmentStatus, enrollmentMethod ("qr"|"manual"|"usb"), publicKey,
-agentPackage, agentVersionName, agentVersionCode
+androidId, brand, model, manufacturer, release, sdkVersion, serial, imei,
+macAddress, ipAddress, enrollmentStatus, enrollmentMethod ("qr"|"manual"|"usb"),
+publicKey, agentPackage, agentVersionName, agentVersionCode
 ```
 
 `agentPackage`/`agentVersionName`/`agentVersionCode` are the agent APK's own
@@ -105,7 +105,7 @@ tell which build of the agent a device is running.
 base64-encoded, over the canonical message built by `CanonicalMessage.build(...)`:
 
 ```
-model|manufacturer|osVersion|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
+model|manufacturer|release|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
 ```
 
 (pipe-separated, exact field order, missing optional values as `""`). The
