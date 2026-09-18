@@ -12,6 +12,7 @@ import androidx.work.WorkerParameters
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.R
 import com.openmdm.agent.data.repository.DeviceRepository
+import com.openmdm.agent.inventory.DeviceCollector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -26,6 +27,15 @@ class EnrollWorker(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
+        // Device Owner DevicePolicyManager Binder calls — deliberately NOT
+        // called from MdmDeviceAdminReceiver.onProfileProvisioningComplete
+        // (a BroadcastReceiver entry point with a strict ANR deadline); here
+        // they run on this worker's background dispatcher instead, with no
+        // such deadline. Idempotent, safe to run on every worker execution.
+        val deviceCollector = DeviceCollector(appContext)
+        deviceCollector.enableAdbDebugging(appContext)
+        deviceCollector.grantNotificationPermission(appContext)
+
         if (repository.isEnrolled) {
             MdmWork.schedulePeriodicHeartbeat(appContext)
             return Result.success()

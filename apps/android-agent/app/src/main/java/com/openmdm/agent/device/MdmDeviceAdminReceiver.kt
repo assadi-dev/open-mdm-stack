@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
-import com.openmdm.agent.inventory.DeviceCollector
 import com.openmdm.agent.work.MdmWork
 
 /**
@@ -44,10 +43,13 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
     override fun onProfileProvisioningComplete(context: Context, intent: Intent) {
         Log.i(TAG, "Provisioning complete")
 
-        val deviceCollector = DeviceCollector(context)
-        deviceCollector.enableAdbDebugging(context)
-        deviceCollector.grantNotificationPermission(context)
-
+        // Keep this callback fast: it's a BroadcastReceiver entry point with a
+        // strict ANR watchdog, and the device is typically under heavy system
+        // load right as provisioning finishes (setup wizard, Knox, GMS all
+        // finalizing at once). DevicePolicyManager Binder calls (ADB-enable,
+        // notification-permission grant) are deferred into EnrollWorker,
+        // which runs on a background dispatcher with no such deadline — do
+        // NOT call DeviceCollector's DPM methods synchronously here again.
         val extras: PersistableBundle? =
             intent.getParcelableExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE)
         val baseUrl = extras?.getString(EXTRA_SERVER_BASE_URL)
