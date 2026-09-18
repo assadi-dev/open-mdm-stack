@@ -3,7 +3,7 @@
 export type CanonicalMessage = {
     model: string,
     manufacturer: string,
-    osVersion: string,
+    release: string,
     serialNumber: string,
     imei: string,
     macAddress: string,

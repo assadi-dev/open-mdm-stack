@@ -23,8 +23,9 @@ const FICTIONAL_DEVICE = {
     model: "Pixel 8 (mock)",
     manufacturer: "Google",
     brand: "google",
-    osVersion: "Android 14 (API 34)",
-    serial: `MOCK-${Date.now()}`,
+    release: "14",
+    sdkVersion: 34,
+    serial: "unknown",
     enrollmentMethod: "manual" as const,
     publicKey: mockKeyPair.publicKey,
 };
@@ -67,7 +68,7 @@ async function main() {
     const canonicalMessage = generateCanonicalMessage({
         model: FICTIONAL_DEVICE.model,
         manufacturer: FICTIONAL_DEVICE.manufacturer,
-        osVersion: FICTIONAL_DEVICE.osVersion,
+        release: FICTIONAL_DEVICE.release,
         serialNumber: FICTIONAL_DEVICE.serial,
         imei: "",
         macAddress: "",

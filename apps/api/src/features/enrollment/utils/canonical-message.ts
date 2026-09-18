@@ -14,7 +14,7 @@ import { CanonicalMessage } from "../entities/generators";
 const CANONICAL_FIELD_ORDER: (keyof CanonicalMessage)[] = [
     "model",
     "manufacturer",
-    "osVersion",
+    "release",
     "serialNumber",
     "imei",
     "macAddress",
