@@ -10,6 +10,11 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
+    <!-- Lets EnrollWorker promote itself via setForeground() so enrollment
+         survives MainActivity losing focus right after provisioning (Doze/
+         standby otherwise kills the WorkManager job when nothing keeps the
+         process at foreground priority — see EnrollWorker). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

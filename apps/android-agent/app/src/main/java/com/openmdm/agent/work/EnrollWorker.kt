@@ -3,11 +3,13 @@ package com.openmdm.agent.work
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.R
@@ -26,7 +28,29 @@ class EnrollWorker(
     private val repository: DeviceRepository,
 ) : CoroutineWorker(appContext, params) {
 
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        val notification = NotificationCompat.Builder(appContext, MdmAgentApp.NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(appContext.getString(R.string.app_name))
+            .setContentText("Enrolling device...")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+        return ForegroundInfo(
+            ENROLLMENT_NOTIFICATION_ID,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE,
+        )
+    }
+
+
     override suspend fun doWork(): Result {
+        // Promote to a foreground service for the duration of this job.
+        // Without this, the job gets silently stopped (onStopJob +
+        // WorkerStoppedException, observed repeatedly) as soon as
+        // MainActivity loses focus right after provisioning — nothing else
+        // keeps this process at a priority the system won't reclaim.
+        setForeground(getForegroundInfo())
+
         // Device Owner DevicePolicyManager Binder calls — deliberately NOT
         // called from MdmDeviceAdminReceiver.onProfileProvisioningComplete
         // (a BroadcastReceiver entry point with a strict ANR deadline); here
@@ -47,6 +71,7 @@ class EnrollWorker(
         return repository.enroll(baseUrl, enrollmentMethod).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
+                notifyEnrollmentSuccess()
                 Result.success()
             },
             onFailure = { Result.retry() },

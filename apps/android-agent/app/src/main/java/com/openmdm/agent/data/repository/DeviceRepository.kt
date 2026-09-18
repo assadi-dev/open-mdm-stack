@@ -9,6 +9,7 @@ import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.inventory.InventoryCollector
 import com.openmdm.agent.security.CanonicalMessage
 import java.time.Instant
+import kotlinx.coroutines.CancellationException
 
 /**
  * Orchestrates the device lifecycle against the backend + secure local store:
@@ -82,7 +83,10 @@ class DeviceRepository(
         // Best-effort first inventory; failure here must not fail enrollment.
         sendInventory().onFailure { Log.w(TAG, "Initial inventory failed", it) }
         Unit
-    }.onFailure { Log.e(TAG, "Enrollment failed", it) }
+    }.onFailure {
+        if (it is CancellationException) throw it
+        Log.e(TAG, "Enrollment failed", it)
+    }
 
     suspend fun sendHeartbeat(): Result<Unit> = runCatching {
         val id = store.deviceId ?: error("Device not enrolled")
@@ -97,12 +101,17 @@ class DeviceRepository(
         )
         store.lastHeartbeatAt = System.currentTimeMillis()
         Unit
-    }.onFailure { Log.w(TAG, "Heartbeat failed", it) }
+    }.onFailure {
+        if (it is CancellationException) throw it
+        Log.w(TAG, "Heartbeat failed", it)
+    }
 
     suspend fun sendInventory(): Result<Unit> = runCatching {
         val id = store.deviceId ?: error("Device not enrolled")
         api.inventory(id, inventory.fullInventory())
         Unit
+    }.onFailure {
+        if (it is CancellationException) throw it
     }
 
     private companion object {
