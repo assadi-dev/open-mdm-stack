@@ -26,10 +26,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DeviceInfoDto(
     val androidId: String? = null,
-    val brand: String? = null,
+    val brand: String,
     val model: String,
     val manufacturer: String,
     val osVersion: String,
+    val os: String,
+    val sdkVersion: Int,
     val serial: String? = null,
     val imei: String? = null,
     val macAddress: String? = null,
@@ -40,6 +42,7 @@ data class DeviceInfoDto(
     val agentVersionName: String? = null,
     val agentVersionCode: Int? = null,
     val agentPackage: String? = null,
+
 )
 
 /**
@@ -99,13 +102,47 @@ data class InstalledAppDto(
 )
 
 @Serializable
+data class LocationDto(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: Float?
+)
+
+@Serializable
+data class BatteryDto(
+    val level: Int,
+    val charging: Boolean,
+    val health: String,
+)
+
+@Serializable
+data class NetworkDto(
+    val type: String,
+    val name: String?,
+    val ipAddress: String?,
+    val macAddress: String?,
+)
+
+@Serializable
+data class MemoryDto(
+    val totalBytes: Long,
+    val usedBytes: Long,
+)
+
+
+@Serializable
 data class InventoryRequest(
+    val brand: String,
     val os: String,
     val model: String,
     val manufacturer: String,
     val serial: String,
     val storage: StorageDto,
     val apps: List<InstalledAppDto>,
+    val battery: BatteryDto,
+    val network: NetworkDto,
+    val memory: MemoryDto,
+    val locations:LocationDto
 )
 
 @Serializable

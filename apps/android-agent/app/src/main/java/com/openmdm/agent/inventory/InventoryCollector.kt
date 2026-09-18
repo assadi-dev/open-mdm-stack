@@ -2,20 +2,13 @@ package com.openmdm.agent.inventory
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.os.BatteryManager
 import android.os.Build
-import android.os.Environment
-import android.os.StatFs
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import com.openmdm.agent.data.remote.dto.DeviceInfoDto
-import com.openmdm.agent.data.remote.dto.InstalledAppDto
 import com.openmdm.agent.data.remote.dto.InventoryRequest
-import com.openmdm.agent.data.remote.dto.StorageDto
 
 /**
  * Collects read-only device facts for enrollment and inventory reporting.
@@ -23,6 +16,21 @@ import com.openmdm.agent.data.remote.dto.StorageDto
  * permission is missing (e.g. before the device-owner grant kicks in).
  */
 class InventoryCollector(private val context: Context) {
+
+    lateinit var storageInventory:StorageCollector
+    lateinit var appInventory: PackageCollector
+    lateinit var networkInventory: NetworkCollector
+
+    lateinit var batteryInventory: PowerCollector
+
+
+    init {
+        storageInventory = StorageCollector(context)
+        appInventory = PackageCollector(context)
+        networkInventory = NetworkCollector(context)
+        batteryInventory = PowerCollector(context)
+
+    }
 
     /**
      * Device facts only — [publicKey]/[enrollmentMethod]/[enrollmentStatus]
@@ -44,6 +52,8 @@ class InventoryCollector(private val context: Context) {
             model = Build.MODEL,
             manufacturer = Build.MANUFACTURER,
             osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+            os = Build.VERSION.RELEASE,
+            sdkVersion = Build.VERSION.SDK_INT,
             serial = readSerial(),
             publicKey = publicKey,
             enrollmentMethod = enrollmentMethod,
@@ -56,41 +66,22 @@ class InventoryCollector(private val context: Context) {
 
     fun fullInventory(): InventoryRequest {
         val info = deviceInfo()
+
         return InventoryRequest(
+            brand = info.brand,
             os = info.osVersion,
             model = info.model,
             manufacturer = info.manufacturer,
             serial = info.serial.orEmpty(),
-            storage = readStorage(),
-            apps = readInstalledApps(),
+            storage = storageInventory.readStorage(),
+            apps = appInventory.readInstalledApps(),
+            network = networkInventory.readNetworkInfo(),
+            memory = storageInventory.readMemory(),
+            battery = batteryInventory.readBatteryStatus(),
+            locations = networkInventory.readLocation(),
         )
     }
 
-    fun batteryLevel(): Int {
-        val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
-        return bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
-    }
-
-    private fun isCharging(): Boolean {
-        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        return status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL
-    }
-
-    private fun getBatteryHealth(): String? {
-        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        return when (intent?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)) {
-            BatteryManager.BATTERY_HEALTH_GOOD -> "good"
-            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "overheat"
-            BatteryManager.BATTERY_HEALTH_DEAD -> "dead"
-            BatteryManager.BATTERY_HEALTH_COLD -> "cold"
-            else -> "unknown"
-        }
-    }
-
-
-    fun freeStorageBytes(): Long = readStorage().freeBytes
 
     private fun readSerial(): String = try {
         // Build.getSerial() requires READ_PHONE_STATE or device-owner privilege.
@@ -114,6 +105,7 @@ class InventoryCollector(private val context: Context) {
         null
     }
 
+
     /** The agent's own package info (name/versionName/versionCode) — static per install, always readable. */
     private fun readAgentPackageInfo(): PackageInfo? = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
@@ -122,68 +114,35 @@ class InventoryCollector(private val context: Context) {
     }
 
 
-    private fun getStorageTotal(): Long {
-        val stat = StatFs(Environment.getDataDirectory().path)
-        return stat.blockCountLong * stat.blockSizeLong
-    }
-
-    private fun getFreeStorageBytes(): Long {
-        val stat = StatFs(Environment.getDataDirectory().path)
-        return stat.availableBlocksLong * stat.blockSizeLong
-    }
-
-    private fun getStorageUsed(): Long {
-        val total = getStorageTotal()
-        val available = getFreeStorageBytes()
-        return total - available
-    }
-
-
-    private fun readStorage(): StorageDto {
-        val total = getStorageTotal()
-        val free = getFreeStorageBytes()
-        val used = getStorageUsed()
-        return StorageDto(totalBytes = total, freeBytes = free, usedBytes = used)
-    }
-
-    @SuppressLint("QueryPermissionsNeeded")
-    private fun readInstalledApps(): List<InstalledAppDto> {
+    @SuppressLint("HardwareIds", "MissingPermission", "ServiceCast")
+    private fun getImei(): String? {
         return try {
-            val packageManager = context.packageManager
-            val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
+            val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                null // IMEI is not accessible on Android 10+
             } else {
                 @Suppress("DEPRECATION")
-                packageManager.getInstalledPackages(0)
+                telephonyManager.deviceId
             }
-
-            packages.map { packageInfo ->
-                val isSystem = (packageInfo.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0
-                InstalledAppDto(
-                    packageName = packageInfo.packageName,
-                    // versionName is a free-form string with no platform length
-                    // limit, but the server stores it in a varchar(50)
-                    // (mdm_device_apps.version in @openmdm/drizzle-adapter) and
-                    // rejects the WHOLE heartbeat when any single app exceeds
-                    // it — Google's TTS app ships a 53-char versionName in the
-                    // wild. Truncate defensively until the server widens the
-                    // column.
-                    versionName = (packageInfo.versionName ?: "unknown").take(MAX_APP_VERSION_LENGTH),
-                    versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        packageInfo.longVersionCode
-                    } else {
-                        @Suppress("DEPRECATION")
-                        packageInfo.versionCode.toLong()
-                    },
-                    system = isSystem
-                )
-            }
-        } catch (_: Exception) {
-            emptyList()
+        } catch (e: Exception) {
+            null
         }
     }
 
-    companion object {
-        private const val MAX_APP_VERSION_LENGTH = 50
+    @SuppressLint("HardwareIds")
+    private fun getSerialNumber(): String? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                null // Serial is not accessible on Android 10+
+            } else {
+                @Suppress("DEPRECATION")
+                Build.SERIAL
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
+
+
+
 }
