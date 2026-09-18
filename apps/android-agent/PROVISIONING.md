@@ -54,21 +54,24 @@ either).
 
 ```bash
 cd apps/android-agent
-./gradlew :app:assembleDebug      # APK at app/build/outputs/apk/debug/app-debug.apk — ADB dev path only, see Provisioning B
-./gradlew :app:assembleRelease    # APK at app/build/outputs/apk/release/app-release.apk — QR/NFC provisioning, see Provisioning A
-./gradlew :app:testDebugUnitTest  # wire-contract + crypto tests (MockWebServer, JVM-only EC keys)
+./gradlew :app:assembleDebug         # APK at app/build/outputs/apk/debug/app-debug.apk — everyday dev builds, not testOnly
+./gradlew :app:assembleBuildTestOnly # APK at app/build/outputs/apk/buildTestOnly/app-buildTestOnly.apk — testOnly, see Provisioning B
+./gradlew :app:assembleRelease       # APK at app/build/outputs/apk/release/app-release.apk — QR/NFC provisioning, see Provisioning A
+./gradlew :app:testDebugUnitTest     # wire-contract + crypto tests (MockWebServer, JVM-only EC keys)
 ```
 
-> **Debug builds cannot be used for QR/NFC provisioning.** [app/src/debug/AndroidManifest.xml](app/src/debug/AndroidManifest.xml)
-> deliberately sets `android:testOnly="true"` on debug builds so a provisioned
-> Device Owner can be removed with `adb shell dpm remove-active-admin`
-> (impossible for a non-test owner). Android's Managed Provisioning flow
-> refuses to silently install a `testOnly` APK, so scanning a QR that points at
-> `app-debug.apk` fails at the install step with a generic "Couldn't set up
-> device admin app" — even with a correct checksum, URL and reachable server.
-> Always host `app-release.apk` for Provisioning A; only the ADB path
-> (Provisioning B, `adb install -t`) may use the debug APK. Verify with:
-> `aapt2 dump badging app-debug.apk | grep testOnly` (`testOnly='-1'` = true).
+> **`testOnly` builds cannot be used for QR/NFC provisioning.**
+> [app/src/buildTestOnly/AndroidManifest.xml](app/src/buildTestOnly/AndroidManifest.xml)
+> sets `android:testOnly="true"` (`debug` and `release` do not) so a
+> provisioned Device Owner can be removed with
+> `adb shell dpm remove-active-admin` (impossible for a non-test owner).
+> Android's Managed Provisioning flow refuses to silently install a
+> `testOnly` APK, so scanning a QR that points at `app-buildTestOnly.apk`
+> fails at the install step with a generic "Couldn't set up device admin
+> app" — even with a correct checksum, URL and reachable server. Always host
+> `app-release.apk` for Provisioning A; only the ADB path (Provisioning B,
+> `adb install -t`) should use the `buildTestOnly` APK. Verify with:
+> `aapt2 dump badging <apk> | grep testOnly` (`testOnly='-1'` = true).
 
 `BuildConfig.USE_MOCK` defaults to **false** — the agent talks to a real
 backend at `BuildConfig.MDM_SERVER_URL` (default `http://10.192.2.120:5573/`,
@@ -196,7 +199,7 @@ this JSON. Host `app-release.apk` (not `app-debug.apk` — see the note in
 The device/emulator must have no accounts and no other device owner.
 
 ```bash
-adb install app/build/outputs/apk/debug/app-debug.apk
+adb install -t app/build/outputs/apk/buildTestOnly/app-buildTestOnly.apk
 adb shell dpm set-device-owner com.openmdm.agent/com.openmdm.agent.device.MdmDeviceAdminReceiver
 adb shell dumpsys device_policy | grep -i "Device Owner"   # verify
 ```

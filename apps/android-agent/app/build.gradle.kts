@@ -44,6 +44,19 @@ android {
         debug {
             signingConfig = signingConfigs.getByName("mdmDev")
         }
+        // Same as debug (debuggable, mdmDev-signed) but additionally marked
+        // android:testOnly="true" (see src/buildTestOnly/AndroidManifest.xml)
+        // so a provisioned Device Owner can be removed with
+        // `adb shell dpm remove-active-admin` — impossible for a non-test
+        // owner. Kept separate from plain `debug` so a regular debug build
+        // stays install-only-via-testOnly-free, matching what QR/NFC
+        // provisioning would need if debug were ever used for that (it isn't
+        // — see PROVISIONING.md).
+        create("buildTestOnly") {
+            initWith(getByName("debug"))
+            isDebuggable = true
+            isJniDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("mdmDev")
