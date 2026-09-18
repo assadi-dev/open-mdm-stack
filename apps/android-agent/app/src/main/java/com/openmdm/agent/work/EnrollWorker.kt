@@ -101,6 +101,13 @@ class EnrollWorker(
         NotificationManagerCompat.from(appContext).notify(ENROLLMENT_NOTIFICATION_ID, notification)
     }
 
+    private fun startMainActivity() {
+        appContext.startActivity(
+            Intent(appContext, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        )
+    }
+
     companion object {
         private const val ENROLLMENT_NOTIFICATION_ID = 1001
     }
