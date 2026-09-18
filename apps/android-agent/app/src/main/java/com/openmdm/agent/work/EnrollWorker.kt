@@ -2,6 +2,7 @@ package com.openmdm.agent.work
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.widget.Toast
@@ -11,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.openmdm.agent.MainActivity
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.R
 import com.openmdm.agent.data.repository.DeviceRepository
