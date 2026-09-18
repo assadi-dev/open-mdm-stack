@@ -17,6 +17,12 @@
     <!-- Serial number read (granted silently to a Device Owner). -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
+    <!-- Status notifications (e.g. enrollment success). Runtime permission on
+         Android 13+; silently granted to ourselves as Device Owner via
+         DevicePolicyManager.setPermissionGrantState (see
+         MdmDeviceAdminReceiver), no user prompt needed. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Storage (runtime). Legacy permission up to Android 12, granular media
          permissions on Android 13+. -->
     <uses-permission

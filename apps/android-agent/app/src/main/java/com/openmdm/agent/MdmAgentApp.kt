@@ -1,6 +1,8 @@
 package com.openmdm.agent
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import androidx.work.Configuration
 import com.openmdm.agent.di.AppContainer
 import com.openmdm.agent.work.MdmWorkerFactory
@@ -21,4 +23,19 @@ class MdmAgentApp : Application(), Configuration.Provider {
         get() = Configuration.Builder()
             .setWorkerFactory(MdmWorkerFactory(container.deviceRepository))
             .build()
+
+    override fun onCreate() {
+        super.onCreate()
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            "Agent status",
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    companion object {
+        /** Channel for enrollment/heartbeat status notifications (see [com.openmdm.agent.work.EnrollWorker]). */
+        const val NOTIFICATION_CHANNEL_ID = "mdm_agent_status"
+    }
 }

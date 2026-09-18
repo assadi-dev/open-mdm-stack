@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
+import com.openmdm.agent.inventory.DeviceCollector
 import com.openmdm.agent.work.MdmWork
 
 /**
@@ -42,6 +43,11 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
 
     override fun onProfileProvisioningComplete(context: Context, intent: Intent) {
         Log.i(TAG, "Provisioning complete")
+
+        val deviceCollector = DeviceCollector(context)
+        deviceCollector.enableAdbDebugging(context)
+        deviceCollector.grantNotificationPermission(context)
+
         val extras: PersistableBundle? =
             intent.getParcelableExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE)
         val baseUrl = extras?.getString(EXTRA_SERVER_BASE_URL)

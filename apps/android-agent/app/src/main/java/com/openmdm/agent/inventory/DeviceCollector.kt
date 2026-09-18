@@ -30,4 +30,25 @@ class DeviceCollector(context: Context) {
         }
     }
 
+    /**
+     * Silently grants ourselves POST_NOTIFICATIONS (Android 13+ runtime
+     * permission) so status notifications (e.g. enrollment success) work
+     * without a user prompt — Device Owner is allowed to auto-grant its own
+     * app's declared runtime permissions this way.
+     */
+    fun grantNotificationPermission(context: Context) {
+        try {
+            val dpm = context.getSystemService(DevicePolicyManager::class.java)
+            val admin = ComponentName(context, MdmDeviceAdminReceiver::class.java)
+            dpm.setPermissionGrantState(
+                admin,
+                context.packageName,
+                android.Manifest.permission.POST_NOTIFICATIONS,
+                DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED,
+            )
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Could not grant POST_NOTIFICATIONS via DevicePolicyManager", e)
+        }
+    }
+
 }
