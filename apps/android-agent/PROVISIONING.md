@@ -79,6 +79,36 @@ enroll/heartbeat/inventory flow against `MockDeviceApi` without any backend.
 > Stable signing identity for QR provisioning lives in `keystore/mdm-dev.jks`
 > (dev-only, committed on purpose so the signature checksum is constant).
 
+> ⚠️ **TODO before production**: [network_security_config.xml](app/src/main/res/xml/network_security_config.xml)
+> currently allows cleartext HTTP for **all hosts, including in the release
+> build** (`cleartextTrafficPermitted="true"` at the base-config level). This
+> is because Provisioning A needs a release build (see above), but the dev
+> backend still runs over plain HTTP on a DHCP-assigned LAN IP with no fixed
+> domain, so a narrower per-host exception isn't practical yet. Once the
+> backend is served over HTTPS, set `cleartextTrafficPermitted="false"` back
+> (or scope it to specific trusted domains) — shipping the current permissive
+> config to real devices makes enrollment/heartbeat/inventory traffic
+> MITM-able.
+>
+> Target production config once the backend has a real domain + HTTPS —
+> no cleartext exception anywhere:
+> ```xml
+> <network-security-config>
+>     <base-config cleartextTrafficPermitted="false" />
+> </network-security-config>
+> ```
+> If a specific host genuinely can't move to HTTPS in time, scope the
+> exception to that domain only instead of the global `base-config` — never
+> leave the blanket exception in a build that ships to real devices:
+> ```xml
+> <network-security-config>
+>     <base-config cleartextTrafficPermitted="false" />
+>     <domain-config cleartextTrafficPermitted="true">
+>         <domain includeSubdomains="false">mdm-api.your-domain.com</domain>
+>     </domain-config>
+> </network-security-config>
+> ```
+
 ## Wire contract (implemented server-side, see `apps/api/src/features/enrollment` and `apps/api/src/features/device`)
 
 There is **no admin-issued enrollment token**. A single-use, short-lived
