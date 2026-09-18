@@ -57,7 +57,7 @@ class DeviceRepository(
         val canonicalMessage = CanonicalMessage.build(
             model = device.model,
             manufacturer = device.manufacturer,
-            osVersion = device.osVersion,
+            release = device.release,
             serialNumber = device.serial,
             imei = device.imei,
             macAddress = device.macAddress,

@@ -13,7 +13,8 @@ export class DeviceRepository {
         serial: string;
         model: string;
         manufacturer: string;
-        osVersion: string;
+        release: string;
+        sdkVersion: number;
         status: typeof enrollmentStatus[number];
         enrollmentMethod: typeof enrollmentMethod[number];
         androidId?: string;
@@ -30,7 +31,8 @@ export class DeviceRepository {
                 serial: input.serial,
                 model: input.model,
                 manufacturer: input.manufacturer,
-                osVersion: input.osVersion,
+                release: input.release,
+                sdkVersion: input.sdkVersion,
                 enrollmentStatus: input.status,
                 enrollmentMethod: input.enrollmentMethod,
                 androidId: input.androidId,
@@ -64,7 +66,8 @@ export class DeviceRepository {
         serial?: string;
         model: string;
         manufacturer: string;
-        osVersion: string;
+        release: string;
+        sdkVersion: number;
         enrollmentMethod: typeof enrollmentMethod[number];
         brand?: string;
         agentVersionName?: string;
@@ -78,7 +81,8 @@ export class DeviceRepository {
                 serial: input.serial,
                 model: input.model,
                 manufacturer: input.manufacturer,
-                osVersion: input.osVersion,
+                release: input.release,
+                sdkVersion: input.sdkVersion,
                 enrollmentStatus: "enrolled",
                 enrollmentMethod: input.enrollmentMethod,
                 brand: input.brand,

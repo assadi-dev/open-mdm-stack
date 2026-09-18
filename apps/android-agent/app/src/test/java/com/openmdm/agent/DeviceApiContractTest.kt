@@ -92,6 +92,8 @@ class DeviceApiContractTest {
                     model = "Pixel",
                     manufacturer = "Google",
                     osVersion = "Android 16",
+                    release = "16",
+                    sdkVersion = 36,
                     serial = "SER123",
                     enrollmentMethod = "manual",
                     publicKey = "cHVibGljS2V5",

@@ -62,7 +62,8 @@ const otherKeyPair = makeMockKeyPair();
 const deviceInfo = {
     model: "Pixel 8",
     manufacturer: "Google",
-    osVersion: "Android 14",
+    release: "14",
+    sdkVersion: 34,
     serial: "abc123",
     brand: "google",
     publicKey: keyPair.publicKeyBase64,
@@ -75,7 +76,7 @@ function signEnrollment(kp: ReturnType<typeof makeMockKeyPair>, overrides: Parti
     const canonicalMessage = generateCanonicalMessage({
         model: deviceInfo.model,
         manufacturer: deviceInfo.manufacturer,
-        osVersion: deviceInfo.osVersion,
+        release: deviceInfo.release,
         serialNumber: deviceInfo.serial,
         imei: "",
         macAddress: "",
@@ -124,7 +125,8 @@ describe("DeviceService", () => {
                     serial: deviceInfo.serial,
                     model: deviceInfo.model,
                     manufacturer: deviceInfo.manufacturer,
-                    osVersion: deviceInfo.osVersion,
+                    release: deviceInfo.release,
+                    sdkVersion: deviceInfo.sdkVersion,
                     brand: deviceInfo.brand,
                     publicKey: deviceInfo.publicKey,
                 }),

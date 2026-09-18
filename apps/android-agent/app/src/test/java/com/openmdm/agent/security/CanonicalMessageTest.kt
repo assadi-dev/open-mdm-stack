@@ -8,7 +8,7 @@ import org.junit.Test
  * Verifies the exact field order/joiner against the server's
  * `generateCanonicalMessage` (apps/api/src/features/enrollment/utils/canonical-message.ts):
  *
- *   model|manufacturer|osVersion|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
+ *   model|manufacturer|release|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
  *
  * with an absent optional field rendered as an empty string (never omitted,
  * never the literal "null" — matching `request[field] ?? ""` server-side).
@@ -20,7 +20,7 @@ class CanonicalMessageTest {
         val message = CanonicalMessage.build(
             model = "Pixel 8",
             manufacturer = "Google",
-            osVersion = "Android 14 (API 34)",
+            release = "14",
             serialNumber = "SER123",
             imei = "IMEI456",
             macAddress = "AA:BB:CC:DD:EE:FF",
@@ -32,7 +32,7 @@ class CanonicalMessageTest {
         )
 
         assertEquals(
-            "Pixel 8|Google|Android 14 (API 34)|SER123|IMEI456|AA:BB:CC:DD:EE:FF|abc123def456|manual|" +
+            "Pixel 8|Google|14|SER123|IMEI456|AA:BB:CC:DD:EE:FF|abc123def456|manual|" +
                 "2026-01-01T00:00:00.000Z|cHVibGljS2V5|chal-1",
             message,
         )
@@ -43,7 +43,7 @@ class CanonicalMessageTest {
         val message = CanonicalMessage.build(
             model = "Pixel 8",
             manufacturer = "Google",
-            osVersion = "Android 14 (API 34)",
+            release = "14",
             serialNumber = null,
             imei = null,
             macAddress = null,
@@ -55,7 +55,7 @@ class CanonicalMessageTest {
         )
 
         assertEquals(
-            "Pixel 8|Google|Android 14 (API 34)||||||2026-01-01T00:00:00.000Z|cHVibGljS2V5|chal-1",
+            "Pixel 8|Google|14||||||2026-01-01T00:00:00.000Z|cHVibGljS2V5|chal-1",
             message,
         )
         assertFalse(message.contains("null"))

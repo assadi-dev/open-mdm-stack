@@ -40,7 +40,7 @@ class EcdsaSignerTest {
         val canonicalMessage = CanonicalMessage.build(
             model = "Pixel 8",
             manufacturer = "Google",
-            osVersion = "Android 14 (API 34)",
+            release = "14",
             serialNumber = "SER123",
             imei = null,
             macAddress = null,

@@ -4,7 +4,13 @@
       "Bash(xargs -I{} sh -c 'echo ==={}; cat {}')",
       "Bash(./gradlew :app:assembleDebug --console=plain)",
       "Bash(./gradlew :app:testDebugUnitTest --console=plain --rerun)",
-      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew :app:testDebugUnitTest --console=plain)"
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew :app:testDebugUnitTest --console=plain)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts',{}\\), indent=2\\)\\)\")",
+      "Bash(pkill -f \"ts-node -r tsconfig-paths/register src/main.ts\")",
+      "Bash(pkill -f \"nodemon\")",
+      "Bash(timeout 300 ./gradlew compileDebugUnitTestKotlin --console=plain)",
+      "Bash(./gradlew compileDebugUnitTestKotlin --console=plain)",
+      "Bash(./gradlew testDebugUnitTest --console=plain)"
     ]
   }
 }

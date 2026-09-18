@@ -5,7 +5,7 @@ package com.openmdm.agent.security
  * enrollment. Field order and semantics MUST exactly match the server's
  * `generateCanonicalMessage` (apps/api/src/features/enrollment/utils/canonical-message.ts):
  *
- *   model|manufacturer|osVersion|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
+ *   model|manufacturer|release|serialNumber|imei|macAddress|androidId|method|timestamp|publicKey|challenge
  *
  * An absent optional field is an empty string ("") in the message, never
  * omitted and never the literal "null" — see [CanonicalMessage.build].
@@ -18,7 +18,7 @@ object CanonicalMessage {
     fun build(
         model: String,
         manufacturer: String,
-        osVersion: String,
+        release: String,
         serialNumber: String?,
         imei: String?,
         macAddress: String?,
@@ -30,7 +30,7 @@ object CanonicalMessage {
     ): String = listOf(
         model,
         manufacturer,
-        osVersion,
+        release,
         serialNumber.orEmpty(),
         imei.orEmpty(),
         macAddress.orEmpty(),

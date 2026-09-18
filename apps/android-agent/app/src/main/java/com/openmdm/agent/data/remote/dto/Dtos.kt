@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
 
 /**
  * Device identity/facts, embedded as the `device` object of [EnrollRequest].
- * All fields but [model]/[manufacturer]/[osVersion]/[publicKey] are optional
- * per the server's `deviceInfoSchema` — an absent optional value must be
+ * All fields but [model]/[manufacturer]/[release]/[sdkVersion]/[publicKey]
+ * are optional per the server's `deviceInfoSchema` — an absent optional value must be
  * omitted from the JSON (not sent as `null`; zod's `.optional()` rejects an
  * explicit null), which is why the Retrofit [kotlinx.serialization.json.Json]
  * instance building this request is configured with `explicitNulls = false`
