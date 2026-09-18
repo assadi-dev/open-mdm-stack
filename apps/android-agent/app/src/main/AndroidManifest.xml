@@ -113,6 +113,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- WorkManager's own SystemForegroundService declares no
+             foregroundServiceType by default; on API 34+ the type passed to
+             ForegroundInfo (shortService, see EnrollWorker) must be a subset
+             of what's declared here, or startForeground() throws
+             IllegalArgumentException at runtime (crash observed without
+             this override — every setForeground() call failed). -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="shortService"
+            tools:node="merge" />
+
         <!-- Disable WorkManager's default initializer: MdmAgentApp provides an
              on-demand Configuration with the custom WorkerFactory. -->
         <provider
