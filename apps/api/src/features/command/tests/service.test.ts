@@ -13,6 +13,7 @@ const { commandRepoMock, deviceRepoMock, publishJsonMock } = vi.hoisted(() => ({
     deviceRepoMock: {
         findDeviceById: vi.fn(),
         setPresence: vi.fn(),
+        setScreenLocked: vi.fn(),
     },
     publishJsonMock: vi.fn(),
 }));
@@ -165,6 +166,38 @@ describe("CommandService", () => {
             await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: "not-a-uuid", status: "succeeded" });
 
             expect(commandRepoMock.applyAck).not.toHaveBeenCalled();
+        });
+
+        it("marks the screen locked when a 'lock' command succeeds", async () => {
+            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "lock", status: "succeeded" }));
+
+            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
+
+            expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, true);
+        });
+
+        it("marks the screen unlocked when an 'unlock' command succeeds", async () => {
+            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "unlock", status: "succeeded" }));
+
+            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
+
+            expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, false);
+        });
+
+        it("does not touch the screen lock state for a non lock/unlock command", async () => {
+            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "reboot", status: "succeeded" }));
+
+            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
+
+            expect(deviceRepoMock.setScreenLocked).not.toHaveBeenCalled();
+        });
+
+        it("does not touch the screen lock state for a mere 'acknowledged' ack", async () => {
+            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "lock", status: "acknowledged" }));
+
+            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "acknowledged" });
+
+            expect(deviceRepoMock.setScreenLocked).not.toHaveBeenCalled();
         });
     });
 });

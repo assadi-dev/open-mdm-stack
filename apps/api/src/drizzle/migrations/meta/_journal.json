@@ -36,6 +36,27 @@
       "when": 1790163801329,
       "tag": "0004_robust_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790166420847,
+      "tag": "0005_dark_mysterio",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790167617937,
+      "tag": "0006_noisy_expediter",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790167632983,
+      "tag": "0007_mute_jack_power",
+      "breakpoints": true
     }
   ]
 }

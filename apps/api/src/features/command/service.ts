@@ -100,6 +100,13 @@ export class CommandService {
         });
         if (!updated) {
             console.warn(`MQTT: ignored ack ${status} for command ${commandId} (device ${deviceId})`);
+            return;
+        }
+
+        if (status === "succeeded" && updated.type === "lock") {
+            await this.deviceRepository.setScreenLocked(deviceId, true);
+        } else if (status === "succeeded" && updated.type === "unlock") {
+            await this.deviceRepository.setScreenLocked(deviceId, false);
         }
     }
 

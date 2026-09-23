@@ -1,4 +1,10 @@
-import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
+import {
+    HTTPBadRequestException,
+    HTTPInternalServerErrorException,
+    HTTPNotFoundException,
+    HTTPUnauthorizedException,
+} from "@core/exception";
+import { APIError } from "better-auth";
 import express from "express";
 import { ZodError } from "zod";
 
@@ -6,15 +12,26 @@ import { ZodError } from "zod";
 
 export const HttpError = (err: unknown) => {
 
-    if (err instanceof HTTPBadRequestException) {
+    if (
+        err instanceof HTTPBadRequestException ||
+        err instanceof HTTPUnauthorizedException ||
+        err instanceof HTTPNotFoundException ||
+        err instanceof HTTPInternalServerErrorException
+    ) {
         return {
             statusCode: err.statusCode,
             message: err.message,
         };
-    } else if (err instanceof HTTPNotFoundException) {
+    } else if (err instanceof APIError) {
+        // Better Auth's own error (e.g. auth.api.signInEmail on a wrong
+        // password, or signUpEmail on an already-registered email) — it
+        // isn't one of our HTTP*Exception classes, so without this branch it
+        // silently fell through to the generic 500 below instead of the 401/
+        // 422/etc it actually carries.
         return {
             statusCode: err.statusCode,
-            message: err.message,
+            message: err.body?.message ?? err.message,
+            code: err.statusCode
         };
     } else {
         return {
@@ -43,6 +60,7 @@ export const errorHandler = async (
         const error = HttpError(err);
         return res.status(error.statusCode).json({
             message: error.message,
+            ...("code" in error && error.code ? { code: error.code } : {}),
         });
     }
 }

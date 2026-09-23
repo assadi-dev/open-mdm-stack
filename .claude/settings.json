@@ -56,7 +56,9 @@
       "Bash(javap -classpath /Users/assadi/Library/Android/sdk/platforms/android-36.1/android.jar android.app.KeyguardManager)",
       "Bash(javap -classpath /Users/assadi/Library/Android/sdk/platforms/android-36.1/android.jar 'android.R$attr')",
       "Bash(git status *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\).exports, null, 2\\)')",
+      "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\),null,2\\)')"
     ]
   }
 }

@@ -102,6 +102,14 @@ export class DeviceRepository {
             .where(eq(devices.id, id));
     }
 
+    /** Updates the lock-screen state, set from a succeeded "lock"/"unlock" command ack (see CommandService.handleAck). */
+    async setScreenLocked(id: string, isScreenLocked: boolean) {
+        await this.db
+            .update(devices)
+            .set({ isScreenLocked })
+            .where(eq(devices.id, id));
+    }
+
     async touchHeartbeat(id: string) {
         await this.db
             .update(devices)
