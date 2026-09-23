@@ -32,6 +32,13 @@ export type DeviceLocationTelemetry = {
     accuracy: number;
 };
 
+// Column defaults, reused by DeviceRepository.patchTelemetry when merging a
+// partial group into a row that doesn't exist yet (see PATCH /telemetry).
+export const DEFAULT_MEMORY_TELEMETRY: DeviceMemoryTelemetry = { totalBytes: 0, usedBytes: 0 };
+export const DEFAULT_STORAGE_TELEMETRY: DeviceStorageTelemetry = { totalBytes: 0, freeBytes: 0, usedBytes: 0 };
+export const DEFAULT_BATTERY_TELEMETRY: DeviceBatteryTelemetry = { level: 0, charging: false, health: "unknown" };
+export const DEFAULT_LOCATION_TELEMETRY: DeviceLocationTelemetry = { latitude: 0, longitude: 0, accuracy: 0 };
+
 /**
  * Live device facts (network, memory, storage, battery, location) refreshed
  * on every inventory push (see features/device DeviceService.recordInventory)
@@ -49,13 +56,13 @@ export const deviceTelemetry = pgTable("device_telemetry", {
 
     network: jsonb("network").$type<DeviceNetworkTelemetry>(),
     memory: jsonb("memory").$type<DeviceMemoryTelemetry>()
-        .default({ totalBytes: 0, usedBytes: 0 }).notNull(),
+        .default(DEFAULT_MEMORY_TELEMETRY).notNull(),
     storage: jsonb("storage").$type<DeviceStorageTelemetry>()
-        .default({ totalBytes: 0, freeBytes: 0, usedBytes: 0 }).notNull(),
+        .default(DEFAULT_STORAGE_TELEMETRY).notNull(),
     battery: jsonb("battery").$type<DeviceBatteryTelemetry>()
-        .default({ level: 0, charging: false, health: "unknown" }).notNull(),
+        .default(DEFAULT_BATTERY_TELEMETRY).notNull(),
     location: jsonb("location").$type<DeviceLocationTelemetry>()
-        .default({ latitude: 0, longitude: 0, accuracy: 0 }).notNull(),
+        .default(DEFAULT_LOCATION_TELEMETRY).notNull(),
 
     ...updatedAndCreatedAt,
 });

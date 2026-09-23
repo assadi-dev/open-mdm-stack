@@ -7,6 +7,7 @@ import {
     validateEnrollDeviceInput,
     validateHeartbeatInput,
     validateInventoryInput,
+    validateTelemetryPatchInput,
 } from "./validator";
 
 export class DeviceController {
@@ -36,6 +37,13 @@ export class DeviceController {
     inventory = async (req: Request, res: Response) => {
         const input = validateInventoryInput(req.body);
         await this.deviceService.recordInventory(req.deviceId as string, input);
+        return res.json({ ok: true });
+    };
+
+    // PATCH /devices/:deviceId/telemetry  (device JWT)
+    patchTelemetry = async (req: Request, res: Response) => {
+        const input = validateTelemetryPatchInput(req.body);
+        await this.deviceService.patchTelemetry(req.deviceId as string, input);
         return res.json({ ok: true });
     };
 }

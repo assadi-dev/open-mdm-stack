@@ -104,13 +104,30 @@ export const inventorySchema = z.object({
     locations: locationSchema,
 });
 
+// Device -> API on PATCH /devices/:deviceId/telemetry. Unlike POST
+// /inventory (a full snapshot, all groups required), this is a targeted
+// update: any subset of groups, merged into what's already stored rather
+// than replacing it (see DeviceRepository.patchTelemetry).
+export const telemetryPatchSchema = z.object({
+    network: networkSchema.partial().optional(),
+    memory: memorySchema.partial().optional(),
+    storage: storageSchema.partial().optional(),
+    battery: batterySchema.partial().optional(),
+    location: locationSchema.partial().optional(),
+}).refine(
+    (data) => data.network || data.memory || data.storage || data.battery || data.location,
+    { message: "At least one of network, memory, storage, battery, location is required" },
+);
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
+export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
 
 
 export const deviceDecoder = {
     enroll: (data: unknown) => enrollDeviceSchema.safeParse(data),
     heartbeat: (data: unknown) => heartbeatSchema.safeParse(data),
     inventory: (data: unknown) => inventorySchema.safeParse(data),
+    telemetryPatch: (data: unknown) => telemetryPatchSchema.safeParse(data),
 };

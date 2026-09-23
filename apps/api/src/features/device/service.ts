@@ -10,7 +10,7 @@ import {
 } from "@core/exception";
 
 import { DeviceRepository } from "./repository";
-import { EnrollDeviceInput, HeartbeatInput, InventoryInput } from "./dto/schema";
+import { EnrollDeviceInput, HeartbeatInput, InventoryInput, TelemetryPatchInput } from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
 import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
@@ -202,5 +202,9 @@ export class DeviceService {
         });
         // Heartbeat timestamp is refreshed so an inventory push also counts as a check-in.
         await this.repository.touchHeartbeat(deviceId);
+    }
+
+    async patchTelemetry(deviceId: string, patch: TelemetryPatchInput) {
+        await this.repository.patchTelemetry(deviceId, patch);
     }
 }

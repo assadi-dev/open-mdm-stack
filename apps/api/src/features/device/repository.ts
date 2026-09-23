@@ -7,6 +7,10 @@ import {
     DeviceMemoryTelemetry,
     DeviceNetworkTelemetry,
     DeviceStorageTelemetry,
+    DEFAULT_MEMORY_TELEMETRY,
+    DEFAULT_STORAGE_TELEMETRY,
+    DEFAULT_BATTERY_TELEMETRY,
+    DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -169,5 +173,51 @@ export class DeviceRepository {
                 target: deviceTelemetry.deviceId,
                 set: { ...data, updatedAt: new Date() },
             });
+    }
+
+    /**
+     * Partial telemetry update (see PATCH /devices/:deviceId/telemetry):
+     * only the groups present in `patch` are touched, and each is *merged*
+     * into what's already stored, not replaced wholesale — e.g. patching
+     * `{ battery: { level: 50 } }` keeps the existing `charging`/`health`.
+     * Checks existence first: creates the row (missing groups falling back
+     * to their column defaults) if none exists yet, updates it otherwise.
+     */
+    async patchTelemetry(deviceId: string, patch: {
+        network?: Partial<DeviceNetworkTelemetry>;
+        memory?: Partial<DeviceMemoryTelemetry>;
+        storage?: Partial<DeviceStorageTelemetry>;
+        battery?: Partial<DeviceBatteryTelemetry>;
+        location?: Partial<DeviceLocationTelemetry>;
+    }) {
+        const [current] = await this.db
+            .select()
+            .from(deviceTelemetry)
+            .where(eq(deviceTelemetry.deviceId, deviceId))
+            .limit(1);
+
+        if (!current) {
+            await this.db.insert(deviceTelemetry).values({
+                deviceId,
+                network: patch.network as DeviceNetworkTelemetry | undefined,
+                memory: patch.memory && { ...DEFAULT_MEMORY_TELEMETRY, ...patch.memory },
+                storage: patch.storage && { ...DEFAULT_STORAGE_TELEMETRY, ...patch.storage },
+                battery: patch.battery && { ...DEFAULT_BATTERY_TELEMETRY, ...patch.battery },
+                location: patch.location && { ...DEFAULT_LOCATION_TELEMETRY, ...patch.location },
+            });
+            return;
+        }
+
+        await this.db
+            .update(deviceTelemetry)
+            .set({
+                network: patch.network && { ...current.network, ...patch.network } as DeviceNetworkTelemetry,
+                memory: patch.memory && { ...current.memory, ...patch.memory },
+                storage: patch.storage && { ...current.storage, ...patch.storage },
+                battery: patch.battery && { ...current.battery, ...patch.battery },
+                location: patch.location && { ...current.location, ...patch.location },
+                updatedAt: new Date(),
+            })
+            .where(eq(deviceTelemetry.deviceId, deviceId));
     }
 }

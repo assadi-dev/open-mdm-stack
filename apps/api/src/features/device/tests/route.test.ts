@@ -12,6 +12,7 @@ const { repoMock, challengeRepoMock, verifyJWTMock } = vi.hoisted(() => ({
         reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
         recordHeartbeat: vi.fn(),
+        patchTelemetry: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -112,5 +113,47 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
             agentVersionCode: 12,
             agentPackage: "com.openmdm.agent",
         });
+    });
+});
+
+describe("PATCH /api/v1/devices/:deviceId/telemetry", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("rejects a telemetry patch with no bearer token", async () => {
+        await request(app)
+            .patch("/api/v1/devices/device-1/telemetry")
+            .send({ battery: { level: 50 } })
+            .expect(401);
+
+        expect(repoMock.patchTelemetry).not.toHaveBeenCalled();
+    });
+
+    it("rejects an empty patch body (no group provided)", async () => {
+        verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });
+
+        await request(app)
+            .patch("/api/v1/devices/device-1/telemetry")
+            .set("Authorization", "Bearer valid-jwt")
+            .send({})
+            .expect(400);
+
+        expect(repoMock.patchTelemetry).not.toHaveBeenCalled();
+    });
+
+    it("accepts a partial battery patch and forwards only that group", async () => {
+        verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });
+
+        const res = await request(app)
+            .patch("/api/v1/devices/device-1/telemetry")
+            .set("Authorization", "Bearer valid-jwt")
+            .send({ battery: { level: 50 } })
+            .expect(200);
+
+        expect(res.body).toEqual({ ok: true });
+        expect(repoMock.patchTelemetry).toHaveBeenCalledWith("device-1", { battery: { level: 50 } });
     });
 });

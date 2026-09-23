@@ -11,6 +11,7 @@ const { repoMock, challengeRepoMock, signJWTMock } = vi.hoisted(() => ({
         touchHeartbeat: vi.fn(),
         recordHeartbeat: vi.fn(),
         upsertTelemetry: vi.fn(),
+        patchTelemetry: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -299,5 +300,11 @@ describe("DeviceService", () => {
             location: { latitude: 45.76, longitude: 4.83, accuracy: 5 },
         });
         expect(repoMock.touchHeartbeat).toHaveBeenCalledWith("device-1");
+    });
+
+    it("patchTelemetry forwards only the provided groups to the repository", async () => {
+        await service.patchTelemetry("device-1", { battery: { level: 50 } });
+
+        expect(repoMock.patchTelemetry).toHaveBeenCalledWith("device-1", { battery: { level: 50 } });
     });
 });
