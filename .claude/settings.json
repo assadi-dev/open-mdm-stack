@@ -58,7 +58,10 @@
       "Bash(git status *)",
       "Bash(git push *)",
       "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\).exports, null, 2\\)')",
-      "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\),null,2\\)')"
+      "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\),null,2\\)')",
+      "Bash(curl -s -u admin:public http://localhost:18083/api/v5/clients/mdm-api/subscriptions)",
+      "Bash(curl -s -u admin:NbCBtfmhrSwZFOAmARd9 \"http://localhost:18083/api/v5/clients/mdm-api/subscriptions\")",
+      "Bash(npx --no-install mqtt --help)"
     ]
   }
 }

@@ -171,8 +171,11 @@ Les droits ([`dependencies/emqx/acl.conf`](dependencies/emqx/acl.conf)) limitent
 | `mdm/devices/{id}/commands` | serveur → device | Commande à exécuter (QoS 1) |
 | `mdm/devices/{id}/acks` | device → serveur | Accusé de réception / résultat d'exécution |
 | `mdm/devices/{id}/status` | device → serveur | `{"state":"online"\|"offline"}`, retained + Last Will |
+| `mdm/devices/{id}/screen` | device → serveur | `{"locked":true\|false}`, retained, renvoyé à chaque changement (y compris un verrouillage/déverrouillage manuel par l'utilisateur, pas seulement via une commande) |
 
 Une commande passe par `pending → sent → acknowledged → succeeded | failed` (ou `expired` si jamais acquittée). Quand un device redevient `online`, l'API lui renvoie tout ce qu'il n'a pas encore acquitté.
+
+L'état `is_screen_locked` du device est mis à jour uniquement depuis `mdm/devices/{id}/screen` — c'est la seule source de vérité, y compris pour une commande `lock`/`unlock` (l'agent le détecte via `KeyguardManager` et le republie, l'ack de la commande ne l'écrit plus lui-même).
 
 ### Tester sans l'agent Android
 

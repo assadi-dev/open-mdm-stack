@@ -42,6 +42,7 @@ class MqttConnectionService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var connectJob: Job? = null
     private var commandsJob: Job? = null
+    private var screenLockReporter: ScreenLockReporter? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -73,6 +74,10 @@ class MqttConnectionService : Service() {
                 .onEach { command -> handleCommand(container, command) }
                 .launchIn(scope)
         }
+        if (screenLockReporter == null) {
+            screenLockReporter = ScreenLockReporter(applicationContext, container.mqttGateway, scope)
+                .also { it.start() }
+        }
         // Restarted by the system after being killed for resources (not a
         // user-initiated swipe-away); the device should reconnect on its own.
         return START_STICKY
@@ -86,6 +91,8 @@ class MqttConnectionService : Service() {
         scope.launch { container.mqttGateway.disconnect() }
         connectJob?.cancel()
         commandsJob?.cancel()
+        screenLockReporter?.stop()
+        screenLockReporter = null
         super.onDestroy()
     }
 

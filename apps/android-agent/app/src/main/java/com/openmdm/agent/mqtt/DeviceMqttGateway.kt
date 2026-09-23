@@ -188,6 +188,16 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
         }
     }
 
+    /** Reports the lock-screen state (retained) on `mdm/devices/{id}/screen` — see [ScreenLockReporter]. */
+    suspend fun publishScreenState(locked: Boolean) {
+        val deviceId = connectedDeviceId
+        if (deviceId == null) {
+            Log.w(TAG, "Cannot report screen state: not connected")
+            return
+        }
+        publishRetained(MqttTopics.screen(deviceId), screenPayload(locked)).await()
+    }
+
     /** Sends a command ack on `mdm/devices/{id}/acks` (not retained — a log of events, not a snapshot). */
     suspend fun ackCommand(ack: CommandAck) {
         val deviceId = connectedDeviceId
@@ -224,6 +234,9 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
 
     private fun statusPayload(state: String): ByteArray =
         json.encodeToString(DeviceStatusPayload(state)).toByteArray(StandardCharsets.UTF_8)
+
+    private fun screenPayload(locked: Boolean): ByteArray =
+        json.encodeToString(DeviceScreenPayload(locked)).toByteArray(StandardCharsets.UTF_8)
 
     private fun publishRetained(topic: String, payload: ByteArray): CompletableFuture<*> =
         publish(topic, payload, retain = true)

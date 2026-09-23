@@ -11,4 +11,5 @@ object MqttTopics {
     fun commands(deviceId: String) = "$ROOT/$deviceId/commands"
     fun acks(deviceId: String) = "$ROOT/$deviceId/acks"
     fun status(deviceId: String) = "$ROOT/$deviceId/status"
+    fun screen(deviceId: String) = "$ROOT/$deviceId/screen"
 }
