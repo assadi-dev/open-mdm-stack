@@ -15,8 +15,8 @@ import androidx.core.content.ContextCompat
 
 /**
  * Requests the permissions the agent needs, on first launch, in sequence:
- *  1. Runtime dialogs — phone state (serial) + storage (legacy on <= Android 12,
- *     granular media on 13+).
+ *  1. Runtime dialogs — phone state (serial), notifications (13+, status
+ *     alerts) + storage (legacy on <= Android 12, granular media on 13+).
  *  2. "Install unknown apps" — a special access that has no runtime dialog, so
  *     the user is sent to the corresponding Settings screen.
  *
@@ -68,6 +68,11 @@ fun StartupPermissions() {
 private fun runtimeDangerousPermissions(): List<String> = buildList {
     // Phone state — lets the agent read the serial without Device Owner privilege.
     add(Manifest.permission.READ_PHONE_STATE)
+    // Notifications — only a runtime permission from Android 13+; before that,
+    // apps can post notifications with no prompt.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.POST_NOTIFICATIONS)
+    }
     // Storage.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         add(Manifest.permission.READ_MEDIA_IMAGES)
