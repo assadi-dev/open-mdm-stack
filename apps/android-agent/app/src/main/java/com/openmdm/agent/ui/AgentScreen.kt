@@ -71,8 +71,8 @@ fun AgentScreen(
                 OutlinedButton(onClick = viewModel::forceHeartbeat, enabled = !state.busy) {
                     Text("Heartbeat")
                 }
-                OutlinedButton(onClick = viewModel::sendInventory, enabled = !state.busy) {
-                    Text("Inventory")
+                OutlinedButton(onClick = viewModel::sendTelemetry, enabled = !state.busy) {
+                    Text("Telemetry")
                 }
             }
         }

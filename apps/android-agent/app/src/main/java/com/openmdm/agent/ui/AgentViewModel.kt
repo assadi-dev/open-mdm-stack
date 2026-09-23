@@ -88,28 +88,36 @@ class AgentViewModel(
         }
     }
 
+    /**
+     * Sends both the heartbeat and the telemetry snapshot — two independent
+     * calls (see [DeviceRepository.sendHeartbeat]/[DeviceRepository.sendTelemetry]),
+     * each with its own outcome reflected in [AgentUiState.message] rather
+     * than one masking the other.
+     */
     fun forceHeartbeat() {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.sendHeartbeat()
+            val heartbeat = repository.sendHeartbeat()
+            val telemetry = repository.sendTelemetry()
             _state.update {
                 it.copy(
                     busy = false,
-                    message = if (result.isSuccess) "Heartbeat sent" else "Heartbeat failed",
+                    message = "Heartbeat ${if (heartbeat.isSuccess) "sent" else "failed"}, " +
+                        "telemetry ${if (telemetry.isSuccess) "sent" else "failed"}",
                 )
             }
             refresh()
         }
     }
 
-    fun sendInventory() {
+    fun sendTelemetry() {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.sendInventory()
+            val result = repository.sendTelemetry()
             _state.update {
                 it.copy(
                     busy = false,
-                    message = if (result.isSuccess) "Inventory sent" else "Inventory failed",
+                    message = if (result.isSuccess) "Telemetry sent" else "Telemetry failed",
                 )
             }
         }

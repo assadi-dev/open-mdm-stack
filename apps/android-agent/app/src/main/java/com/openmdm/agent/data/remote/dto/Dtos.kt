@@ -153,6 +153,23 @@ data class InventoryRequest(
     val locations:LocationDto
 )
 
+/**
+ * Body for `PATCH devices/{id}/telemetry` — mirrors `telemetryPatchSchema`
+ * in apps/api/src/features/device/dto/schema.ts. The agent always reports
+ * every group it can currently read (all non-null), but the endpoint itself
+ * treats each one as an independent partial update merged into what's
+ * already stored (see DeviceRepository.patchTelemetry server-side), hence
+ * every field here being optional on the wire.
+ */
+@Serializable
+data class TelemetryRequest(
+    val network: NetworkDto? = null,
+    val memory: MemoryDto? = null,
+    val storage: StorageDto? = null,
+    val battery: BatteryDto? = null,
+    val location: LocationDto? = null,
+)
+
 @Serializable
 data class SimpleOkResponse(
     val ok: Boolean = true,

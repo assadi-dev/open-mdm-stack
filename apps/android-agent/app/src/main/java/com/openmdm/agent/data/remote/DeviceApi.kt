@@ -6,8 +6,10 @@ import com.openmdm.agent.data.remote.dto.EnrollResponse
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.data.remote.dto.InventoryRequest
 import com.openmdm.agent.data.remote.dto.SimpleOkResponse
+import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -32,9 +34,18 @@ interface DeviceApi {
         @Body body: HeartbeatRequest,
     ): SimpleOkResponse
 
+    // Not yet called by the agent — full software/hardware inventory (apps
+    // list included) is a later chantier. See [telemetry] for the current
+    // hardware-facts report.
     @POST("api/v1/devices/{deviceId}/inventory")
     suspend fun inventory(
         @Path("deviceId") deviceId: String,
         @Body body: InventoryRequest,
+    ): SimpleOkResponse
+
+    @PATCH("api/v1/devices/{deviceId}/telemetry")
+    suspend fun telemetry(
+        @Path("deviceId") deviceId: String,
+        @Body body: TelemetryRequest,
     ): SimpleOkResponse
 }

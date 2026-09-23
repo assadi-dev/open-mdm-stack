@@ -6,6 +6,7 @@ import com.openmdm.agent.data.remote.dto.EnrollResponse
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.data.remote.dto.InventoryRequest
 import com.openmdm.agent.data.remote.dto.SimpleOkResponse
+import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.UUID
@@ -40,6 +41,11 @@ class MockDeviceApi : DeviceApi {
     }
 
     override suspend fun inventory(deviceId: String, body: InventoryRequest): SimpleOkResponse {
+        delay(150)
+        return SimpleOkResponse(ok = true)
+    }
+
+    override suspend fun telemetry(deviceId: String, body: TelemetryRequest): SimpleOkResponse {
         delay(150)
         return SimpleOkResponse(ok = true)
     }

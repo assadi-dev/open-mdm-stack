@@ -6,6 +6,7 @@ import com.openmdm.agent.data.local.SecureDeviceStore
 import com.openmdm.agent.data.remote.DeviceApi
 import com.openmdm.agent.data.remote.dto.EnrollRequest
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
+import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import com.openmdm.agent.inventory.InventoryCollector
 import com.openmdm.agent.security.CanonicalMessage
 import java.time.Instant
@@ -13,7 +14,7 @@ import kotlinx.coroutines.CancellationException
 
 /**
  * Orchestrates the device lifecycle against the backend + secure local store:
- * enroll → persist identity → report inventory, then periodic heartbeats.
+ * enroll → persist identity → report telemetry, then periodic heartbeats.
  */
 class DeviceRepository(
     private val api: DeviceApi,
@@ -80,8 +81,8 @@ class DeviceRepository(
         )
         store.saveEnrollment(response.deviceId, response.deviceToken)
         Log.i(TAG, "Enrolled as deviceId=${response.deviceId}")
-        // Best-effort first inventory; failure here must not fail enrollment.
-        sendInventory().onFailure { Log.w(TAG, "Initial inventory failed", it) }
+        // Best-effort first telemetry report; failure here must not fail enrollment.
+        sendTelemetry().onFailure { Log.w(TAG, "Initial telemetry report failed", it) }
         Unit
     }.onFailure {
         if (it is CancellationException) throw it
@@ -113,12 +114,32 @@ class DeviceRepository(
         Log.w(TAG, "Heartbeat failed", it)
     }
 
-    suspend fun sendInventory(): Result<Unit> = runCatching {
+    /**
+     * Reports the device's current hardware facts (network, memory, storage,
+     * battery, location) to `PATCH devices/{id}/telemetry`. Separate from
+     * [sendHeartbeat] and failing independently of it — see [HeartbeatWorker]
+     * and [com.openmdm.agent.ui.AgentViewModel.forceHeartbeat], which call
+     * both and handle each result on its own.
+     *
+     * Stands in for a full inventory report for now — [DeviceApi.inventory]
+     * (apps list included) is a later chantier.
+     */
+    suspend fun sendTelemetry(): Result<Unit> = runCatching {
         val id = store.deviceId ?: error("Device not enrolled")
-        api.inventory(id, inventory.fullInventory())
+        api.telemetry(
+            id,
+            TelemetryRequest(
+                network = inventory.networkInventory.readNetworkInfo(),
+                memory = inventory.storageInventory.readMemory(),
+                storage = inventory.storageInventory.readStorage(),
+                battery = inventory.batteryInventory.readBatteryStatus(),
+                location = inventory.networkInventory.readLocation(),
+            ),
+        )
         Unit
     }.onFailure {
         if (it is CancellationException) throw it
+        Log.w(TAG, "Telemetry report failed", it)
     }
 
     private companion object {
