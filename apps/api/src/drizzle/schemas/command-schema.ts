@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, uuid, index, pgEnum, jsonb } from "drizzle-or
 import { updatedAndCreatedAt } from "../timestampable";
 import { devices } from "./device-schema";
 
-export const commandType = ["lock", "reboot", "set_lock_message", "factory_reset", "clear_apps_data", "run_app", "uninstall_app", "install_app", "block_app", "unblock_app", "kiosk_mode", "get_location", "get_wifi_list", "remote_cast", "stop_remote_cast"] as const;
+export const commandType = ["lock", "unlock", "reboot", "set_lock_message", "factory_reset", "clear_apps_data", "run_app", "uninstall_app", "install_app", "block_app", "unblock_app", "kiosk_mode", "get_location", "get_wifi_list", "remote_cast", "stop_remote_cast"] as const;
 /**
  * pending      created, not yet handed to the broker (or broker unreachable)
  * sent         published on mdm/devices/{id}/commands (QoS 1)

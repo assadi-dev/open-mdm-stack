@@ -3,6 +3,7 @@ import z from "zod";
 // Admin -> API. One variant per command type so each payload is validated.
 export const createCommandSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("lock") }),
+    z.object({ type: z.literal("unlock") }),
     z.object({ type: z.literal("reboot") }),
     z.object({
         type: z.literal("set_lock_message"),

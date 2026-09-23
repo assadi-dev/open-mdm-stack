@@ -12,10 +12,14 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -36,9 +40,11 @@ enum class MqttConnectionState { DISCONNECTED, CONNECTING, CONNECTED }
  * disconnect (network loss, battery pull, process kill) — no heartbeat
  * needed for that.
  *
- * First cut, scope intentionally limited to connection + presence: it does
- * not yet subscribe to `mdm/devices/{id}/commands` or ack anything — that's
- * the next step, on top of this same connection.
+ * Commands: after every successful (re)connect, this also (re)subscribes to
+ * `mdm/devices/{id}/commands` (QoS 1) and republishes decoded messages on
+ * [commands] for [CommandExecutor]/[MqttConnectionService] to run and ack —
+ * this class stays transport-only, same split as the backend's
+ * `mqttGateway`/`CommandService`.
  */
 class DeviceMqttGateway(private val store: SecureDeviceStore) {
 
@@ -51,6 +57,12 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
 
     private val _connectionState = MutableStateFlow(MqttConnectionState.DISCONNECTED)
     val connectionState: StateFlow<MqttConnectionState> = _connectionState.asStateFlow()
+
+    // Buffered so a burst of commands right at (re)connect — e.g. everything
+    // that queued up while this device was offline — isn't dropped waiting
+    // for the collector in MqttConnectionService to keep up.
+    private val _commands = MutableSharedFlow<IncomingCommand>(extraBufferCapacity = 16)
+    val commands: SharedFlow<IncomingCommand> = _commands.asSharedFlow()
 
     /**
      * Idempotent for a given device identity: a second call while already
@@ -115,6 +127,12 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
                 Log.i(TAG, "MQTT connected to $host:$MQTT_PORT")
                 _connectionState.value = MqttConnectionState.CONNECTED
                 publishRetained(statusTopic, onlinePayload)
+                // Re-issued on every (re)connect, not just the first: a
+                // duplicate SUBSCRIBE for the same filter is harmless, and
+                // this removes any doubt about whether the library's session
+                // resume alone would have covered it (see the simpleAuth/
+                // willPublish comment above for why doubt is warranted here).
+                subscribeToCommands(deviceId)
             }
             .addDisconnectedListener { context ->
                 Log.w(TAG, "MQTT disconnected: ${context.cause.message}")
@@ -170,15 +188,52 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
         }
     }
 
+    /** Sends a command ack on `mdm/devices/{id}/acks` (not retained — a log of events, not a snapshot). */
+    suspend fun ackCommand(ack: CommandAck) {
+        val deviceId = connectedDeviceId
+        if (deviceId == null) {
+            Log.w(TAG, "Cannot ack ${ack.commandId}: not connected")
+            return
+        }
+        publish(MqttTopics.acks(deviceId), json.encodeToString(ack).toByteArray(StandardCharsets.UTF_8), retain = false)
+            .await()
+    }
+
+    private fun subscribeToCommands(deviceId: String) {
+        val mqttClient = client ?: return
+        mqttClient.subscribeWith()
+            .topicFilter(MqttTopics.commands(deviceId))
+            .qos(MqttQos.AT_LEAST_ONCE)
+            .callback { publish ->
+                val command = runCatching {
+                    json.decodeFromString<IncomingCommand>(
+                        String(publish.payloadAsBytes, StandardCharsets.UTF_8),
+                    )
+                }.getOrNull()
+                if (command != null) {
+                    _commands.tryEmit(command)
+                } else {
+                    Log.w(TAG, "Dropping malformed message on ${publish.topic}")
+                }
+            }
+            .send()
+            .whenComplete { _, error ->
+                if (error != null) Log.e(TAG, "Failed to subscribe to commands", error)
+            }
+    }
+
     private fun statusPayload(state: String): ByteArray =
         json.encodeToString(DeviceStatusPayload(state)).toByteArray(StandardCharsets.UTF_8)
 
-    private fun publishRetained(topic: String, payload: ByteArray): CompletableFuture<*> {
+    private fun publishRetained(topic: String, payload: ByteArray): CompletableFuture<*> =
+        publish(topic, payload, retain = true)
+
+    private fun publish(topic: String, payload: ByteArray, retain: Boolean): CompletableFuture<*> {
         val mqttClient = client ?: return CompletableFuture.completedFuture(null)
         return mqttClient.publishWith()
             .topic(topic)
             .qos(MqttQos.AT_LEAST_ONCE)
-            .retain(true)
+            .retain(retain)
             .payload(payload)
             .send()
             .whenComplete { _, error ->

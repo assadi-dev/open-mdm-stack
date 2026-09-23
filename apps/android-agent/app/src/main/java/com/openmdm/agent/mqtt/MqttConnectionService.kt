@@ -9,10 +9,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.R
+import com.openmdm.agent.di.AppContainer
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
@@ -26,11 +30,18 @@ import kotlinx.coroutines.launch
  * boot for an already-enrolled device ([com.openmdm.agent.work.BootReceiver]),
  * and from [MdmAgentApp] in case the process was restarted some other way
  * (e.g. the user reopening the app after it was killed in the background).
+ *
+ * Also collects [DeviceMqttGateway.commands] for as long as it runs, running
+ * each one through [CommandExecutor] and acking it — the reason this service
+ * exists at all rather than just being presence: a connection with nothing
+ * reading it would still get commands delivered at the MQTT level, but
+ * nothing would ever execute or ack them.
  */
 class MqttConnectionService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var connectJob: Job? = null
+    private var commandsJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -57,6 +68,11 @@ class MqttConnectionService : Service() {
                 }
             }
         }
+        if (commandsJob?.isActive != true) {
+            commandsJob = container.mqttGateway.commands
+                .onEach { command -> handleCommand(container, command) }
+                .launchIn(scope)
+        }
         // Restarted by the system after being killed for resources (not a
         // user-initiated swipe-away); the device should reconnect on its own.
         return START_STICKY
@@ -69,10 +85,42 @@ class MqttConnectionService : Service() {
         // (registered in DeviceMqttGateway.connect) does this for us.
         scope.launch { container.mqttGateway.disconnect() }
         connectJob?.cancel()
+        commandsJob?.cancel()
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    /**
+     * Acks receipt first (so the server sees it as `acknowledged` even if
+     * execution then fails or the device dies mid-command), then executes it
+     * and acks the outcome. A command already past [IncomingCommand.expiresAt]
+     * (e.g. redelivered after a long outage) is failed without running —
+     * mirrors the server's own TTL (see `COMMAND_TTL_SECONDS` /
+     * `CommandRepository.expireOverdue`).
+     */
+    private suspend fun handleCommand(container: AppContainer, command: IncomingCommand) {
+        val gateway = container.mqttGateway
+        runCatching { gateway.ackCommand(CommandAck(command.id, "acknowledged")) }
+            .onFailure { Log.w(TAG, "Failed to send 'acknowledged' ack for ${command.id}", it) }
+
+        val expiresAt = command.expiresAt?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        val outcome = if (expiresAt != null && Instant.now().isAfter(expiresAt)) {
+            Result.failure(IllegalStateException("Command expired at $expiresAt"))
+        } else {
+            container.commandExecutor.execute(command)
+        }
+
+        val ack = outcome.fold(
+            onSuccess = { CommandAck(command.id, "succeeded", result = it) },
+            onFailure = {
+                Log.e(TAG, "Command ${command.id} (${command.type}) failed", it)
+                CommandAck(command.id, "failed", error = it.message ?: it.toString())
+            },
+        )
+        runCatching { gateway.ackCommand(ack) }
+            .onFailure { Log.w(TAG, "Failed to send '${ack.status}' ack for ${command.id}", it) }
+    }
 
     private fun buildNotification() =
         NotificationCompat.Builder(this, MdmAgentApp.NOTIFICATION_CHANNEL_ID)
