@@ -8,13 +8,13 @@
  *   CONNECT   clientId = deviceId, username = deviceId, password = deviceToken,
  *             clean = false, will = status {"state":"offline"} (retained, QoS 1)
  *   PUBLISH   mdm/devices/{id}/status  {"state":"online"}          (retained, QoS 1)
- *   PUBLISH   mdm/devices/{id}/screen  {"locked":false}            (retained, QoS 1)
+ *   PUBLISH   mdm/devices/{id}/screen  {"on":true}                 (retained, QoS 1)
  *   SUBSCRIBE mdm/devices/{id}/commands                            (QoS 1)
  *     <- {"id","type","payload","issuedAt","expiresAt"}  (at-least-once: dedupe by id)
  *   PUBLISH   mdm/devices/{id}/acks  {"commandId","status":"acknowledged"}
  *   PUBLISH   mdm/devices/{id}/acks  {"commandId","status":"succeeded"|"failed","result"?,"error"?}
- *   PUBLISH   mdm/devices/{id}/screen  {"locked":true|false}  again after a "lock"/"unlock" succeeds
- *             (mirrors the agent's KeyguardManager-driven report — see ScreenLockReporter.kt)
+ *   PUBLISH   mdm/devices/{id}/screen  {"on":true|false}  again after a "lock"/"unlock" succeeds
+ *             (mirrors the agent's SCREEN_ON/OFF-driven report — see ScreenStateReporter.kt)
  *
  * Usage:
  *   npx tsx scripts/mock-device-mqtt.ts
@@ -104,14 +104,14 @@ async function main() {
 
     const seen = new Set<string>();
     const ack = (body: object) => client.publishAsync(topics.acks, JSON.stringify(body), { qos: 1 });
-    const reportScreen = (locked: boolean) =>
-        client.publishAsync(topics.screen, JSON.stringify({ locked }), { qos: 1, retain: true });
+    const reportScreen = (on: boolean) =>
+        client.publishAsync(topics.screen, JSON.stringify({ on }), { qos: 1, retain: true });
 
     client.on("connect", async () => {
         console.log(`MQTT connected to ${MQTT_URL}`);
         await client.subscribeAsync(topics.commands, { qos: 1 });
         await client.publishAsync(topics.status, JSON.stringify({ state: "online" }), { qos: 1, retain: true });
-        await reportScreen(false);
+        await reportScreen(true);
         console.log(`Online. Send a command with:\n  curl -X POST ${BASE_URL}/api/v1/devices/${deviceId}/commands \\\n    -H "Authorization: Bearer <admin JWT>" -H "Content-Type: application/json" -d '{"type":"lock"}'`);
     });
 
@@ -127,11 +127,13 @@ async function main() {
         await ack({ commandId: command.id, status: "succeeded", result: { executedAt: new Date().toISOString() } });
         console.log(`-> succeeded ${command.id}`);
 
-        // Real agent reports this via KeyguardManager, independently of the
-        // ack (see ScreenLockReporter.kt) — mirrored here so the mock stays
+        // Real agent reports this from SCREEN_ON/OFF, independently of the
+        // ack (see ScreenStateReporter.kt) — mirrored here so the mock stays
         // useful for testing screen-state propagation, not just commands.
-        if (command.type === "lock") await reportScreen(true);
-        if (command.type === "unlock") await reportScreen(false);
+        // lockNow() turns the screen off; dismissing the keyguard (unlock)
+        // turns it back on.
+        if (command.type === "lock") await reportScreen(false);
+        if (command.type === "unlock") await reportScreen(true);
     });
 
     client.on("error", (error) => console.error("MQTT error:", error.message));

@@ -64,7 +64,14 @@
       "Bash(npx --no-install mqtt --help)",
       "Bash(pkill -f \"mqtt subscribe\")",
       "Bash(unzip -p /Users/assadi/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.7.3/6701e8c68d9e82387ce72ee96e8ddf058208d58f/kotlinx-serialization-json-jvm-1.7.3.jar kotlinx/serialization/json/JsonElementKt.class)",
-      "Bash(javap /tmp/JsonElementKt.class)"
+      "Bash(javap /tmp/JsonElementKt.class)",
+      "Bash(python3 -c ' *)",
+      "Bash(npx ctx7@latest library \"Drizzle ORM\" \"update set undefined values behavior\")",
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/02902624-491a-49f3-8605-53908c553f81/scratchpad/npm-cache npx --yes ctx7@latest library \"Drizzle ORM\" \"update set undefined values skip column\")",
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/02902624-491a-49f3-8605-53908c553f81/scratchpad/npm-cache npx --yes ctx7@latest docs /drizzle-team/drizzle-orm-docs \"update\\(\\).set\\(\\) with undefined property values in the object - are they skipped or set to NULL\")",
+      "Bash(xargs ls)",
+      "Bash(./gradlew compileDebugKotlin compileDebugUnitTestKotlin -q)",
+      "Bash(./gradlew testDebugUnitTest --tests \"com.openmdm.agent.DeviceApiContractTest\" --tests \"com.openmdm.agent.mqtt.CommandExecutorTest\" -q)"
     ]
   }
 }

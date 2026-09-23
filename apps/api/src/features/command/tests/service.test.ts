@@ -13,7 +13,7 @@ const { commandRepoMock, deviceRepoMock, publishJsonMock } = vi.hoisted(() => ({
     deviceRepoMock: {
         findDeviceById: vi.fn(),
         setPresence: vi.fn(),
-        setScreenLocked: vi.fn(),
+        setScreenOn: vi.fn(),
     },
     publishJsonMock: vi.fn(),
 }));
@@ -171,22 +171,22 @@ describe("CommandService", () => {
     });
 
     describe("handleDeviceMessage — screen", () => {
-        it("records the reported lock-screen state", async () => {
-            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: true });
+        it("records the reported screen-on state", async () => {
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { on: true });
 
-            expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, true);
+            expect(deviceRepoMock.setScreenOn).toHaveBeenCalledWith(DEVICE_ID, true);
         });
 
-        it("records an unlock report", async () => {
-            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: false });
+        it("records a screen-off report", async () => {
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { on: false });
 
-            expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, false);
+            expect(deviceRepoMock.setScreenOn).toHaveBeenCalledWith(DEVICE_ID, false);
         });
 
         it("ignores a malformed screen report", async () => {
-            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: "yes" });
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { on: "yes" });
 
-            expect(deviceRepoMock.setScreenLocked).not.toHaveBeenCalled();
+            expect(deviceRepoMock.setScreenOn).not.toHaveBeenCalled();
         });
     });
 });

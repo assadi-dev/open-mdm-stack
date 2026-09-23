@@ -45,6 +45,14 @@ export const heartbeatSchema = z.object({
     storageFreeBytes: z.number().int().nonnegative(),
     online: z.boolean(),
     ts: z.number().int(),
+    // Screen power state (on/off) — a periodic re-assertion alongside the
+    // real-time report on mdm/devices/{id}/screen (see ScreenStateReporter.kt).
+    screenOn: z.boolean(),
+    sdkVersion: z.number().int().optional(),
+    ipAddress: z.string().optional(),
+    agentVersionName: z.string().optional(),
+    agentVersionCode: z.number().optional(),
+    agentPackage: z.string().optional(),
 });
 
 const storageSchema = z.object({

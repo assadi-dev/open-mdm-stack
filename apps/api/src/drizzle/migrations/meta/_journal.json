@@ -71,6 +71,13 @@
       "when": 1790175275708,
       "tag": "0009_pretty_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790176889106,
+      "tag": "0010_rename_is_screen_locked",
+      "breakpoints": true
     }
   ]
 }

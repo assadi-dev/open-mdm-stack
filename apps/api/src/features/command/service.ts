@@ -105,7 +105,7 @@ export class CommandService {
         }
     }
 
-    /** The device reports its lock-screen state whenever it changes, independently of any command (see mdm/devices/{id}/screen). */
+    /** The device reports its screen power state whenever it changes, independently of any command (see mdm/devices/{id}/screen). */
     private async handleScreen(deviceId: string, payload: unknown) {
         const parsed = commandDecoder.screen(payload);
         if (!parsed.success) {
@@ -113,7 +113,7 @@ export class CommandService {
             return;
         }
 
-        await this.deviceRepository.setScreenLocked(deviceId, parsed.data.locked);
+        await this.deviceRepository.setScreenOn(deviceId, parsed.data.on);
     }
 
     /** Re-sends everything not yet acknowledged, e.g. when the device reconnects. */

@@ -57,9 +57,9 @@ export const devices = pgTable("devices", {
     // MQTT presence, driven by mdm/devices/{id}/status (retained + Last Will).
     online: boolean("online").default(false).notNull(),
     presenceChangedAt: timestamp("presence_changed_at"),
-    // Last known lock-screen state, updated when a "lock"/"unlock" command
-    // succeeds (see CommandService.handleAck).
-    isScreenLocked: boolean("is_screen_locked").default(false).notNull(),
+    // Last known screen power state (on/off), reported by the device
+    // whenever it changes (see CommandService.handleScreen).
+    isScreenOn: boolean("is_screen_on").default(false).notNull(),
     //policyId: uuid("policy_id"),
     //groupId: uuid("group_id"),
     agentVersionCode: integer("agent_version_code"),

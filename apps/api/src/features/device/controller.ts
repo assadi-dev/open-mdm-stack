@@ -5,6 +5,7 @@ import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
     validateEnrollDeviceInput,
+    validateHeartbeatInput,
     validateInventoryInput,
 } from "./validator";
 
@@ -26,7 +27,8 @@ export class DeviceController {
 
     // POST /devices/:deviceId/heartbeat  (device JWT)
     heartbeat = async (req: Request, res: Response) => {
-        await this.deviceService.recordHeartbeat(req.deviceId as string);
+        const input = validateHeartbeatInput(req.body);
+        await this.deviceService.recordHeartbeat(req.deviceId as string, input);
         return res.json({ ok: true });
     };
 

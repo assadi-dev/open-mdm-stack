@@ -9,6 +9,7 @@ const { repoMock, challengeRepoMock, signJWTMock } = vi.hoisted(() => ({
         findByAndroidId: vi.fn(),
         reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
+        recordHeartbeat: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -251,10 +252,28 @@ describe("DeviceService", () => {
         });
     });
 
-    it("recordHeartbeat refreshes the device's last-seen timestamp", async () => {
-        await service.recordHeartbeat("device-1");
+    it("recordHeartbeat refreshes the device's reported facts and last-seen timestamp", async () => {
+        await service.recordHeartbeat("device-1", {
+            battery: 80,
+            storageFreeBytes: 1_000,
+            online: true,
+            ts: Date.now(),
+            screenOn: true,
+            sdkVersion: 34,
+            ipAddress: "192.168.1.10",
+            agentVersionName: "1.2.0",
+            agentVersionCode: 12,
+            agentPackage: "com.openmdm.agent",
+        });
 
-        expect(repoMock.touchHeartbeat).toHaveBeenCalledWith("device-1");
+        expect(repoMock.recordHeartbeat).toHaveBeenCalledWith("device-1", {
+            isScreenOn: true,
+            sdkVersion: 34,
+            ipAddress: "192.168.1.10",
+            agentVersionName: "1.2.0",
+            agentVersionCode: 12,
+            agentPackage: "com.openmdm.agent",
+        });
     });
 
     it("recordInventory also refreshes the heartbeat timestamp (an inventory push counts as a check-in)", async () => {

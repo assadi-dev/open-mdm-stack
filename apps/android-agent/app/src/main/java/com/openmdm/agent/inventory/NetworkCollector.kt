@@ -62,7 +62,7 @@ class NetworkCollector(private val context: Context) {
     }
 
 
-    private fun getIpAddress(): String? {
+    fun getIpAddress(): String? {
         return try {
             NetworkInterface.getNetworkInterfaces()?.toList()
                 ?.flatMap { it.inetAddresses.toList() }

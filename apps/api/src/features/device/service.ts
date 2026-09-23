@@ -10,7 +10,7 @@ import {
 } from "@core/exception";
 
 import { DeviceRepository } from "./repository";
-import { EnrollDeviceInput, InventoryInput } from "./dto/schema";
+import { EnrollDeviceInput, HeartbeatInput, InventoryInput } from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
 import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
@@ -172,8 +172,15 @@ export class DeviceService {
         return token;
     }
 
-    async recordHeartbeat(deviceId: string) {
-        await this.repository.touchHeartbeat(deviceId);
+    async recordHeartbeat(deviceId: string, input: HeartbeatInput) {
+        await this.repository.recordHeartbeat(deviceId, {
+            isScreenOn: input.screenOn,
+            sdkVersion: input.sdkVersion,
+            ipAddress: input.ipAddress,
+            agentVersionName: input.agentVersionName,
+            agentVersionCode: input.agentVersionCode,
+            agentPackage: input.agentPackage,
+        });
     }
 
     async recordInventory(deviceId: string, _inventory: InventoryInput) {

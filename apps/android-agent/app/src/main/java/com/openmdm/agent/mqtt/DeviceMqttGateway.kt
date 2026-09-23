@@ -189,21 +189,21 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
     }
 
     /**
-     * Reports the lock-screen state (retained) on `mdm/devices/{id}/screen` —
-     * see [ScreenLockReporter]. Returns whether it was actually published:
+     * Reports the screen power state (retained) on `mdm/devices/{id}/screen` —
+     * see [ScreenStateReporter]. Returns whether it was actually published:
      * the caller dedupes on its last *reported* value, so a silent no-op
      * here (not connected yet, e.g. right at service startup) must not be
      * mistaken for success — that would permanently skip the next real
      * change, believing it was already sent.
      */
-    suspend fun publishScreenState(locked: Boolean): Boolean {
+    suspend fun publishScreenState(on: Boolean): Boolean {
         val deviceId = connectedDeviceId
         if (deviceId == null || _connectionState.value != MqttConnectionState.CONNECTED) {
             Log.w(TAG, "Cannot report screen state: not connected")
             return false
         }
         return try {
-            publishRetained(MqttTopics.screen(deviceId), screenPayload(locked)).await()
+            publishRetained(MqttTopics.screen(deviceId), screenPayload(on)).await()
             true
         } catch (e: Exception) {
             Log.w(TAG, "Failed to report screen state", e)
@@ -248,8 +248,8 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
     private fun statusPayload(state: String): ByteArray =
         json.encodeToString(DeviceStatusPayload(state)).toByteArray(StandardCharsets.UTF_8)
 
-    private fun screenPayload(locked: Boolean): ByteArray =
-        json.encodeToString(DeviceScreenPayload(locked)).toByteArray(StandardCharsets.UTF_8)
+    private fun screenPayload(on: Boolean): ByteArray =
+        json.encodeToString(DeviceScreenPayload(on)).toByteArray(StandardCharsets.UTF_8)
 
     private fun publishRetained(topic: String, payload: ByteArray): CompletableFuture<*> =
         publish(topic, payload, retain = true)

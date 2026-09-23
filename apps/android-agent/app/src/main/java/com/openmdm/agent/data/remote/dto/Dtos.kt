@@ -84,6 +84,14 @@ data class HeartbeatRequest(
     val storageFreeBytes: Long,
     val online: Boolean,
     val ts: Long,
+    // Screen power state (on/off) — see ScreenStateReporter.kt for the
+    // real-time counterpart on mdm/devices/{id}/screen.
+    val screenOn: Boolean,
+    val sdkVersion: Int? = null,
+    val ipAddress: String? = null,
+    val agentVersionName: String? = null,
+    val agentVersionCode: Int? = null,
+    val agentPackage: String? = null,
 )
 
 @Serializable

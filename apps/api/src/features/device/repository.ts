@@ -102,11 +102,11 @@ export class DeviceRepository {
             .where(eq(devices.id, id));
     }
 
-    /** Updates the lock-screen state, set from a succeeded "lock"/"unlock" command ack (see CommandService.handleAck). */
-    async setScreenLocked(id: string, isScreenLocked: boolean) {
+    /** Updates the screen power state, reported by the device whenever it changes (see CommandService.handleScreen). */
+    async setScreenOn(id: string, isScreenOn: boolean) {
         await this.db
             .update(devices)
-            .set({ isScreenLocked })
+            .set({ isScreenOn })
             .where(eq(devices.id, id));
     }
 
@@ -114,6 +114,35 @@ export class DeviceRepository {
         await this.db
             .update(devices)
             .set({ lastHeartbeatAt: new Date() })
+            .where(eq(devices.id, id));
+    }
+
+    /**
+     * Refreshes the facts carried on every heartbeat — screen state, IP,
+     * SDK/agent version — alongside the last-seen timestamp. The optional
+     * fields are omitted by Drizzle when `undefined` (left unchanged), not
+     * set to NULL, so a heartbeat that couldn't determine e.g. `ipAddress`
+     * doesn't wipe out the last known value.
+     */
+    async recordHeartbeat(id: string, data: {
+        isScreenOn: boolean;
+        sdkVersion?: number;
+        ipAddress?: string;
+        agentVersionName?: string;
+        agentVersionCode?: number;
+        agentPackage?: string;
+    }) {
+        await this.db
+            .update(devices)
+            .set({
+                isScreenOn: data.isScreenOn,
+                sdkVersion: data.sdkVersion,
+                ipAddress: data.ipAddress,
+                agentVersionName: data.agentVersionName,
+                agentVersionCode: data.agentVersionCode,
+                agentPackage: data.agentPackage,
+                lastHeartbeatAt: new Date(),
+            })
             .where(eq(devices.id, id));
     }
 }

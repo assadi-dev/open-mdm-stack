@@ -11,6 +11,7 @@ const { repoMock, challengeRepoMock, verifyJWTMock } = vi.hoisted(() => ({
         findByAndroidId: vi.fn(),
         reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
+        recordHeartbeat: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -40,7 +41,18 @@ vi.mock("@lib/auth", () => ({
 
 import { app } from "../../../app";
 
-const heartbeatBody = { battery: 80, storageFreeBytes: 1_000, online: true, ts: Date.now() };
+const heartbeatBody = {
+    battery: 80,
+    storageFreeBytes: 1_000,
+    online: true,
+    ts: Date.now(),
+    screenOn: true,
+    sdkVersion: 34,
+    ipAddress: "192.168.1.10",
+    agentVersionName: "1.2.0",
+    agentVersionCode: 12,
+    agentPackage: "com.openmdm.agent",
+};
 
 describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
     beforeEach(() => {
@@ -53,7 +65,7 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
             .send(heartbeatBody)
             .expect(401);
 
-        expect(repoMock.touchHeartbeat).not.toHaveBeenCalled();
+        expect(repoMock.recordHeartbeat).not.toHaveBeenCalled();
     });
 
     it("rejects a heartbeat whose JWT subject doesn't match the enrolled device", async () => {
@@ -65,7 +77,7 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
             .send(heartbeatBody)
             .expect(403);
 
-        expect(repoMock.touchHeartbeat).not.toHaveBeenCalled();
+        expect(repoMock.recordHeartbeat).not.toHaveBeenCalled();
     });
 
     it("rejects a heartbeat for a device that isn't enrolled", async () => {
@@ -78,10 +90,10 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
             .send(heartbeatBody)
             .expect(401);
 
-        expect(repoMock.touchHeartbeat).not.toHaveBeenCalled();
+        expect(repoMock.recordHeartbeat).not.toHaveBeenCalled();
     });
 
-    it("accepts a heartbeat for an enrolled device and refreshes its last-seen timestamp", async () => {
+    it("accepts a heartbeat for an enrolled device and refreshes its reported facts", async () => {
         verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
         repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });
 
@@ -92,6 +104,13 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
             .expect(200);
 
         expect(res.body).toEqual({ ok: true });
-        expect(repoMock.touchHeartbeat).toHaveBeenCalledWith("device-1");
+        expect(repoMock.recordHeartbeat).toHaveBeenCalledWith("device-1", {
+            isScreenOn: true,
+            sdkVersion: 34,
+            ipAddress: "192.168.1.10",
+            agentVersionName: "1.2.0",
+            agentVersionCode: 12,
+            agentPackage: "com.openmdm.agent",
+        });
     });
 });

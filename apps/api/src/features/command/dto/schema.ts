@@ -35,9 +35,9 @@ export const deviceStatusSchema = z.object({
 });
 
 // Device -> API on mdm/devices/{id}/screen (retained). Reported independently
-// of commands, e.g. the user manually locking/unlocking the device.
+// of commands, whenever the screen power state (on/off) changes.
 export const deviceScreenSchema = z.object({
-    locked: z.boolean(),
+    on: z.boolean(),
 });
 
 export type CreateCommandInput = z.infer<typeof createCommandSchema>;

@@ -90,6 +90,7 @@ class DeviceRepository(
 
     suspend fun sendHeartbeat(): Result<Unit> = runCatching {
         val id = store.deviceId ?: error("Device not enrolled")
+        val device = inventory.deviceInfo()
         api.heartbeat(
             id,
             HeartbeatRequest(
@@ -97,6 +98,12 @@ class DeviceRepository(
                 storageFreeBytes = inventory.storageInventory.getFreeStorageBytes(),
                 online = true,
                 ts = System.currentTimeMillis(),
+                screenOn = inventory.isScreenOn(),
+                sdkVersion = device.sdkVersion,
+                ipAddress = inventory.networkInventory.getIpAddress(),
+                agentVersionName = device.agentVersionName,
+                agentVersionCode = device.agentVersionCode,
+                agentPackage = device.agentPackage,
             ),
         )
         store.lastHeartbeatAt = System.currentTimeMillis()

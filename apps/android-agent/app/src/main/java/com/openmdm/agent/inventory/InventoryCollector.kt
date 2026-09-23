@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import com.openmdm.agent.data.remote.dto.DeviceInfoDto
@@ -63,6 +64,10 @@ class InventoryCollector(private val context: Context) {
             agentVersionCode = agentPackageInfo?.longVersionCode?.toInt(),
         )
     }
+
+    /** Current screen power state — same signal as [com.openmdm.agent.mqtt.ScreenStateReporter]. */
+    fun isScreenOn(): Boolean =
+        (context.getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive
 
     fun fullInventory(): InventoryRequest {
         val info = deviceInfo()

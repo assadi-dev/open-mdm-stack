@@ -129,7 +129,7 @@ class DeviceApiContractTest {
 
         val response = api.heartbeat(
             deviceId = "dev-1",
-            body = HeartbeatRequest(battery = 80, storageFreeBytes = 1024L, online = true, ts = 1L),
+            body = HeartbeatRequest(battery = 80, storageFreeBytes = 1024L, online = true, ts = 1L, screenOn = true),
         )
 
         assertTrue(response.ok)
