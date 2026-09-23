@@ -188,14 +188,27 @@ class DeviceMqttGateway(private val store: SecureDeviceStore) {
         }
     }
 
-    /** Reports the lock-screen state (retained) on `mdm/devices/{id}/screen` — see [ScreenLockReporter]. */
-    suspend fun publishScreenState(locked: Boolean) {
+    /**
+     * Reports the lock-screen state (retained) on `mdm/devices/{id}/screen` —
+     * see [ScreenLockReporter]. Returns whether it was actually published:
+     * the caller dedupes on its last *reported* value, so a silent no-op
+     * here (not connected yet, e.g. right at service startup) must not be
+     * mistaken for success — that would permanently skip the next real
+     * change, believing it was already sent.
+     */
+    suspend fun publishScreenState(locked: Boolean): Boolean {
         val deviceId = connectedDeviceId
-        if (deviceId == null) {
+        if (deviceId == null || _connectionState.value != MqttConnectionState.CONNECTED) {
             Log.w(TAG, "Cannot report screen state: not connected")
-            return
+            return false
         }
-        publishRetained(MqttTopics.screen(deviceId), screenPayload(locked)).await()
+        return try {
+            publishRetained(MqttTopics.screen(deviceId), screenPayload(locked)).await()
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to report screen state", e)
+            false
+        }
     }
 
     /** Sends a command ack on `mdm/devices/{id}/acks` (not retained — a log of events, not a snapshot). */

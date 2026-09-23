@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -80,6 +81,16 @@ fun AgentScreen(
             onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) },
         ) {
             Text("Paramètres")
+        }
+
+        if (state.isDeviceOwner) {
+            // Debug only: resets a test device without a full factory reset.
+            OutlinedButton(
+                onClick = viewModel::removeDeviceOwner,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) {
+                Text("Retirer Device Owner")
+            }
         }
 
         state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }

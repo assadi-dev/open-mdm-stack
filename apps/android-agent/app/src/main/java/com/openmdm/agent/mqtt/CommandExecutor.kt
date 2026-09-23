@@ -35,6 +35,10 @@ class CommandExecutor(private val deviceCommands: DeviceCommandActions) {
                 deviceCommands.setLockScreenMessage(message)
                 emptyResult()
             }
+            "remove_device_owner" -> {
+                deviceCommands.removeDeviceOwner()
+                emptyResult()
+            }
             else -> error("Unknown command type: ${command.type}")
         }
     }

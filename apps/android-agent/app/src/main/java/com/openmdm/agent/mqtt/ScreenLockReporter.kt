@@ -19,7 +19,13 @@ import kotlinx.coroutines.launch
  * the outcome of a "lock"/"unlock" command (see [CommandExecutor]). The
  * screen can be ON while still showing the keyguard, so SCREEN_ON/SCREEN_OFF
  * are only used as triggers to re-check [KeyguardManager.isKeyguardLocked],
- * never trusted directly as "unlocked"/"locked".
+ * never trusted directly as "unlocked"/"locked". USER_PRESENT is required
+ * too, not just SCREEN_ON/OFF: on a device with a real PIN/pattern/password
+ * (the realistic case), the actual dismissal happens *between* screen
+ * events — SCREEN_ON still finds the keyguard showing, and by the next
+ * SCREEN_OFF it's back up regardless — so without USER_PRESENT the
+ * "unlocked" state would in practice almost never be observed. USER_PRESENT
+ * fires exactly at that dismissal moment.
  *
  * ACTION_SCREEN_ON/OFF/USER_PRESENT are excluded from manifest-declared
  * broadcasts and only reach a receiver registered at runtime, hence
@@ -72,10 +78,15 @@ class ScreenLockReporter(
     private fun report(force: Boolean) {
         val locked = keyguardManager.isKeyguardLocked
         if (!force && locked == lastReported) return
-        lastReported = locked
         scope.launch {
-            runCatching { gateway.publishScreenState(locked) }
-                .onFailure { Log.w(TAG, "Failed to report screen state", it) }
+            Log.d(TAG, "ScreenLockReporter: Reporting screen state as $locked")
+            // Only commit to lastReported once actually published: a silent
+            // no-op (e.g. not connected yet) must not be mistaken for
+            // success, or the next real change would be deduped away
+            // believing it was already sent.
+            if (runCatching { gateway.publishScreenState(locked) }.getOrDefault(false)) {
+                lastReported = locked
+            }
         }
     }
 

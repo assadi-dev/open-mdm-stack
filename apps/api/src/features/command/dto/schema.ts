@@ -11,6 +11,14 @@ export const createCommandSchema = z.discriminatedUnion("type", [
         // Empty string clears it.
         payload: z.object({ message: z.string().max(200) }),
     }),
+    z.object({
+        type: z.literal("remove_device_owner"),
+        // Relinquishes Device Owner (self-service, always possible). No way
+        // back remotely: Android has no API to (re-)grant Device Owner —
+        // only `adb shell dpm set-device-owner` or full re-provisioning
+        // (QR/NFC) can do that. Testing/decommissioning only, not a normal
+        // fleet operation.
+    }),
 ]);
 
 // Device -> API on mdm/devices/{id}/acks.

@@ -109,6 +109,24 @@ class CommandExecutorTest {
     }
 
     @Test
+    fun removeDeviceOwner_callsRemoveDeviceOwnerAndSucceeds() {
+        val result = executor.execute(command("remove_device_owner"))
+
+        assertTrue(actions.removeDeviceOwnerCalled)
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun removeDeviceOwner_failurePropagatesAsResultFailure() {
+        actions.removeDeviceOwnerError = IllegalStateException("Failed to clear device owner")
+
+        val result = executor.execute(command("remove_device_owner"))
+
+        assertTrue(result.isFailure)
+        assertEquals("Failed to clear device owner", result.exceptionOrNull()?.message)
+    }
+
+    @Test
     fun unknownType_failsWithoutCallingAnyAction() {
         val result = executor.execute(command("factory_reset"))
 
@@ -122,9 +140,11 @@ class CommandExecutorTest {
         var requestUnlockCalled = false
         var setLockScreenMessageCalled = false
         var lastLockScreenMessage: String? = null
+        var removeDeviceOwnerCalled = false
 
         var lockNowError: Throwable? = null
         var rebootError: Throwable? = null
+        var removeDeviceOwnerError: Throwable? = null
 
         override fun lockNow() {
             lockNowError?.let { throw it }
@@ -145,7 +165,12 @@ class CommandExecutorTest {
             requestUnlockCalled = true
         }
 
+        override fun removeDeviceOwner() {
+            removeDeviceOwnerError?.let { throw it }
+            removeDeviceOwnerCalled = true
+        }
+
         fun anyActionCalled() =
-            lockNowCalled || rebootCalled || requestUnlockCalled || setLockScreenMessageCalled
+            lockNowCalled || rebootCalled || requestUnlockCalled || setLockScreenMessageCalled || removeDeviceOwnerCalled
     }
 }

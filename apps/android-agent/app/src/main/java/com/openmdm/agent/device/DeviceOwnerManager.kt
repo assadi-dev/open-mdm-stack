@@ -69,8 +69,24 @@ class DeviceOwnerManager(private val context: Context) : DeviceCommandActions {
     }
 
     /**
+     * Relinquishes Device Owner, triggered remotely by the "remove_device_owner"
+     * command (see [com.openmdm.agent.mqtt.CommandExecutor]) — testing/
+     * decommissioning only, not a normal fleet operation. There is no way
+     * back remotely: Android has no API to (re-)grant Device Owner, only
+     * `adb shell dpm set-device-owner` or full re-provisioning (QR/NFC).
+     * Throws (rather than returning false like [clearDeviceOwner]) so the
+     * command's ack reports "failed" with a real error, per this class's
+     * convention.
+     */
+    override fun removeDeviceOwner() {
+        Log.i(TAG, "Executing removeDeviceOwner")
+        if (!clearDeviceOwner()) error("Failed to clear device owner")
+    }
+
+    /**
      * Relinquishes Device Owner. A non-test Device Owner cannot be removed via
      * `adb dpm remove-active-admin`; only the owner app itself can step down.
+     * Used directly by the debug "Retirer Device Owner" button in the UI.
      */
     fun clearDeviceOwner(): Boolean = try {
         if (dpm.isDeviceOwnerApp(context.packageName)) {

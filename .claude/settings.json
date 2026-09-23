@@ -61,7 +61,10 @@
       "Bash(node -pe 'JSON.stringify\\(JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0\\)\\),null,2\\)')",
       "Bash(curl -s -u admin:public http://localhost:18083/api/v5/clients/mdm-api/subscriptions)",
       "Bash(curl -s -u admin:NbCBtfmhrSwZFOAmARd9 \"http://localhost:18083/api/v5/clients/mdm-api/subscriptions\")",
-      "Bash(npx --no-install mqtt --help)"
+      "Bash(npx --no-install mqtt --help)",
+      "Bash(pkill -f \"mqtt subscribe\")",
+      "Bash(unzip -p /Users/assadi/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.7.3/6701e8c68d9e82387ce72ee96e8ddf058208d58f/kotlinx-serialization-json-jvm-1.7.3.jar kotlinx/serialization/json/JsonElementKt.class)",
+      "Bash(javap /tmp/JsonElementKt.class)"
     ]
   }
 }

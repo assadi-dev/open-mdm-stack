@@ -115,6 +115,20 @@ class AgentViewModel(
         }
     }
 
+    /**
+     * Debug convenience: relinquishes Device Owner locally, for resetting a
+     * test device without a full factory reset (`adb shell dpm
+     * remove-active-admin` refuses on a non-test admin — only the owner app
+     * itself can step down, see [com.openmdm.agent.device.DeviceOwnerManager.clearDeviceOwner]).
+     */
+    fun removeDeviceOwner() {
+        val success = owner.clearDeviceOwner()
+        _state.update {
+            it.copy(message = if (success) "Device owner retiré" else "Échec du retrait")
+        }
+        refresh()
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

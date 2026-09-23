@@ -12,4 +12,5 @@ interface DeviceCommandActions {
     fun reboot()
     fun setLockScreenMessage(message: String?)
     fun requestUnlock()
+    fun removeDeviceOwner()
 }
