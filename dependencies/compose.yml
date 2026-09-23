@@ -49,6 +49,26 @@ services:
     depends_on:
       - postgres
 
+  # Broker MQTT : commandes à distance + présence des devices.
+  # Auth déléguée à l'API (POST /api/v1/mqtt/auth), ACL par device dans acl.conf.
+  # 5.8.6 = dernière version Apache-2.0 (5.9+ passe sous BSL).
+  emqx:
+    image: emqx/emqx:5.8.6
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-8083}:8083"
+      - "${EMQX_DASHBOARD_PORT:-18083}:18083"
+    environment:
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:-public}
+    volumes:
+      - ./emqx/emqx.conf:/opt/emqx/etc/emqx.conf:ro
+      - ./emqx/acl.conf:/opt/emqx/etc/acl.conf:ro
+      - ./volumes/emqx-data:/opt/emqx/data
+    extra_hosts:
+      # Permet au conteneur de joindre l'API lancée sur l'hôte (Linux inclus).
+      - "host.docker.internal:host-gateway"
+
   # Canvas server du MCP Excalidraw (UI + REST + WebSocket) que Claude pilote.
   # Mappé sur 5000 (le canvas écoute sur 3000 en interne, déjà pris par apps/web).
   excalidraw:

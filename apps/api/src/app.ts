@@ -10,6 +10,8 @@ import { toNodeHandler } from "better-auth/node";
 import authRouter from "@features/auth/route";
 import deviceRouter from "@features/device/route";
 import enrollmentRouter from "@features/enrollment/route";
+import commandRouter from "@features/command/route";
+import mqttRouter from "@features/mqtt/route";
 
 
 export const app = express();
@@ -30,8 +32,10 @@ app.use(`/downloads/agent`, express.static("src/downloads/apk"));
 
 app.use(`${API_BASE_URL}`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
+app.use(`${API_BASE_URL}/devices/:deviceId/commands`, commandRouter);
 app.use(`${API_BASE_URL}/devices`, deviceRouter);
 app.use(`${API_BASE_URL}/enrollment`, enrollmentRouter);
+app.use(`${API_BASE_URL}/mqtt`, mqttRouter);
 app.use(errorHandler);
 
 // http.Server wrapping `app`; listening is started from main.ts so this

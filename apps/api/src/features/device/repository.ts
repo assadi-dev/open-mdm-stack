@@ -95,6 +95,13 @@ export class DeviceRepository {
         return row;
     }
 
+    async setPresence(id: string, online: boolean) {
+        await this.db
+            .update(devices)
+            .set({ online, presenceChangedAt: new Date() })
+            .where(eq(devices.id, id));
+    }
+
     async touchHeartbeat(id: string) {
         await this.db
             .update(devices)

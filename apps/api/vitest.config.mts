@@ -25,6 +25,8 @@ export default defineConfig({
             MDM_DEVICE_SECRET: "test-mdm-device-secret",
             // Valid Base32 (RFC 4648) — otplib decodes it as the TOTP/HOTP secret.
             MDM_OTP_SECRET: "GEZDGNBVGY3TQOJQGEZDGNBVGY",
+            MDM_DPC_SIGNATURE_CHECKSUM: "test-dpc-signature-checksum",
+            MQTT_BACKEND_PASSWORD: "test-mqtt-backend-password",
         },
     },
 });

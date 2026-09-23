@@ -30,7 +30,13 @@
       "Bash(/Users/assadi/Library/Android/sdk/build-tools/36.0.0/aapt2 dump *)",
       "Bash(ls /Users/assadi/.claude/projects/-Users-assadi-Projects-turbo-open-mdm-stack/memory/ 2>/dev/null *)",
       "Read(//Users/assadi/.claude/projects/-Users-assadi-Projects-turbo-open-mdm-stack/memory/**)",
-      "Bash(curl -s -o /dev/null -w \"app-release.apk -> HTTP %{http_code}\\\\n\" http://10.192.2.120:5573/downloads/agent/app-release.apk)"
+      "Bash(curl -s -o /dev/null -w \"app-release.apk -> HTTP %{http_code}\\\\n\" http://10.192.2.120:5573/downloads/agent/app-release.apk)",
+      "Bash(npx -y ctx7@latest library EMQX \"HTTP authentication and file ACL authorization configuration in docker\")",
+      "Bash(cd /Users/assadi/Projects/turbo/open-mdm-stack && sed 's/=.*/=<redacted>/' dependencies/.env; ls dependencies/volumes; cat .gitignore | head -30; grep -n \"^[A-Z_]*=\" apps/api/.env | sed 's/=.*//' ; cat apps/api/README.md | head -60)",
+      "Bash(git stash *)",
+      "Bash(lsof -iTCP:5573 -sTCP:LISTEN)",
+      "Bash(break)",
+      "Bash(perl -e 'select\\(undef,undef,undef,1\\)')"
     ]
   }
 }

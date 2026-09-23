@@ -42,6 +42,15 @@ const env_schema = z.object({
   // single-use, fetched via GET /devices/enroll/challenge.
   ENROLLMENT_CHALLENGE_TTL_SECONDS: z.coerce.number().int().min(1).default(120),
 
+  // MQTT broker (EMQX, see dependencies/emqx). The API connects as superuser
+  // with these credentials; the broker validates them via POST /mqtt/auth.
+  MQTT_URL: z.string().min(1).default("mqtt://localhost:1883"),
+  MQTT_CLIENT_ID: z.string().min(1).default("mdm-api"),
+  MQTT_BACKEND_USERNAME: z.string().min(1).default("mdm-api"),
+  MQTT_BACKEND_PASSWORD: z.string().min(16, "MQTT_BACKEND_PASSWORD must be at least 16 chars"),
+  // How long an undelivered command stays eligible for (re)delivery.
+  COMMAND_TTL_SECONDS: z.coerce.number().int().min(1).default(86400),
+
 });
 
 const result = env_schema.safeParse(process.env);

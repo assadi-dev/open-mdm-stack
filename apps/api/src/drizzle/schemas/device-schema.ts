@@ -54,6 +54,9 @@ export const devices = pgTable("devices", {
     enrollmentMethod: enrollmentMethodEnum("enrollment_method").default("manual").notNull(),
     publicKey: text("public_key"),
     lastHeartbeatAt: timestamp("last_heartbeat_at"),
+    // MQTT presence, driven by mdm/devices/{id}/status (retained + Last Will).
+    online: boolean("online").default(false).notNull(),
+    presenceChangedAt: timestamp("presence_changed_at"),
     //policyId: uuid("policy_id"),
     //groupId: uuid("group_id"),
     agentVersionCode: integer("agent_version_code"),
