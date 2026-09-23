@@ -58,6 +58,31 @@ export const heartbeatSchema = z.object({
 const storageSchema = z.object({
     totalBytes: z.number().int().nonnegative(),
     freeBytes: z.number().int().nonnegative(),
+    usedBytes: z.number().int().nonnegative(),
+});
+
+const memorySchema = z.object({
+    totalBytes: z.number().int().nonnegative(),
+    usedBytes: z.number().int().nonnegative(),
+});
+
+const networkSchema = z.object({
+    type: z.string(),
+    name: z.string().nullable().optional(),
+    ipAddress: z.string().nullable().optional(),
+    macAddress: z.string().nullable().optional(),
+});
+
+const batterySchema = z.object({
+    level: z.number().int(),
+    charging: z.boolean(),
+    health: z.string(),
+});
+
+const locationSchema = z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+    accuracy: z.number().nullable().optional(),
 });
 
 const installedAppSchema = z.object({
@@ -73,6 +98,10 @@ export const inventorySchema = z.object({
     serial: z.string(),
     storage: storageSchema,
     apps: z.array(installedAppSchema),
+    network: networkSchema,
+    memory: memorySchema,
+    battery: batterySchema,
+    locations: locationSchema,
 });
 
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;

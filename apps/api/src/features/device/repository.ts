@@ -1,5 +1,13 @@
 import { db as defaultDb } from "@drizzle/instance";
 import { devices, enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
+import {
+    deviceTelemetry,
+    DeviceBatteryTelemetry,
+    DeviceLocationTelemetry,
+    DeviceMemoryTelemetry,
+    DeviceNetworkTelemetry,
+    DeviceStorageTelemetry,
+} from "@drizzle/schemas/device-telemetry-schema";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
@@ -144,5 +152,22 @@ export class DeviceRepository {
                 lastHeartbeatAt: new Date(),
             })
             .where(eq(devices.id, id));
+    }
+
+    /** Overwrites the device's telemetry snapshot from an inventory push — no history, one row per device. */
+    async upsertTelemetry(deviceId: string, data: {
+        network: DeviceNetworkTelemetry;
+        memory: DeviceMemoryTelemetry;
+        storage: DeviceStorageTelemetry;
+        battery: DeviceBatteryTelemetry;
+        location: DeviceLocationTelemetry;
+    }) {
+        await this.db
+            .insert(deviceTelemetry)
+            .values({ deviceId, ...data })
+            .onConflictDoUpdate({
+                target: deviceTelemetry.deviceId,
+                set: { ...data, updatedAt: new Date() },
+            });
     }
 }

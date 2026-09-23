@@ -183,10 +183,24 @@ export class DeviceService {
         });
     }
 
-    async recordInventory(deviceId: string, _inventory: InventoryInput) {
-        // Inventory persistence (table/column) is a later chantier; for now we
-        // only confirm the device is known. Heartbeat timestamp is refreshed so
-        // an inventory push also counts as a check-in.
+    async recordInventory(deviceId: string, inventory: InventoryInput) {
+        await this.repository.upsertTelemetry(deviceId, {
+            network: {
+                type: inventory.network.type,
+                name: inventory.network.name ?? null,
+                ipAddress: inventory.network.ipAddress ?? null,
+                macAddress: inventory.network.macAddress ?? null,
+            },
+            memory: inventory.memory,
+            storage: inventory.storage,
+            battery: inventory.battery,
+            location: {
+                latitude: inventory.locations.latitude,
+                longitude: inventory.locations.longitude,
+                accuracy: inventory.locations.accuracy ?? 0,
+            },
+        });
+        // Heartbeat timestamp is refreshed so an inventory push also counts as a check-in.
         await this.repository.touchHeartbeat(deviceId);
     }
 }

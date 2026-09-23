@@ -73,7 +73,9 @@
       "Bash(./gradlew compileDebugKotlin compileDebugUnitTestKotlin -q)",
       "Bash(./gradlew testDebugUnitTest --tests \"com.openmdm.agent.DeviceApiContractTest\" --tests \"com.openmdm.agent.mqtt.CommandExecutorTest\" -q)",
       "Bash(/Users/assadi/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell pm list packages)",
-      "Bash(/Users/assadi/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell dpm set-device-owner com.openmdm.agent/.device.MdmDeviceAdminReceiver)"
+      "Bash(/Users/assadi/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell dpm set-device-owner com.openmdm.agent/.device.MdmDeviceAdminReceiver)",
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/6c54444f-d207-4c81-8ca1-5cc65d092cb2/scratchpad/npm-cache npx --yes ctx7@latest docs /drizzle-team/drizzle-orm-docs \"pg-core bigint column type mode number vs bigint, default value, doublePrecision and real column types\")",
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/6c54444f-d207-4c81-8ca1-5cc65d092cb2/scratchpad/npm-cache npx --yes ctx7@latest docs /drizzle-team/drizzle-orm-docs \"postgres insert onConflictDoUpdate upsert with target column and set\")"
     ]
   }
 }

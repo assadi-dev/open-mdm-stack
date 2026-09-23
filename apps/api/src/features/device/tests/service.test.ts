@@ -10,6 +10,7 @@ const { repoMock, challengeRepoMock, signJWTMock } = vi.hoisted(() => ({
         reEnrollDevice: vi.fn(),
         touchHeartbeat: vi.fn(),
         recordHeartbeat: vi.fn(),
+        upsertTelemetry: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -276,16 +277,27 @@ describe("DeviceService", () => {
         });
     });
 
-    it("recordInventory also refreshes the heartbeat timestamp (an inventory push counts as a check-in)", async () => {
+    it("recordInventory persists the telemetry snapshot and refreshes the heartbeat timestamp (an inventory push counts as a check-in)", async () => {
         await service.recordInventory("device-1", {
             os: "Android 14",
             model: "Pixel 8",
             manufacturer: "Google",
             serial: "abc123",
-            storage: { totalBytes: 1000, freeBytes: 500 },
+            storage: { totalBytes: 1000, freeBytes: 500, usedBytes: 500 },
             apps: [],
+            network: { type: "wifi", name: "HomeWifi", ipAddress: "192.168.1.10", macAddress: "AA:BB:CC:DD:EE:FF" },
+            memory: { totalBytes: 4000, usedBytes: 2000 },
+            battery: { level: 80, charging: true, health: "good" },
+            locations: { latitude: 45.76, longitude: 4.83, accuracy: 5 },
         });
 
+        expect(repoMock.upsertTelemetry).toHaveBeenCalledWith("device-1", {
+            network: { type: "wifi", name: "HomeWifi", ipAddress: "192.168.1.10", macAddress: "AA:BB:CC:DD:EE:FF" },
+            memory: { totalBytes: 4000, usedBytes: 2000 },
+            storage: { totalBytes: 1000, freeBytes: 500, usedBytes: 500 },
+            battery: { level: 80, charging: true, health: "good" },
+            location: { latitude: 45.76, longitude: 4.83, accuracy: 5 },
+        });
         expect(repoMock.touchHeartbeat).toHaveBeenCalledWith("device-1");
     });
 });
