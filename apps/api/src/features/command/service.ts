@@ -51,6 +51,8 @@ export class CommandService {
     async handleDeviceMessage(deviceId: string, kind: DeviceMessageKind, payload: unknown) {
         if (kind === "status") {
             await this.handleStatus(deviceId, payload);
+        } else if (kind === "screen") {
+            await this.handleScreen(deviceId, payload);
         } else {
             await this.handleAck(deviceId, payload);
         }
@@ -100,14 +102,18 @@ export class CommandService {
         });
         if (!updated) {
             console.warn(`MQTT: ignored ack ${status} for command ${commandId} (device ${deviceId})`);
+        }
+    }
+
+    /** The device reports its lock-screen state whenever it changes, independently of any command (see mdm/devices/{id}/screen). */
+    private async handleScreen(deviceId: string, payload: unknown) {
+        const parsed = commandDecoder.screen(payload);
+        if (!parsed.success) {
+            console.warn(`MQTT: invalid screen state from device ${deviceId}`);
             return;
         }
 
-        if (status === "succeeded" && updated.type === "lock") {
-            await this.deviceRepository.setScreenLocked(deviceId, true);
-        } else if (status === "succeeded" && updated.type === "unlock") {
-            await this.deviceRepository.setScreenLocked(deviceId, false);
-        }
+        await this.deviceRepository.setScreenLocked(deviceId, parsed.data.locked);
     }
 
     /** Re-sends everything not yet acknowledged, e.g. when the device reconnects. */

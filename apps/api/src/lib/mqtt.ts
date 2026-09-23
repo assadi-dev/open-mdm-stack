@@ -8,13 +8,14 @@ export const mqttTopics = {
     commands: (deviceId: string) => `${TOPIC_ROOT}/${deviceId}/commands`,
     allAcks: `${TOPIC_ROOT}/+/acks`,
     allStatus: `${TOPIC_ROOT}/+/status`,
+    allScreen: `${TOPIC_ROOT}/+/screen`,
 };
 
-export type DeviceMessageKind = "acks" | "status";
+export type DeviceMessageKind = "acks" | "status" | "screen";
 
-/** Extracts the device id from mdm/devices/{id}/(acks|status); null for anything else. */
+/** Extracts the device id from mdm/devices/{id}/(acks|status|screen); null for anything else. */
 export const parseDeviceTopic = (topic: string): { deviceId: string; kind: DeviceMessageKind } | null => {
-    const match = /^mdm\/devices\/([^/]+)\/(acks|status)$/.exec(topic);
+    const match = /^mdm\/devices\/([^/]+)\/(acks|status|screen)$/.exec(topic);
     if (!match) return null;
     return { deviceId: match[1], kind: match[2] as DeviceMessageKind };
 };
@@ -66,7 +67,7 @@ class MqttGateway {
         client.on("connect", async (connack) => {
             console.log(`✅ MQTT connected to ${ENV.MQTT_URL} (sessionPresent=${connack.sessionPresent})`);
             try {
-                await client.subscribeAsync([mqttTopics.allAcks, mqttTopics.allStatus], { qos: 1 });
+                await client.subscribeAsync([mqttTopics.allAcks, mqttTopics.allStatus, mqttTopics.allScreen], { qos: 1 });
                 await this.connectHandler?.();
             } catch (error) {
                 console.error("MQTT post-connect setup failed", error);

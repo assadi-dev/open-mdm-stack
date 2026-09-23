@@ -26,12 +26,20 @@ export const deviceStatusSchema = z.object({
     state: z.enum(["online", "offline"]),
 });
 
+// Device -> API on mdm/devices/{id}/screen (retained). Reported independently
+// of commands, e.g. the user manually locking/unlocking the device.
+export const deviceScreenSchema = z.object({
+    locked: z.boolean(),
+});
+
 export type CreateCommandInput = z.infer<typeof createCommandSchema>;
 export type CommandAckInput = z.infer<typeof commandAckSchema>;
 export type DeviceStatusInput = z.infer<typeof deviceStatusSchema>;
+export type DeviceScreenInput = z.infer<typeof deviceScreenSchema>;
 
 export const commandDecoder = {
     create: (data: unknown) => createCommandSchema.safeParse(data),
     ack: (data: unknown) => commandAckSchema.safeParse(data),
     status: (data: unknown) => deviceStatusSchema.safeParse(data),
+    screen: (data: unknown) => deviceScreenSchema.safeParse(data),
 };

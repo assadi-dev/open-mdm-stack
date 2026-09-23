@@ -168,34 +168,23 @@ describe("CommandService", () => {
             expect(commandRepoMock.applyAck).not.toHaveBeenCalled();
         });
 
-        it("marks the screen locked when a 'lock' command succeeds", async () => {
-            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "lock", status: "succeeded" }));
+    });
 
-            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
+    describe("handleDeviceMessage — screen", () => {
+        it("records the reported lock-screen state", async () => {
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: true });
 
             expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, true);
         });
 
-        it("marks the screen unlocked when an 'unlock' command succeeds", async () => {
-            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "unlock", status: "succeeded" }));
-
-            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
+        it("records an unlock report", async () => {
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: false });
 
             expect(deviceRepoMock.setScreenLocked).toHaveBeenCalledWith(DEVICE_ID, false);
         });
 
-        it("does not touch the screen lock state for a non lock/unlock command", async () => {
-            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "reboot", status: "succeeded" }));
-
-            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "succeeded" });
-
-            expect(deviceRepoMock.setScreenLocked).not.toHaveBeenCalled();
-        });
-
-        it("does not touch the screen lock state for a mere 'acknowledged' ack", async () => {
-            commandRepoMock.applyAck.mockResolvedValue(commandRow({ type: "lock", status: "acknowledged" }));
-
-            await service.handleDeviceMessage(DEVICE_ID, "acks", { commandId: COMMAND_ID, status: "acknowledged" });
+        it("ignores a malformed screen report", async () => {
+            await service.handleDeviceMessage(DEVICE_ID, "screen", { locked: "yes" });
 
             expect(deviceRepoMock.setScreenLocked).not.toHaveBeenCalled();
         });
