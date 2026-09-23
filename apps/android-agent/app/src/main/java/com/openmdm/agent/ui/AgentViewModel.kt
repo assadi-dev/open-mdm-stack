@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.di.AppContainer
+import com.openmdm.agent.mqtt.MqttConnectionState
 import com.openmdm.agent.work.MdmWork
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,6 +28,7 @@ data class AgentUiState(
     val serial: String = "",
     val busy: Boolean = false,
     val message: String? = null,
+    val mqttState: MqttConnectionState = MqttConnectionState.DISCONNECTED,
 )
 
 class AgentViewModel(
@@ -40,6 +44,9 @@ class AgentViewModel(
 
     init {
         refresh()
+        container.mqttGateway.connectionState
+            .onEach { mqttState -> _state.update { it.copy(mqttState = mqttState) } }
+            .launchIn(viewModelScope)
     }
 
     fun refresh() {

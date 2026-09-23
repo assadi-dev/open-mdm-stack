@@ -17,6 +17,7 @@ import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.R
 import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.inventory.DeviceCollector
+import com.openmdm.agent.mqtt.MqttConnectionService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -56,6 +57,7 @@ class EnrollWorker(
 
         if (repository.isEnrolled) {
             MdmWork.schedulePeriodicHeartbeat(appContext)
+            MqttConnectionService.start(appContext)
             return Result.success()
         }
         val baseUrl = inputData.getString(MdmWork.KEY_BASE_URL)
@@ -65,6 +67,7 @@ class EnrollWorker(
         return repository.enroll(baseUrl, enrollmentMethod).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
+                MqttConnectionService.start(appContext)
                 notifyEnrollmentSuccess()
                 Result.success()
             },

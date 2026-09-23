@@ -10,6 +10,7 @@ import com.openmdm.agent.data.remote.MockDeviceApi
 import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.device.DeviceOwnerManager
 import com.openmdm.agent.inventory.InventoryCollector
+import com.openmdm.agent.mqtt.DeviceMqttGateway
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -31,6 +32,8 @@ class AppContainer(private val appContext: Context) {
     val deviceKeyStore: DeviceKeyStore by lazy { DeviceKeyStore() }
 
     val deviceOwnerManager: DeviceOwnerManager by lazy { DeviceOwnerManager(appContext) }
+
+    val mqttGateway: DeviceMqttGateway by lazy { DeviceMqttGateway(secureStore) }
 
     val inventoryCollector: InventoryCollector by lazy { InventoryCollector(appContext) }
 

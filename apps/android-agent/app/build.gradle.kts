@@ -74,6 +74,22 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // The HiveMQ MQTT client pulls in Netty, whose jars each ship the same
+    // META-INF housekeeping files (versions.properties, INDEX.LIST, license
+    // headers) — harmless duplicates for packaging, so they're dropped
+    // instead of merged.
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -99,6 +115,9 @@ dependencies {
 
     // QR scanning (optional enrollment channel)
     implementation(libs.zxing.android.embedded)
+
+    // MQTT (remote commands + presence)
+    implementation(libs.hivemq.mqtt.client)
 
     // Networking
     implementation(libs.retrofit)

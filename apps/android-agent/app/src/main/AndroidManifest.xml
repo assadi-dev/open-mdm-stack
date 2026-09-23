@@ -15,6 +15,9 @@
          standby otherwise kills the WorkManager job when nothing keeps the
          process at foreground priority — see EnrollWorker). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+    <!-- Persistent MQTT connection (remote commands + presence), see
+         mqtt.MqttConnectionService. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -102,6 +105,12 @@
                 <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
             </intent-filter>
         </receiver>
+
+        <!-- Persistent MQTT connection: remote commands + presence. -->
+        <service
+            android:name=".mqtt.MqttConnectionService"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging" />
 
         <!-- Re-arm the heartbeat after reboot. -->
         <receiver

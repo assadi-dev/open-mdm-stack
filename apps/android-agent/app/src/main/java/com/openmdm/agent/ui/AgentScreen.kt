@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openmdm.agent.mqtt.MqttConnectionState
 import com.openmdm.agent.work.MdmWork
 import java.text.DateFormat
 import java.util.Date
@@ -96,6 +97,7 @@ private fun StatusCard(state: AgentUiState) {
             InfoRow("Admin active", if (state.isAdminActive) "yes" else "no")
             InfoRow("Enrolled", if (state.isEnrolled) "yes" else "no")
             InfoRow("Device id", state.deviceId ?: "—")
+            InfoRow("MQTT", formatMqttState(state.mqttState))
             InfoRow("Last heartbeat", formatTimestamp(state.lastHeartbeatAt))
             InfoRow("Model", state.deviceModel)
             InfoRow("OS", state.osVersion)
@@ -186,3 +188,9 @@ private fun ManualEnrollmentCard(
 
 private fun formatTimestamp(ts: Long): String =
     if (ts <= 0L) "never" else DateFormat.getDateTimeInstance().format(Date(ts))
+
+private fun formatMqttState(state: MqttConnectionState): String = when (state) {
+    MqttConnectionState.CONNECTED -> "connecté"
+    MqttConnectionState.CONNECTING -> "connexion…"
+    MqttConnectionState.DISCONNECTED -> "déconnecté"
+}
