@@ -79,7 +79,20 @@
       "Bash(./gradlew testDebugUnitTest -q)",
       "Bash(./gradlew compileDebugKotlin -q)",
       "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
-      "Bash(python3 sample2.py)"
+      "Bash(python3 sample2.py)",
+      "Bash(node scripts/validate_palette.js --help)",
+      "Bash(node scripts/validate_palette.js \"#ED9843,#57A2F7,#45E581\" --mode light --surface \"#F2EBDD\")",
+      "Bash(node scripts/validate_palette.js \"#F0A254,#E27100,#B35A00,#7A3B08\" --ordinal --mode light --surface \"#F2EBDD\")",
+      "Bash(node scripts/validate_palette.js \"#EC9540,#E27100,#B35A00,#7A3B08\" --ordinal --mode light --surface \"#F2EBDD\")",
+      "Bash(node scripts/validate_palette.js \"#EA903A,#D96C00,#AA5400,#743806\" --ordinal --mode light --surface \"#F2EBDD\")",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --disable-gpu --hide-scrollbars --window-size=500,300 --screenshot=test.png file://__TRACKED_VAR__/test.html)",
+      "Bash(chmod +x shot.sh)",
+      "Bash(./shot.sh board.html board.png 760)",
+      "Bash(./shot.sh board.html board.png 1400)",
+      "Bash(./shot.sh board.html board.png 2000)",
+      "Bash(./shot.sh board.html board.png 2500)",
+      "Bash(./shot.sh board.html board.png 3000)",
+      "Bash(./shot.sh board.html board.png 3600)"
     ]
   }
 }
