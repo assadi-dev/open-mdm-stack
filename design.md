@@ -14,6 +14,7 @@ Stack : Next.js 16, React 19, Tailwind v4, **shadcn/ui** sur **Base UI** (style 
 6. **Jamais la couleur seule pour un statut.** Toujours icône lucide ou pastille + libellé texte.
 7. **Une seule police : Inter**, poids 400/500/600 uniquement.
 8. Tout le contenu UI est **en français**, verbes à l'infinitif, casse de phrase (pas de Title Case), pas d'emoji, pas de point d'exclamation.
+9. **Icônes : uniquement `lucide-react`**, jamais une autre librairie, jamais un SVG dessiné à la main (détail tailles/usages : § Icônes plus bas).
 
 ## Tokens — les seuls noms à utiliser dans le JSX/Tailwind
 

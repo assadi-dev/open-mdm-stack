@@ -103,7 +103,10 @@
       "Bash(npx --yes ctx7@latest library \"Base UI\" \"Progress Indicator inline width style\")",
       "Bash(npx --yes ctx7@latest docs /mui/base-ui \"Progress.Indicator inline style width percentage of value\")",
       "Bash(curl -s https://ui.shadcn.com/r/styles/base-nova/registry.json -o /dev/null -w \"%{http_code}\\\\n\")",
-      "Bash(echo \"exit $?\")"
+      "Bash(echo \"exit $?\")",
+      "mcp__shadcn__get_project_registries",
+      "Bash(npx shadcn@latest --version)",
+      "Bash(npm -v)"
     ]
   }
 }

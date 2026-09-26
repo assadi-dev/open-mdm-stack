@@ -257,3 +257,13 @@ Après une soumission de formulaire, ou toute action qui peut échouer (mutation
 - Une action qui ne passe pas par TanStack Query est entourée d'un `try/catch` dans son hook, avec un toast dans chaque branche.
 - Les textes viennent de `success` et `error` dans le fichier de l'entité (`DEVICE.success.create`, `DEVICE.error.create`), jamais écrits en dur.
 - Les erreurs de validation d'un champ restent affichées sous le champ (`FieldError`). Le toast porte le résultat de la soumission.
+
+## 9. Icônes
+
+Toute icône vient de `lucide-react`, jamais d'une autre librairie ni d'un SVG dessiné à la main.
+
+```tsx
+import { LayoutDashboard } from "lucide-react";
+```
+
+Tailles, épaisseur de trait et usage par contexte (nav, bouton, badge, statut…) : voir `design.md` § Icônes.

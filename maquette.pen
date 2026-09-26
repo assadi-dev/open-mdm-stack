@@ -1,5 +1,5 @@
 {
-  "version": "2.18",
+  "version": "2.19",
   "children": [
     {
       "type": "frame",
@@ -5339,6 +5339,518 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lpr8u",
+      "x": 2420,
+      "y": 0,
+      "name": "Nav Item",
+      "reusable": true,
+      "width": 240,
+      "height": 44,
+      "cornerRadius": 14,
+      "gap": 12,
+      "padding": [
+        0,
+        14
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "hG0a6",
+          "name": "Icon",
+          "width": 20,
+          "height": 20,
+          "icon": "layout-dashboard",
+          "library": "lucide",
+          "fill": "$foreground"
+        },
+        {
+          "type": "text",
+          "id": "VlaR8",
+          "name": "Label",
+          "fill": "$foreground",
+          "content": "Element de navigation",
+          "fontFamily": "$font-sans",
+          "fontSize": 15,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "reoOy",
+      "x": 2720,
+      "y": 0,
+      "name": "Sidebar",
+      "reusable": true,
+      "width": 280,
+      "fill": "$card",
+      "cornerRadius": 22,
+      "stroke": "$card-border",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 20,
+      "padding": 12,
+      "children": [
+        {
+          "type": "frame",
+          "id": "p1Jj0z",
+          "name": "Brand",
+          "width": "fill_container",
+          "padding": [
+            10,
+            10,
+            6,
+            10
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "kDQtr",
+              "name": "Brand Label",
+              "fill": "$foreground",
+              "content": "Open MDM",
+              "fontFamily": "$font-sans",
+              "fontSize": 22,
+              "fontWeight": "600",
+              "letterSpacing": -0.4
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oXU94",
+          "name": "Nav",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "children": [
+            {
+              "id": "QqqRI",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Tableau de bord",
+              "width": "fill_container",
+              "fill": "$primary",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "layout-dashboard",
+                  "fill": "$primary-foreground"
+                },
+                "VlaR8": {
+                  "content": "Tableau de bord",
+                  "fill": "$primary-foreground",
+                  "fontWeight": "600"
+                }
+              }
+            },
+            {
+              "id": "R7dbUG",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Appareils",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "smartphone",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Appareils",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "A8i2VW",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Politiques",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "shield-check",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Politiques",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "N6ZK2U",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Enrolement",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "qr-code",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Enrolement",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "L48iR",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Applications",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "package",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Applications",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "s2rkx",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Commandes",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "send",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Commandes",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "xhS1l",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Groupes",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "layers",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Groupes",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            },
+            {
+              "id": "rz6nX",
+              "type": "ref",
+              "ref": "lpr8u",
+              "name": "Nav Journal",
+              "width": "fill_container",
+              "descendants": {
+                "hG0a6": {
+                  "icon": "scroll-text",
+                  "fill": "$foreground"
+                },
+                "VlaR8": {
+                  "content": "Journal",
+                  "fill": "$foreground",
+                  "fontWeight": "500"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "q5wtU",
+      "x": 3060,
+      "y": 0,
+      "name": "Topbar",
+      "reusable": true,
+      "width": 960,
+      "fill": "$card",
+      "cornerRadius": 22,
+      "stroke": "$card-border",
+      "strokeWidth": 1,
+      "gap": 24,
+      "padding": [
+        16,
+        20
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "AhYwN",
+          "name": "Titles",
+          "layout": "vertical",
+          "gap": 2,
+          "children": [
+            {
+              "type": "text",
+              "id": "j8v5I",
+              "name": "Title",
+              "fill": "$foreground",
+              "content": "Tableau de bord",
+              "fontFamily": "$font-sans",
+              "fontSize": 26,
+              "fontWeight": "600",
+              "letterSpacing": -0.6
+            },
+            {
+              "type": "text",
+              "id": "pnAJO",
+              "name": "Subtitle",
+              "fill": "$muted-foreground",
+              "content": "Vue d'ensemble de la flotte",
+              "fontFamily": "$font-sans",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YpEHT",
+          "name": "Actions",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "z2z0u",
+              "name": "Search",
+              "width": 320,
+              "height": 46,
+              "fill": "$card-strong",
+              "cornerRadius": 14,
+              "stroke": "$card-border",
+              "strokeWidth": 1,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "SJVTU",
+                  "name": "Search Icon",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "search",
+                  "library": "lucide",
+                  "fill": "$subtle-foreground"
+                },
+                {
+                  "type": "text",
+                  "id": "CyPQI",
+                  "name": "Placeholder",
+                  "fill": "$subtle-foreground",
+                  "content": "Rechercher...",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AYfWq",
+              "name": "Bell Button",
+              "width": 44,
+              "height": 44,
+              "fill": "$card-strong",
+              "cornerRadius": 999,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ZMuDE",
+                  "name": "Bell Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "bell",
+                  "library": "lucide",
+                  "fill": "$foreground"
+                },
+                {
+                  "type": "ellipse",
+                  "id": "TCYUX",
+                  "layoutPosition": "absolute",
+                  "x": 28,
+                  "y": 2,
+                  "name": "Badge Dot",
+                  "fill": "$danger",
+                  "width": 10,
+                  "height": 10,
+                  "stroke": "$card",
+                  "strokeWidth": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mfsRT",
+              "name": "Account",
+              "height": 44,
+              "fill": "$card-strong",
+              "cornerRadius": 999,
+              "gap": 10,
+              "padding": [
+                6,
+                14,
+                6,
+                6
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VNzra",
+                  "name": "Avatar",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$primary-soft",
+                  "cornerRadius": 999,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NL6ny",
+                      "name": "Initials",
+                      "fill": "$primary-text",
+                      "content": "AM",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BTBxM",
+                  "name": "Info",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kBpcZ",
+                      "name": "Name",
+                      "fill": "$foreground",
+                      "content": "Alex Martin",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "UZunT",
+                      "name": "Role",
+                      "fill": "$muted-foreground",
+                      "content": "Administrateur",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "fWjhm",
+      "x": 2720,
+      "y": 547,
+      "name": "Ecran - Tableau de bord (brouillon)",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "$ambient-top",
+            "position": 0
+          },
+          {
+            "color": "$ambient-mid",
+            "position": 0.5
+          },
+          {
+            "color": "$ambient-bottom",
+            "position": 1
+          }
+        ]
+      },
+      "gap": 20,
+      "padding": 24,
+      "children": [
+        {
+          "id": "W1LRj",
+          "type": "ref",
+          "ref": "reoOy",
+          "name": "Sidebar",
+          "height": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "GAiWT",
+          "name": "Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "children": [
+            {
+              "id": "oon8W",
+              "type": "ref",
+              "ref": "q5wtU",
+              "name": "Topbar",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "Dosos",
+              "name": "Content",
+              "width": "fill_container",
+              "height": "fill_container",
+              "cornerRadius": 20
             }
           ]
         }
