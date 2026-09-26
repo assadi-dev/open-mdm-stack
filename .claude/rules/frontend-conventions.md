@@ -25,13 +25,14 @@ Chaque page correspond à un contexte métier et contient tout ce qui lui est pr
 app/dashboard/
 ├── _hooks/        actions métier : useQuery, useMutation, formulaires
 ├── _components/   composants utilisés uniquement par cette page
-├── _services/     un fichier pour les appels API, un fichier pour les fonctions utilitaires
+├── _services/     un fichier par rôle : appels API, clés de requête, fonctions utilitaires
 ├── _types/        types TypeScript de la page
 ├── _dto/          schémas Zod + objet de validation/parsing
 └── page.tsx
 ```
 
 - `_services/dashboard.api.ts` : uniquement les fonctions d'appel API.
+- `_services/dashboard.queries.ts` : uniquement les clés des requêtes TanStack Query (voir §5).
 - `_services/dashboard.utils.ts` : uniquement les fonctions utilitaires.
 - `_dto/device.dto.ts` : les schémas Zod et un objet qui expose les méthodes de validation et de parsing.
 
@@ -79,7 +80,7 @@ Nos composants sont en PascalCase (`ButtonWithIcon.tsx`). Les fichiers shadcn ga
 
 ## 4. Ne jamais modifier les composants shadcn
 
-Aucun fichier de `components/ui/` n'est modifié (pas de prop ajoutée, pas de classe changée). Pour personnaliser, on crée un wrapper dans le dossier du contexte, qui importe le composant shadcn et applique nos modifications. Les pages et composants importent le wrapper, jamais `components/ui/` directement.
+Aucun fichier de `components/ui/` n'est modifié (pas de prop ajoutée, pas de classe changée). Pour personnaliser, on crée un wrapper dans le dossier du contexte, qui importe le composant shadcn et applique nos modifications. Dès qu'un wrapper existe, les pages et composants importent le wrapper, plus le composant shadcn.
 
 ```tsx
 // components/buttons/Button.tsx
@@ -100,7 +101,7 @@ Tout appel API passe par TanStack Query, dans un hook de `_hooks/`.
 
 - **Lecture** : un hook dédié par requête, préfixé `useFetch`. Ex. `useFetchDeviceCollection` récupère la collection d'appareils.
 - **Écriture** (ajout, modification, suppression…) : toutes les actions d'une ressource sont regroupées dans un seul hook, suffixé `Mutation`. Ex. `useDeviceMutation` retourne `{ create, update, remove }`.
-- Les actions retournées portent un **verbe d'action seul** : `create`, `update`, `remove`, pas `createDevice`.
+- Les actions retournées portent un **verbe d'action seul** : `create`, `update`, `remove`, pas `createDevice`. `delete` étant un mot réservé en JavaScript, l'action s'appelle `remove` (et `removeMany`), mais ses textes restent sous la clé `delete` (et `deleteMany`) dans les constantes.
 - **Jamais de `fetch` écrit dans `queryFn` ou `mutationFn`.** On passe la fonction importée depuis `_services/<page>.api.ts`, nommée `<verbe><Ressource>Api`.
 
 ```ts
@@ -113,54 +114,118 @@ export const fetchDeviceCollectionApi = async () => {
 };
 ```
 
+### Clés de requête
+
+Les clés (`queryKey`) ne sont jamais écrites en dur dans un hook. Elles sont définies dans `_services/<page>.queries.ts`.
+
+- Un objet par entité ou par contexte, nommé en UPPER_SNAKE_CASE : `DEVICES`, `POLICIES`.
+- Chaque propriété correspond à une requête de lecture (GET) et porte la raison ou l'endpoint concerné. Ex. `DEVICES.collection` pour le tableau des appareils, `DEVICES.enrolledDevices` pour les appareils enrôlés.
+- Une clé qui dépend d'un paramètre est une fonction : `DEVICES.detail(id)`.
+- Les mutations n'ont pas de clé.
+- **Exception au caractère privé des dossiers `_` :** si une autre page doit lire ou invalider une de ces clés, elle l'importe directement depuis le `_services` de la page propriétaire (ex. `app/devices/_services/devices.queries.ts`). On ne crée pas de dossier partagé pour les clés : les appels API identiques entre pages sont très rares.
+
+```ts
+// _services/dashboard.queries.ts
+export const DEVICES = {
+  collection: ["devices", "collection"],
+  enrolledDevices: ["devices", "enrolled"],
+  detail: (id: string) => ["devices", "detail", id] as const,
+} as const;
+```
+
 ```ts
 // _hooks/useFetchDeviceCollection.ts
 import { useQuery } from "@tanstack/react-query";
 import { fetchDeviceCollectionApi } from "../_services/dashboard.api";
+import { DEVICES } from "../_services/dashboard.queries";
 
 export const useFetchDeviceCollection = () =>
-  useQuery({ queryKey: ["devices"], queryFn: fetchDeviceCollectionApi });
+  useQuery({ queryKey: DEVICES.collection, queryFn: fetchDeviceCollectionApi });
 ```
+
+### Invalidation après une mutation
+
+Chaque mutation réussie invalide **toutes les requêtes dont elle change les données**, et seulement celles-là. Avant d'écrire une mutation, lister les clés touchées : enrôler un appareil change `DEVICES.collection` et `DEVICES.enrolledDevices`, mais pas `POLICIES.collection`.
 
 ```ts
 // _hooks/useDeviceMutation.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { DEVICE } from "@/constants/device";
 import { createDeviceApi, updateDeviceApi, removeDeviceApi } from "../_services/dashboard.api";
+import { DEVICES } from "../_services/dashboard.queries";
 
 export const useDeviceMutation = () => {
   const queryClient = useQueryClient();
-  const onSuccess = () => queryClient.invalidateQueries({ queryKey: ["devices"] });
 
-  const create = useMutation({ mutationFn: createDeviceApi, onSuccess });
-  const update = useMutation({ mutationFn: updateDeviceApi, onSuccess });
-  const remove = useMutation({ mutationFn: removeDeviceApi, onSuccess });
+  const afterMutation = (action: keyof typeof DEVICE.success, queryKeys: QueryKey[]) => ({
+    onSuccess: () => {
+      queryKeys.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }));
+      toast.success(DEVICE.success[action]);
+    },
+    onError: () => toast.error(DEVICE.error[action]),
+  });
+
+  const create = useMutation({
+    mutationFn: createDeviceApi,
+    ...afterMutation("create", [DEVICES.collection, DEVICES.enrolledDevices]),
+  });
+  const update = useMutation({
+    mutationFn: updateDeviceApi,
+    ...afterMutation("update", [DEVICES.collection]),
+  });
+  const remove = useMutation({
+    mutationFn: removeDeviceApi,
+    ...afterMutation("delete", [DEVICES.collection, DEVICES.enrolledDevices]),
+  });
 
   return { create, update, remove };
 };
 ```
 
-## 6. Constantes : messages d'erreur et libellés
+## 6. Constantes : textes de l'interface
 
-Aucun texte d'erreur ni libellé d'action ou de bouton n'est écrit en dur dans un composant. Ils vivent dans `constants/`. Si le fichier adéquat n'existe pas, le créer.
+**Toute constante est nommée en UPPER_SNAKE_CASE** (`DEVICE`, `DEVICES`), où qu'elle se trouve. Ses propriétés sont en camelCase (`DEVICE.button.deleteMany`, `DEVICES.collection`).
 
-- `constants/errors.ts` : messages d'erreur **génériques** (pas de détail technique affiché).
-- `constants/actions.ts` : noms des actions et libellés des boutons, à l'infinitif (« Enrôler un appareil », « Verrouiller »), voir `design-system/README.md` › Contenu et ton.
+Aucun texte (message de toast, libellé de bouton, titre de page) n'est écrit en dur dans un composant ou un hook. Chaque entité ou contexte a son fichier dans `constants/`, qui exporte un objet à son nom au singulier, toujours avec la même structure. Si le fichier n'existe pas, le créer.
+
+- `success` : message du toast de réussite, une clé par action.
+- `error` : message du toast d'échec, une clé par action. Il reste **générique** : aucun détail technique affiché.
+- `button` : libellé du bouton de chaque action, à l'infinitif (voir `design-system/README.md` › Contenu et ton).
+- `page` : textes de la page, dont `title`.
+
+Les clés d'action sont `create`, `update`, `delete`, `deleteMany`. Une action propre à l'entité (ex. `lock` pour un appareil) ajoute sa clé dans `success`, `error` et `button`.
+
+Ne pas confondre : `DEVICE` (singulier, `constants/device.ts`) porte les textes, `DEVICES` (pluriel, `_services/*.queries.ts`) porte les clés de requête.
 
 ```ts
-// constants/errors.ts
-export const ERROR_MESSAGES = {
-  GENERIC: "Une erreur est survenue. Réessayez.",
-  NETWORK: "Connexion impossible. Vérifiez votre réseau.",
-  NOT_FOUND: "Élément introuvable.",
-} as const;
-
-// constants/actions.ts
-export const ACTION_LABELS = {
-  ENROLL_DEVICE: "Enrôler un appareil",
-  LOCK: "Verrouiller",
-  SAVE: "Enregistrer",
+// constants/device.ts
+export const DEVICE = {
+  success: {
+    create: "Appareil enrôlé.",
+    update: "Appareil mis à jour.",
+    delete: "Appareil supprimé.",
+    deleteMany: "Appareils supprimés.",
+  },
+  error: {
+    create: "Impossible d'enrôler l'appareil. Réessayez.",
+    update: "Impossible de mettre à jour l'appareil. Réessayez.",
+    delete: "Impossible de supprimer l'appareil. Réessayez.",
+    deleteMany: "Impossible de supprimer les appareils. Réessayez.",
+  },
+  button: {
+    create: "Enrôler un appareil",
+    update: "Enregistrer",
+    delete: "Supprimer",
+    deleteMany: "Supprimer la sélection",
+  },
+  page: {
+    title: "Appareils",
+  },
 } as const;
 ```
+
+Les erreurs qui ne dépendent d'aucune entité (réseau, erreur inconnue) vont dans `constants/errors.ts`, sous `ERROR_MESSAGES`.
 
 ## 7. Formulaires avec React Hook Form
 
@@ -182,3 +247,13 @@ export const useDeviceForm = (defaultValues?: Partial<Device>) => {
   return form;
 };
 ```
+
+## 8. Toast après chaque soumission ou action faillible
+
+Après une soumission de formulaire, ou toute action qui peut échouer (mutation, copie, téléchargement…), **toujours afficher un toast** : `toast.success` en cas de réussite, `toast.error` en cas d'échec.
+
+- On utilise Sonner (composant shadcn `sonner`). Le `<Toaster />` est monté une seule fois, dans `app/layout.tsx`.
+- Le toast part du hook, pas du composant. Pour une mutation, il est déclenché dans `onSuccess` et `onError` du hook (voir `useDeviceMutation` au §5). Un formulaire soumis via une mutation hérite donc du toast.
+- Une action qui ne passe pas par TanStack Query est entourée d'un `try/catch` dans son hook, avec un toast dans chaque branche.
+- Les textes viennent de `success` et `error` dans le fichier de l'entité (`DEVICE.success.create`, `DEVICE.error.create`), jamais écrits en dur.
+- Les erreurs de validation d'un champ restent affichées sous le champ (`FieldError`). Le toast porte le résultat de la soumission.
