@@ -9,7 +9,7 @@ Open MDM administre une flotte Android souveraine, sans services Google. L'inter
 - **Le fond est toujours l'ambiance.** Peignez `html` avec `gradient-ambient` (brume grise → sable → crème), fixé au viewport. Aucune page, aucune carte n'est posée sur un aplat.
 - **Les surfaces sont du verre.** Une Card, la Sidebar ou l'en-tête de page : `card` (blanc 28 %) avec un contour `card-border` de 1px. Pour les champs, l'en-tête de Table, les pills et le bouton `secondary` : `card-strong` (blanc 55 %). Trois exceptions opaques seulement : `popover` (menus et listes de Select), `background` dans `AlertDialogContent`, et le fond blanc `sand-0` du QR code (les lecteurs en ont besoin).
 - **Un seul accent.** `primary` (Golden Flame #E27100) marque le lien de navigation actif, le CTA principal et les contrôles cochés. Un seul `Button variant="default"` par vue.
-- **Aucune ombre.** La profondeur vient de la translucidité et des contours. On retire `shadow-xs`, `shadow-sm` et `shadow-md` des composants shadcn.
+- **Aucune ombre.** La profondeur vient de la translucidité et des contours. Les wrappers neutralisent les `shadow-*` des composants shadcn, sans modifier `components/ui/`.
 - **Jamais la couleur seule pour un statut.** Toujours une icône lucide ou une pastille, plus un libellé.
 
 ## Contenu et ton
@@ -105,6 +105,6 @@ Tout ce qui s'écarte du brief est dérivé des échelles Flame et Sand, et just
 - `popover` = `sand-50` (opaque) : un menu posé au-dessus des données doit rester lisible.
 - `destructive` = `danger-text` : shadcn l'utilise en fond de bouton avec du texte blanc, et en texte d'erreur. `danger` tomberait à 3,9:1 et 2,9:1.
 - `radius-sm` = 10px : rayon concentrique des items dans un popover (14 − 4 de padding).
-- Trois ajouts de variantes, pas de composants : `Button variant="ink"`, `Badge variant="success | warning | danger | info"` et `Alert variant="success | warning | info"`.
+- Trois ajouts de variantes, pas de composants, portés par les wrappers : `Button variant="ink"`, `Badge variant="success | warning | danger | info"` et `Alert variant="success | warning | info"`.
 - **Non appliqué, à décider** : un anneau de focus plein en `flame-600` (3,2:1 au pire cas) à la place de `ring/50`.
 - **Hors périmètre** : le mode sombre (V2).

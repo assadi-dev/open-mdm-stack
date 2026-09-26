@@ -2,14 +2,14 @@
 
 Lis ce fichier avant toute tâche UI dans `apps/web`. Il condense `design-system/` en règles actionnables. Détails complets : [`design-system/README.md`](design-system/README.md) (charte), [`design-system/shadcn.md`](design-system/shadcn.md) (installation, `globals.css`, ajustements par composant, recettes de graphes), [`design-system/tokens.json`](design-system/tokens.json) (valeurs sources). Référence visuelle (26 composants + 5 écrans) : [artifact Open MDM — Flame & Sand](https://claude.ai/artifact/Qwu94fQ815E8WKhs7LcPpp) — lisible dans un navigateur, pas depuis Claude Code.
 
-Stack : Next.js 16, React 19, Tailwind v4, **shadcn/ui**.
+Stack : Next.js 16, React 19, Tailwind v4, **shadcn/ui** sur **Base UI** (style `base-nova`). Conventions de code : [`.claude/rules/frontend-conventions.md`](.claude/rules/frontend-conventions.md).
 
 ## Règles dures — ne jamais enfreindre
 
-1. **Aucun composant inventé.** Un besoin d'UI = un composant shadcn/ui ou une composition de composants shadcn/ui listés ci-dessous. Pas de composant maison. Un besoin non couvert → dire lequel manque, ne pas improviser.
+1. **Aucun composant inventé.** Un besoin d'UI = un composant shadcn/ui listé ci-dessous, son wrapper, ou une composition des deux. Pas de composant maison. Un besoin non couvert → dire lequel manque, ne pas improviser.
 2. **Le fond est toujours le dégradé d'ambiance**, jamais un aplat : `background-color: var(--background); background-image: var(--gradient-ambient); background-attachment: fixed;` sur `html`. Aucune page, aucune Card sur un aplat.
 3. **Les surfaces sont du verre** (`card` / `card-strong`), jamais opaques — sauf `popover` (menus, listes de Select), `AlertDialogContent`, et le fond du QR code.
-4. **Aucune ombre.** Retirer `shadow-*` de tous les composants shadcn.
+4. **Aucune ombre.** Les wrappers neutralisent les `shadow-*` des composants shadcn. On ne modifie jamais `components/ui/`.
 5. **Un seul `Button variant="default"` (orange) par vue.** Les autres actions : `ink`, `secondary`, `outline`, `ghost`, `destructive` (voir tableau plus bas).
 6. **Jamais la couleur seule pour un statut.** Toujours icône lucide ou pastille + libellé texte.
 7. **Une seule police : Inter**, poids 400/500/600 uniquement.
@@ -87,11 +87,11 @@ Base 4px (`--spacing` Tailwind). Contrôles : Button 44px, Input/Select/recherch
 
 Button, Badge, Card, Input, InputGroup, Field, Label, Select, Checkbox, Switch, Tabs, Table, Sidebar, Breadcrumb, Pagination, Item, Avatar, Progress, Separator, Tooltip, Alert, DropdownMenu, AlertDialog, Chart (Recharts).
 
-**3 variantes ajoutées, rien d'autre :** `Button variant="ink"` · `Badge variant="success|warning|danger|info"` · `Alert variant="success|warning|info"`.
+**3 variantes ajoutées, rien d'autre, portées par les wrappers :** `Button variant="ink"` · `Badge variant="success|warning|danger|info"` · `Alert variant="success|warning|info"`.
 
 **3 graphes = compositions de `Chart`**, code exact dans `design-system/shadcn.md` §4 : `ChartPieDonutText` (donut, trou 70 %), `ChartAreaFlow` (aires en plage, dégradé flux), `ChartPieGauge` (demi-cercle 18 segments, dégradé flamme).
 
-Ajustements de classes par composant (bordures, tailles, variantes de couleur) : `design-system/shadcn.md` §3 — à appliquer avant d'utiliser un composant, pas après.
+Ajustements de classes par composant (bordures, tailles, variantes de couleur) : `design-system/shadcn.md` §3. Ils vivent dans un wrapper de `components/<contexte>/`, jamais dans `components/ui/`, et le wrapper existe avant qu'un écran utilise le composant. Les écrans importent le wrapper.
 
 ## Icônes
 
@@ -118,5 +118,5 @@ Toujours mesurer sur le **pire cas** : une `card` posée en haut du dégradé (�
 
 1. Relire la correspondance Écran → composants dans `design-system/shadcn.md` §5 (Tableau de bord, Appareils, Détail appareil, Enrôlement, Politiques) — c'est l'inventaire, ne pas en sortir.
 2. Vérifier que `apps/web/app/globals.css` contient bien les tokens de `design-system/shadcn.md` §2 avant d'écrire le JSX.
-3. Composer uniquement avec les composants shadcn listés plus haut, thémés par les tokens ci-dessus.
+3. Composer uniquement avec les wrappers des composants shadcn listés plus haut, thémés par les tokens ci-dessus.
 4. Repasser la checklist accessibilité avant de considérer l'écran fini.

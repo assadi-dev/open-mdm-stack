@@ -1,16 +1,21 @@
 # Intégration shadcn/ui
 
-`apps/web` (Next.js 16, React 19, Tailwind v4) s'appuie sur shadcn/ui. On installe les composants officiels, puis on applique le thème et les quelques ajustements listés ici. Pas de composant maison : chaque élément des écrans est un composant shadcn ou une composition de composants shadcn.
+`apps/web` (Next.js 16, React 19, Tailwind v4) s'appuie sur shadcn/ui, sur les primitives **Base UI**. On installe les composants officiels, puis on applique le thème (§2) et les ajustements, dans des wrappers (§3). Pas de composant maison : chaque élément des écrans est un composant shadcn, un wrapper d'un composant shadcn ou une composition des deux.
 
 ## 1. Installation
 
+Depuis `apps/web` :
+
 ```bash
-npx shadcn@latest init
+npx shadcn@latest init --base base --preset nova
 npx shadcn@latest add button badge card input input-group field label select checkbox switch tabs table sidebar breadcrumb pagination item avatar progress separator tooltip alert dropdown-menu alert-dialog chart
 ```
 
+- Primitives : **Base UI** (`@base-ui/react`), style `base-nova` dans `components.json`. Pas de Radix. Les classes du §3 sont calées sur les fichiers générés par ce style.
 - `iconLibrary` : `lucide`.
-- Police : `Inter` chargée par `next/font/google` avec `variable: "--font-inter"` et `weight: ["400", "500", "600"]`, appliquée sur `<html>`.
+- Police : `Inter` chargée par `next/font/google` avec `variable: "--font-inter"` et `weight: ["400", "500", "600"]`, appliquée sur `<html>`. Le preset nova amène Geist : le remplacer par Inter partout, y compris dans les variables de police que l'init ajoute.
+- `globals.css` : remplacer le thème généré par celui du §2, en gardant les `@import` que l'init place en tête du fichier.
+- Les fichiers de `components/ui/` restent tels que la CLI les génère (`.claude/rules/frontend-conventions.md` §4).
 
 ## 2. `app/globals.css`
 
@@ -142,41 +147,103 @@ npx shadcn@latest add button badge card input input-group field label select che
   }
   body { @apply font-sans text-sm text-foreground antialiased; }
 }
+
+/* Sous-parties shadcn qu'aucun wrapper n'atteint (voir §3).
+   Hors @layer : ces règles priment sur les utilitaires Tailwind. */
+[data-slot="alert-dialog-overlay"] {
+  background-color: color-mix(in oklab, var(--foreground) 40%, transparent);
+}
 ```
 
 Le mode sombre (`.dark`) n'est pas défini : il est prévu pour la V2.
 
-## 3. Ajustements par composant
+## 3. Ajustements par composant, dans des wrappers
 
-Ce sont des modifications de classes dans `components/ui/*`. Aucun composant n'est ajouté, et trois composants reçoivent des **variantes** supplémentaires (marquées ➕).
+`components/ui/` n'est jamais modifié (`.claude/rules/frontend-conventions.md` §4). Chaque ajustement ci-dessous vit dans un **wrapper** rangé dans `components/<contexte>/` (ex. `components/buttons/Button.tsx`) : il importe le composant shadcn, ajoute ses classes avec `cn(…, className)` et transmet toutes les autres props. Les écrans importent le wrapper, jamais `@/components/ui/*`. Un wrapper n'est pas un composant inventé : il porte le nom et l'API du composant shadcn qu'il enveloppe.
 
-| Composant | Ajustement | Pourquoi |
+Les classes sont calées sur les fichiers générés par le style `base-nova`. Après chaque `add`, relire le fichier généré : si une classe d'origine a changé, adapter le wrapper.
+
+**Trois façons d'atteindre une classe**
+
+1. **Sur l'élément qui reçoit `className`** : réécrire la classe avec le *même préfixe de variante* que dans le fichier généré (`hover:`, `focus:`, `data-active:`, `data-unchecked:`, `data-[size=default]:`, `group-data-horizontal/tabs:`…). `cn` (tailwind-merge) remplace alors la classe d'origine. Avec un autre préfixe, les deux classes coexistent et le résultat dépend de l'ordre du CSS.
+2. **Sur une sous-partie rendue par le composant** (piste et indicateur de Progress, intérieur de la Sidebar) : la cibler depuis le wrapper par son `data-slot`, avec `*:` ou `**:data-[slot=…]:` et le suffixe `!`. tailwind-merge ne voit pas la classe d'origine, et la spécificité peut être égale.
+3. **Sur une sous-partie hors de l'arbre de `className`** : re-scoper une variable CSS sur le wrapper (flèche du Tooltip), ou écrire une règle par `data-slot` dans `globals.css`, hors `@layer` (overlay de l'AlertDialog, §2).
+
+**Variantes ajoutées (➕)** : le wrapper élargit le type de `variant`, traduit la nouvelle valeur en classes et passe une variante shadcn existante en dessous. Les classes de statut s'écrivent en entier dans un objet (`bg-success-soft text-success-text`), jamais `bg-${statut}-soft` : Tailwind ne détecte pas les noms construits.
+
+```tsx
+// components/buttons/Button.tsx
+import type { ComponentProps } from "react";
+import { Button as ShadcnButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type ShadcnButtonProps = ComponentProps<typeof ShadcnButton>;
+type ButtonVariant = NonNullable<ShadcnButtonProps["variant"]> | "ink";
+type ButtonSize = NonNullable<ShadcnButtonProps["size"]>;
+type ButtonProps = Omit<ShadcnButtonProps, "variant" | "size"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+};
+
+const VARIANT_CLASSES: Partial<Record<ButtonVariant, string>> = {
+  default: "hover:bg-primary/90",
+  secondary: "border-card-border hover:bg-secondary/80",
+  outline: "border-border-strong bg-transparent",
+  destructive: "bg-destructive text-white hover:bg-destructive/90",
+  link: "text-primary-text",
+  ink: "bg-ink text-ink-foreground hover:bg-ink/90",
+};
+
+const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
+  default: "h-11 px-4.5 text-[15px] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
+  sm: "h-9 px-3.5 font-semibold",
+  lg: "h-12 px-6",
+  icon: "size-11 rounded-full",
+  "icon-sm": "size-9 rounded-full",
+  "icon-lg": "size-12 rounded-full",
+};
+
+export const Button = ({ variant = "default", size = "default", className, ...props }: ButtonProps) => (
+  <ShadcnButton
+    variant={variant === "ink" ? "default" : variant}
+    size={size}
+    className={cn("rounded-md", VARIANT_CLASSES[variant], SIZE_CLASSES[size], className)}
+    {...props}
+  />
+);
+```
+
+| Composant | Classes ajoutées par le wrapper | Pourquoi |
 |---|---|---|
-| Tous | Retirer `shadow-xs`, `shadow-sm`, `shadow-md`, `shadow-lg` | La DA n'a pas d'ombre |
-| **Button** | Tailles : `default` → `h-11 px-4.5 text-[15px] font-semibold [&_svg:not([class*='size-'])]:size-4.5` · `sm` → `h-9 px-3.5 font-semibold` · `lg` → `h-12 px-6` · `icon` / `icon-sm` / `icon-lg` → `size-11` / `size-9` / `size-12 rounded-full` | Contrôles de 44px, boutons icône ronds comme la référence |
-| | `secondary` : ajouter `border border-card-border` · `outline` : `border-border-strong bg-transparent` · `link` : `text-primary-text` | Verre avec contour, lien lisible (4,6:1) |
-| | ➕ `ink` : `bg-ink text-ink-foreground hover:bg-ink/90` | Bouton sombre de la DA (« Verrouiller ») |
-| **Badge** | Base : `rounded-full px-2.5 py-1 gap-1.5 font-semibold [&>svg]:size-3.5` · `default` : `bg-primary-soft text-primary-text` | Pill 12/600 ; le blanc sur orange en 12px échoue |
-| | ➕ `success`, `warning`, `danger`, `info` : `bg-{s}-soft text-{s}-text`. Pastille : `<span className="size-[7px] rounded-full bg-{s}" />` | Statuts, toujours avec pastille ou icône |
-| **Card** | `border-card-border` · CardTitle `text-lg font-semibold tracking-[-0.3px]` · CardDescription `text-[13px]` | Verre, titres serrés |
-| **Input**, **InputGroup**, **SelectTrigger** | `h-11.5 bg-card-strong px-4 placeholder:text-subtle-foreground` (SelectTrigger `size="sm"` : `h-9`) | Champ de verre de 46px, placeholder décoratif |
-| **SelectContent**, **DropdownMenuContent** | `bg-popover border-border` · items : `rounded-sm px-2.5 py-2 focus:bg-primary-soft` | Surface opaque lisible ; survol visible sur crème |
+| Tous | `shadow-none` partout où le fichier généré pose une ombre, avec le même préfixe (ex. `group-data-[variant=default]/tabs-list:data-active:shadow-none`) | La DA n'a pas d'ombre |
+| **Button** | Voir l'exemple : `rounded-md` · tailles `default` 44px, `sm` 36px, `lg` 48px, icônes rondes `size-11` / `size-9` / `size-12` · `secondary` : `border-card-border hover:bg-secondary/80` · `outline` : `border-border-strong bg-transparent` · `destructive` : `bg-destructive text-white hover:bg-destructive/90` · `link` : `text-primary-text` · `default` : `hover:bg-primary/90` | Contrôles de 44px. base-nova livre un `destructive` pâle (`bg-destructive/10`) : la charte le veut plein, blanc dessus à 7,2:1 |
+| | ➕ `ink` : `bg-ink text-ink-foreground hover:bg-ink/90`, sur la variante `default` | Bouton sombre de la DA (« Verrouiller ») |
+| **Badge** | `h-6 rounded-full px-2.5 py-1 gap-1.5 font-semibold [&>svg]:size-3.5!` · `default` : `bg-primary-soft text-primary-text` | Pill 12/600 ; le blanc sur orange en 12px échoue. `!` parce que le fichier généré force `size-3!` |
+| | ➕ `success`, `warning`, `danger`, `info` : `bg-{s}-soft text-{s}-text`, sur la variante `secondary`. Pastille : `<span className="size-[7px] rounded-full bg-{s}" />` | Statuts, toujours avec pastille ou icône |
+| **Card** | `ring-card-border [--card-spacing:--spacing(6)]` (KPI : `gap-4 py-5` en plus) · CardTitle `text-lg font-semibold tracking-[-0.3px]` · CardDescription `text-[13px]` | Le contour de base-nova est un `ring`, pas une `border`. `--card-spacing` pilote le padding et le gap |
+| **Input** | `h-11.5 rounded-md bg-card-strong px-4 placeholder:text-subtle-foreground` | Champ de verre de 46px, placeholder décoratif |
+| **InputGroup** | `h-11.5 rounded-md bg-card-strong` | Idem |
+| **SelectTrigger** | `rounded-md bg-card-strong px-4 data-[size=default]:h-11.5 data-[size=sm]:h-9 data-placeholder:text-subtle-foreground` | Idem. Les hauteurs sont portées par `data-[size=…]:` dans le fichier généré |
+| **SelectContent**, **DropdownMenuContent** | `shadow-none ring-border` | Surface opaque `popover` déjà en place, contour encre 8 % |
+| **SelectItem**, **DropdownMenuItem** | `rounded-sm px-2.5 py-2 focus:bg-primary-soft` | Survol visible sur crème. Le fichier généré utilise `focus:`, pas `data-highlighted:` |
 | **Checkbox** | `border-[1.5px] border-muted-foreground bg-card-strong` | Contour à 4,6:1 (`border-input` serait invisible) |
-| **Switch** | `data-[state=unchecked]:bg-muted-foreground` | Piste éteinte visible (4,6:1) |
-| **Tabs** | TabsList `h-11` · TabsTrigger `px-4 data-[state=active]:bg-ink data-[state=active]:text-ink-foreground data-[state=active]:font-semibold` | Onglet actif en Obsidian, comme la pill de filtre de la référence |
+| **Switch** | `data-unchecked:bg-muted-foreground` | Piste éteinte visible (4,6:1) |
+| **Tabs** | TabsList `group-data-horizontal/tabs:h-11` · TabsTrigger `px-4 data-active:bg-ink data-active:text-ink-foreground data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:shadow-none` | Onglet actif en Obsidian, comme la pill de filtre de la référence |
 | **Table** | TableHeader `bg-card-strong` · TableHead `h-10 px-4 text-xs text-muted-foreground` · TableCell `px-4 py-3` | En-tête en verre dense, lignes aérées |
-| **Sidebar** | `SIDEBAR_WIDTH = "17.5rem"` · conteneur flottant `p-6 pr-0` · intérieur `rounded-2xl p-3` | Sidebar de 280px posée comme une carte |
-| | SidebarMenuButton : `h-11 px-3.5 gap-3 text-[15px] [&>svg]:size-5` et actif `data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:font-semibold` | Lien actif orange |
-| | SidebarGroupLabel `px-3.5 text-[13px] text-muted-foreground` · SidebarMenuBadge `right-3.5 rounded-full bg-danger text-white text-[11px] font-semibold` | Compteur d'alertes rouge |
-| **Alert** | Base `rounded-lg border-card-border` · ➕ `success`, `warning`, `info` : `border-transparent bg-{s}-soft text-foreground [&>svg]:text-{s}-text *:data-[slot=alert-description]:text-foreground` | Statuts ; `muted-foreground` sur `-soft` tombe à 4,1:1 |
-| **Progress** | Racine `bg-chart-track` · Indicator `bg-(image:--gradient-flame)` avec **`style={{ width: value + "%" }}`** au lieu du `translateX` | La flamme démarre toujours en `flame-500` |
-| **Tooltip** | `bg-ink text-ink-foreground font-semibold` (flèche `bg-ink fill-ink`) | Bulle Obsidian de la référence |
-| **AlertDialog** | Overlay `bg-foreground/40` · contenu `rounded-2xl border-card-border` | Voile chaud, pas de noir froid |
+| **Sidebar** | SidebarProvider : `style={{ "--sidebar-width": "17.5rem", ...style }}` · Sidebar : `p-6 pr-0 *:data-[slot=sidebar-inner]:rounded-2xl! *:data-[slot=sidebar-inner]:p-3 *:data-[slot=sidebar-inner]:shadow-none!` | Sidebar de 280px posée comme une carte. La largeur passe par la variable, que `SidebarProvider` laisse surcharger via `style` |
+| | SidebarMenuButton : `h-11 px-3.5 gap-3 rounded-md text-[15px] [&_svg]:size-5 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:font-semibold` | Lien actif orange |
+| | SidebarGroupLabel `px-3.5 text-[13px] text-muted-foreground` · SidebarMenuBadge `right-3.5 rounded-full bg-danger text-white text-[11px] font-semibold peer-hover/menu-button:text-white peer-data-active/menu-button:text-white` | Compteur d'alertes rouge, qui reste blanc au survol et sur le lien actif |
+| **Alert** | `border-card-border` · ➕ `success`, `warning`, `info` : `border-transparent bg-{s}-soft text-foreground *:[svg]:text-{s}-text *:data-[slot=alert-description]:text-foreground`, sur la variante `default` | Statuts ; `muted-foreground` sur `-soft` tombe à 4,1:1 |
+| **Progress** | `**:data-[slot=progress-track]:bg-chart-track! **:data-[slot=progress-indicator]:bg-(image:--gradient-flame)` | Base UI pose déjà la largeur de l'indicateur en `width: %`, donc la flamme démarre toujours en `flame-500` |
+| **Tooltip** | TooltipContent `font-semibold [--foreground:var(--ink)] [--background:var(--ink-foreground)]` | Bulle Obsidian. Le fichier généré peint la bulle et sa flèche en `bg-foreground` : re-scoper la variable colore aussi la flèche, que le wrapper n'atteint pas |
+| **AlertDialog** | AlertDialogContent `rounded-2xl bg-background ring-card-border` · overlay : règle `data-slot` dans `globals.css` (§2) | Voile chaud, pas de noir froid. L'overlay est rendu à l'intérieur d'`AlertDialogContent`, hors de portée du wrapper |
 | **Avatar** | AvatarFallback `text-[13px] font-semibold` | — |
-| **Item** | ItemMedia `variant="icon"` : `rounded-sm border-card-border bg-muted` | Pastille d'icône en verre |
+| **Item** | ItemMedia `variant="icon"` : `rounded-sm border border-card-border bg-muted` | Pastille d'icône en verre |
 | **Breadcrumb** | BreadcrumbList `text-[13px]` | — |
 
 ## 4. Recettes de graphes (`components/ui/chart`)
+
+Chaque recette est un composant partagé de `components/charts/` (`ChartPieDonutText.tsx`…). Ce sont les seuls fichiers qui importent `@/components/ui/chart` ; les écrans importent la recette.
 
 **ChartPieDonutText** : répartition, 5 parts au maximum.
 

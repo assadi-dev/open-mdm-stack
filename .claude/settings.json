@@ -92,7 +92,17 @@
       "Bash(./shot.sh board.html board.png 2000)",
       "Bash(./shot.sh board.html board.png 2500)",
       "Bash(./shot.sh board.html board.png 3000)",
-      "Bash(./shot.sh board.html board.png 3600)"
+      "Bash(./shot.sh board.html board.png 3600)",
+      "Bash(export npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/f58ac837-cf80-498d-81f2-e1779c0ae76b/scratchpad/npm-cache)",
+      "Bash(npx --yes ctx7@latest library \"Next.js\" \"Next.js 16 upgrade breaking changes proxy cache components\")",
+      "Bash(npx --yes ctx7@latest docs /vercel/next.js/v16.2.9 \"version 16 upgrade guide: proxy.ts replaces middleware, async request APIs, cacheComponents and use cache, turbopack default, removed features\")",
+      "Bash(npx --yes ctx7@latest library \"shadcn/ui\" \"latest CLI init monorepo components.json base-ui radix\")",
+      "Bash(npx --yes ctx7@latest docs /shadcn-ui/ui \"shadcn CLI init in Turborepo monorepo with Next.js and Tailwind v4, components.json, Radix vs Base UI option\")",
+      "Bash(npx --yes ctx7@latest docs /shadcn-ui/ui \"Base UI version of Tabs and Switch components source: data attributes for active tab and unchecked switch \\(data-active, data-checked, data-unchecked\\)\")",
+      "Bash(npx --yes ctx7@latest docs /shadcn-ui/ui \"shadcn init --preset names with --base base, components.json style value like base-nova\")",
+      "Bash(npx --yes ctx7@latest library \"Base UI\" \"Progress Indicator inline width style\")",
+      "Bash(npx --yes ctx7@latest docs /mui/base-ui \"Progress.Indicator inline style width percentage of value\")",
+      "Bash(curl -s https://ui.shadcn.com/r/styles/base-nova/registry.json -o /dev/null -w \"%{http_code}\\\\n\")"
     ]
   }
 }
