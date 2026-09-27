@@ -267,3 +267,123 @@ import { LayoutDashboard } from "lucide-react";
 ```
 
 Tailles, épaisseur de trait et usage par contexte (nav, bouton, badge, statut…) : voir `design.md` § Icônes.
+
+## 10. Tableaux avec TanStack Table
+
+Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest` publiée, ex. `9.2.4`). Aucune page n'appelle `useTable` ni ne déclare ses propres `tableFeatures` : on passe systématiquement par le wrapper unique `components/data-table/DataTable.tsx`.
+
+- **La v9 change l'API par rapport à la v8** (encore la version la plus répandue dans les exemples et tutoriels existants) : le hook s'appelle `useTable` (pas `useReactTable`), un objet `features` construit via `tableFeatures(...)` est obligatoire, et le rendu passe par la méthode `table.FlexRender` (pas d'import `flexRender` séparé). Le row model « core » est inclus par défaut ; seuls le tri et la pagination doivent être déclarés comme features.
+- Le wrapper enregistre **une seule fois** les features communes (tri + pagination). Les pages n'ont jamais à répéter cette configuration.
+- Chaque page ne définit que ses colonnes, dans `_components/<entite>-columns.tsx`, avec `createColumnHelper<typeof dataTableFeatures, Entite>()` (le `dataTableFeatures` exporté par le wrapper).
+- Les libellés d'en-tête suivent la règle des constantes (§6) : pas de texte en dur dans un fichier de colonnes.
+- Le wrapper rend le balisage avec les primitives shadcn de `components/ui/table.tsx`, jamais modifiées directement (voir §4).
+
+```tsx
+// components/data-table/DataTable.tsx
+"use client";
+
+import { useState } from "react";
+import {
+  createPaginatedRowModel,
+  createSortedRowModel,
+  rowPaginationFeature,
+  rowSortingFeature,
+  sortFns,
+  tableFeatures,
+  useTable,
+  type ColumnDef,
+  type PaginationState,
+  type SortingState,
+} from "@tanstack/react-table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+export const dataTableFeatures = tableFeatures({
+  rowSortingFeature,
+  rowPaginationFeature,
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+  sortFns,
+});
+
+type DataTableProps<TData> = {
+  columns: ColumnDef<typeof dataTableFeatures, TData>[];
+  data: TData[];
+  emptyMessage?: string;
+};
+
+export const DataTable = <TData,>({ columns, data, emptyMessage = "Aucun résultat." }: DataTableProps<TData>) => {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+
+  const table = useTable({
+    features: dataTableFeatures,
+    columns,
+    data,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+  });
+
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id}>
+                {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.length ? (
+          table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getAllCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  <table.FlexRender cell={cell} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={columns.length} className="h-24 text-center">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
+  );
+};
+```
+
+```tsx
+// app/devices/_components/device-columns.tsx
+import { createColumnHelper } from "@tanstack/react-table";
+import { dataTableFeatures } from "@/components/data-table/DataTable";
+import type { Device } from "../_types/device.types";
+
+const helper = createColumnHelper<typeof dataTableFeatures, Device>();
+
+export const deviceColumns = [
+  helper.accessor("model", { header: DEVICE.table.model }),
+  helper.accessor("serial", { header: DEVICE.table.serial }),
+];
+```
+
+```tsx
+// app/devices/page.tsx
+import { DataTable } from "@/components/data-table/DataTable";
+import { deviceColumns } from "./_components/device-columns";
+import { useFetchDeviceCollection } from "./_hooks/useFetchDeviceCollection";
+
+export default function DevicesPage() {
+  const { data } = useFetchDeviceCollection();
+
+  return <DataTable columns={deviceColumns} data={data ?? []} />;
+}
+```
