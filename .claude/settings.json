@@ -128,7 +128,11 @@
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"socialProviders google redirectURI absolute URL callback path\")",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express integration toNodeHandler mount route before json body parser\")",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"signInSocial server api call return headers cookies set-cookie state\")",
-      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"returnHeaders option example forward Set-Cookie to response express\")"
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"returnHeaders option example forward Set-Cookie to response express\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"trustedOrigins cross-origin cookie frontend different port\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"React client createAuthClient useSession signIn.social baseURL\")",
+      "Bash(grep -i \"next-themes\\\\|^sonner$\")",
+      "Bash(npx shadcn@latest add @shadcn/sonner --yes)"
     ]
   }
 }
