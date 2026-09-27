@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { LoginForm, UseSigninFormHookReturn } from "../_types/form"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { ERROR_MESSAGES } from "@/constants/errors"
+import { ERROR_AUTH_MESSAGES, ERROR_MESSAGES } from "@/constants/errors"
+import { handleSignInError } from "../utils"
 
 
 export const useSigninForm = (): UseSigninFormHookReturn => {
@@ -30,10 +31,9 @@ export const useSigninForm = (): UseSigninFormHookReturn => {
             })
 
             if (error) {
-                console.log(error);
+                toast.error(handleSignInError(error))
             }
         } catch (error) {
-            console.log(error);
             toast.error(ERROR_MESSAGES.generic);
         }
     }
