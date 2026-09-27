@@ -34,6 +34,17 @@
                 "--workspace=apps/api"
             ],
             "port": 5573
-        }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Drizzle studio",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "db:studio",
+                "--workspace=apps/api"
+            ]
+        },
     ]
 }
