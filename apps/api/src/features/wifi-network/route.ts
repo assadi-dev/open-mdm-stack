@@ -7,7 +7,7 @@ const wifiNetworkRouter = Router();
 const controller = new WifiNetworkController();
 
 wifiNetworkRouter.post("/", requireAuth, controller.create);
-wifiNetworkRouter.get("/options", requireAuth, controller.list);
+wifiNetworkRouter.get("/lists", requireAuth, controller.list);
 wifiNetworkRouter.get("/:id", requireAuth, controller.getById);
 wifiNetworkRouter.patch("/:id", requireAuth, controller.update);
 wifiNetworkRouter.delete("/:id", requireAuth, controller.remove);
