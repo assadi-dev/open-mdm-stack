@@ -119,7 +119,11 @@
       "Bash(node -e ' *)",
       "Bash(rm -f app/fonts/GeistVF.woff app/fonts/GeistMonoVF.woff)",
       "Bash(rmdir app/fonts)",
-      "Bash(npx shadcn@latest add @shadcn/card @shadcn/tabs @shadcn/button @shadcn/input @shadcn/input-group @shadcn/checkbox @shadcn/separator @shadcn/field @shadcn/label --yes)"
+      "Bash(npx shadcn@latest add @shadcn/card @shadcn/tabs @shadcn/button @shadcn/input @shadcn/input-group @shadcn/checkbox @shadcn/separator @shadcn/field @shadcn/label --yes)",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(curl -s http://localhost:3000/login -o /tmp/login.html)",
+      "Bash(pkill -f \"next dev --port 3000\")",
+      "mcp__shadcn__get_audit_checklist"
     ]
   }
 }

@@ -1,5 +1,5 @@
 import { auth } from "@lib/auth";
-import { LoginInput, RegisterInput } from "./dto/schema";
+import { LoginInput, RegisterInput, SocialProvider } from "./dto/schema";
 import { AuthResponse } from "./type";
 import { JWTPayload } from "better-auth";
 import { ENV } from "@config/env";
@@ -30,6 +30,17 @@ export class AuthService {
             body: {
                 email: inputs.email,
                 password: inputs.password,
+            }
+        })
+        return response;
+    }
+
+    async oAuthProvider(provider: SocialProvider, inputs: any) {
+
+        const response = await auth.api.signInSocial({
+            body: {
+                provider,
+
             }
         })
         return response;

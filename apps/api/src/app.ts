@@ -31,7 +31,7 @@ app.use(cors(corsOptions));
 // Static files
 app.use(`/downloads/agent`, express.static("src/downloads/apk"));
 
-app.use(`${API_BASE_URL}`, authRouter);
+app.use(`${API_BASE_URL}/auth`, authRouter);
 app.use(`${API_BASE_URL}/qrcode`, qrcodeRouter);
 app.use(`${API_BASE_URL}/devices/:deviceId/commands`, commandRouter);
 app.use(`${API_BASE_URL}/devices`, deviceRouter);
