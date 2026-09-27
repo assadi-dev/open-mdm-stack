@@ -12,6 +12,7 @@ import deviceRouter from "@features/device/route";
 import enrollmentRouter from "@features/enrollment/route";
 import commandRouter from "@features/command/route";
 import mqttRouter from "@features/mqtt/route";
+import wifiNetworkRouter from "@features/wifi-network/route";
 
 
 export const app = express();
@@ -36,6 +37,7 @@ app.use(`${API_BASE_URL}/devices/:deviceId/commands`, commandRouter);
 app.use(`${API_BASE_URL}/devices`, deviceRouter);
 app.use(`${API_BASE_URL}/enrollment`, enrollmentRouter);
 app.use(`${API_BASE_URL}/mqtt`, mqttRouter);
+app.use(`${API_BASE_URL}/wifi-networks`, wifiNetworkRouter);
 app.use(errorHandler);
 
 // http.Server wrapping `app`; listening is started from main.ts so this
