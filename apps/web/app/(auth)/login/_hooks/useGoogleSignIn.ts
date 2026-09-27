@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { ERROR_MESSAGES } from "@/constants/errors";
@@ -9,25 +9,26 @@ import { ERROR_MESSAGES } from "@/constants/errors";
  * there is no "success" state to report here — only initiation failures.
  */
 export const useGoogleSignIn = () => {
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const signInWithGoogle = async () => {
-    setIsPending(true);
+    startTransition(async () => {
 
-    try {
-      const { error } = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
+      try {
+        const { error } = await authClient.signIn.social({
+          provider: "google",
+          callbackURL: process.env.NEXT_PUBLIC_HOME_URL,
+        });
 
-      if (error) {
+        if (error) {
+          console.log(error);
+          toast.error(ERROR_MESSAGES.generic);
+        }
+      } catch (error) {
+        console.log(error);
         toast.error(ERROR_MESSAGES.generic);
       }
-    } catch {
-      toast.error(ERROR_MESSAGES.generic);
-    } finally {
-      setIsPending(false);
-    }
+    });
   };
 
   return { signInWithGoogle, isPending };
