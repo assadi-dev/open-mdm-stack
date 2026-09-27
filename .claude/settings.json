@@ -125,7 +125,8 @@
       "Bash(pkill -f \"next dev --port 3000\")",
       "mcp__shadcn__get_audit_checklist",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest library \"better-auth\" \"google social provider redirectURI config\")",
-      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"socialProviders google redirectURI absolute URL callback path\")"
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"socialProviders google redirectURI absolute URL callback path\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express integration toNodeHandler mount route before json body parser\")"
     ]
   }
 }
