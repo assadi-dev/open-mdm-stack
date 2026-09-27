@@ -1,4 +1,4 @@
-import { generateTitleMetadata, PageProps } from "@/lib/page-metadata"
+import { generateTitleMetadata, type PageProps } from "@/lib/page-metadata"
 import { ResolvingMetadata } from "next"
 
 export const generateMetadata = async (props: PageProps, parent: ResolvingMetadata) => {
