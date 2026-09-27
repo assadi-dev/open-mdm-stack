@@ -4,11 +4,14 @@ import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception"
 
 // `vi.hoisted` runs alongside the hoisted `vi.mock` below, so `challengeRepoMock`
 // is already initialized when the mock factory references it.
-const { challengeRepoMock } = vi.hoisted(() => ({
+const { challengeRepoMock, wifiNetworkRepoMock } = vi.hoisted(() => ({
     challengeRepoMock: {
         create: vi.fn(),
         byChallenge: vi.fn(),
         markConsumed: vi.fn(),
+    },
+    wifiNetworkRepoMock: {
+        findById: vi.fn(),
     },
 }));
 
@@ -20,7 +23,16 @@ vi.mock("@features/enrollment/repositories", () => ({
     }),
 }));
 
+vi.mock("@features/wifi-network/repository", () => ({
+    WifiNetworkRepository: vi.fn(function () {
+        return wifiNetworkRepoMock;
+    }),
+}));
+
 import { EnrollmentService } from "../service";
+// Real implementation (not mocked) — resolveWifiNetwork decrypts what it
+// reads back from the DB, so tests build fixtures through the same cipher.
+import { encryptSecret } from "@lib/crypto";
 
 describe("EnrollmentService", () => {
     let service: EnrollmentService;
@@ -140,6 +152,61 @@ describe("EnrollmentService", () => {
                     body: { wifiSecurityType: "NOT-A-TYPE" },
                 }),
             ).rejects.toBeInstanceOf(ZodError);
+        });
+
+        describe("wifiId resolution", () => {
+            const wifiNetworkRow = (overrides: object = {}) => ({
+                id: "wifi-1",
+                name: "Office",
+                ssid: "office-ssid",
+                password: encryptSecret("s3cr3t!"),
+                security: "WPA2",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                ...overrides,
+            });
+
+            it("looks up the stored network and decrypts its password into the payload", async () => {
+                wifiNetworkRepoMock.findById.mockResolvedValue(wifiNetworkRow());
+
+                const result = (await service.displayProvisioning({
+                    body: { wifiId: "wifi-1" },
+                })) as Record<string, unknown>;
+
+                expect(wifiNetworkRepoMock.findById).toHaveBeenCalledWith("wifi-1");
+                expect(result["android.app.extra.PROVISIONING_WIFI_SSID"]).toBe("office-ssid");
+                // WPA2 (PSK family) is declared as "WPA" to Android — see WIFI_SECURITY_TYPE_MAP.
+                expect(result["android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"]).toBe("WPA");
+                expect(result["android.app.extra.PROVISIONING_WIFI_PASSWORD"]).toBe("s3cr3t!");
+            });
+
+            it("omits the password for an open network stored without one", async () => {
+                wifiNetworkRepoMock.findById.mockResolvedValue(wifiNetworkRow({ security: "NONE", password: null }));
+
+                const result = (await service.displayProvisioning({
+                    body: { wifiId: "wifi-1" },
+                })) as Record<string, unknown>;
+
+                expect(result["android.app.extra.PROVISIONING_WIFI_SECURITY_TYPE"]).toBe("NONE");
+                expect(result).not.toHaveProperty("android.app.extra.PROVISIONING_WIFI_PASSWORD");
+            });
+
+            it("leaves the Wi-Fi extras out when wifiId doesn't match any stored network", async () => {
+                wifiNetworkRepoMock.findById.mockResolvedValue(undefined);
+
+                const result = (await service.displayProvisioning({
+                    body: { wifiId: "missing-wifi" },
+                })) as Record<string, unknown>;
+
+                expect(result).not.toHaveProperty("android.app.extra.PROVISIONING_WIFI_SSID");
+                expect(result).not.toHaveProperty("android.app.extra.PROVISIONING_WIFI_PASSWORD");
+            });
+
+            it("does not query the wifi network repository when wifiId is not provided", async () => {
+                await service.displayProvisioning({ body: {} });
+
+                expect(wifiNetworkRepoMock.findById).not.toHaveBeenCalled();
+            });
         });
     });
 });
