@@ -139,7 +139,8 @@
       "Bash(curl -s -D - -o /dev/null \"http://localhost:5573/api/auth/sign-in/social\" -X POST -H \"Content-Type: application/json\" -H \"Origin: http://localhost:3000\" --data '{\"provider\":\"google\",\"callbackURL\":\"/\"}')",
       "Bash(lsof -iTCP:3000 -sTCP:LISTEN -Pn)",
       "Bash(lsof -iTCP:5573 -sTCP:LISTEN -Pn)",
-      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install @hookform/resolvers)"
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install @hookform/resolvers)",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express cors middleware order before toNodeHandler preflight OPTIONS 404\")"
     ]
   }
 }

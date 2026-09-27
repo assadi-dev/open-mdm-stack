@@ -16,6 +16,7 @@ import wifiNetworkRouter from "@features/wifi-network/route";
 
 
 export const app = express();
+app.use(cors(corsOptions));
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,8 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
-
-app.use(cors(corsOptions));
 
 
 
