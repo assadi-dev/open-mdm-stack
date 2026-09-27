@@ -51,6 +51,12 @@ const env_schema = z.object({
   // How long an undelivered command stays eligible for (re)delivery.
   COMMAND_TTL_SECONDS: z.coerce.number().int().min(1).default(86400),
 
+  // AES-256-GCM key used to encrypt Wi-Fi PSKs at rest (see lib/crypto.ts).
+  // 32 bytes, hex-encoded (64 chars) — generate with `openssl rand -hex 32`.
+  WIFI_NETWORK_ENCRYPTION_KEY: z
+    .string()
+    .length(64, "WIFI_NETWORK_ENCRYPTION_KEY must be a 32-byte key encoded as 64 hex chars"),
+
 });
 
 const result = env_schema.safeParse(process.env);

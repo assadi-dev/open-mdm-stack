@@ -27,6 +27,7 @@ export default defineConfig({
             MDM_OTP_SECRET: "GEZDGNBVGY3TQOJQGEZDGNBVGY",
             MDM_DPC_SIGNATURE_CHECKSUM: "test-dpc-signature-checksum",
             MQTT_BACKEND_PASSWORD: "test-mqtt-backend-password",
+            WIFI_NETWORK_ENCRYPTION_KEY: "0".repeat(64),
         },
     },
 });

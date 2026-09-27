@@ -111,7 +111,10 @@
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/d54e8a7b-1833-444d-af2f-e2cb8f24eb3c/scratchpad/npm-cache npx --yes ctx7@latest docs /tanstack/table \"generic reusable React DataTable component with useReactTable, ColumnDef<TData>, getCoreRowModel and shadcn/ui table primitives\")",
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/d54e8a7b-1833-444d-af2f-e2cb8f24eb3c/scratchpad/npm-cache npm view @tanstack/react-table dist-tags --json)",
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/d54e8a7b-1833-444d-af2f-e2cb8f24eb3c/scratchpad/npm-cache npx --yes ctx7@latest docs /tanstack/table \"v9 tableFeatures opt-in for sorting rowSorting and pagination rowPagination, getSortedRowModel getPaginationRowModel, generic reusable DataTable component props\")",
-      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/d54e8a7b-1833-444d-af2f-e2cb8f24eb3c/scratchpad/npm-cache npx --yes ctx7@latest docs /tanstack/table \"v9 React controlled sorting state SortingState onSortingChange getState table.setSorting, controlled pagination state onPaginationChange\")"
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/d54e8a7b-1833-444d-af2f-e2cb8f24eb3c/scratchpad/npm-cache npx --yes ctx7@latest docs /tanstack/table \"v9 React controlled sorting state SortingState onSortingChange getState table.setSorting, controlled pagination state onPaginationChange\")",
+      "Bash(echo \"exit=$?\")",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(WIFI_NETWORK_ENCRYPTION_KEY=__CMDSUB_OUTPUT__ npx tsx -e ' *)"
     ]
   }
 }
