@@ -375,15 +375,146 @@ export const deviceColumns = [
 ];
 ```
 
+## 11. Déclaration des pages : Server Component + délégation client
+
+`page.tsx` (et `layout.tsx`) exporte **toujours** un composant en fonction fléchée asynchrone, jamais en `function`, jamais en flèche exportée inline (`export default () => ...`). La déclaration et l'`export default` sont deux instructions séparées.
+
+```tsx
+// app/(auth)/login/page.tsx
+const LoginPage = async () => {
+  return (
+    <>
+      <h1>Welcome to MDM</h1>
+      <p>login to access</p>
+    </>
+  );
+};
+
+export default LoginPage;
+```
+
+`page.tsx` reste donc **toujours** un Server Component, sans exception : jamais de `"use client"` dessus. Dès qu'une page a besoin d'un hook client (TanStack Query, React Hook Form, `useState`...), on délègue à un unique composant enfant qui porte `"use client"` et enveloppe tout ce qui en dépend, nommé `<NomPage>Client`, dans `_components/`.
+
+```tsx
+// app/(auth)/login/page.tsx
+import { LoginPageClient } from "./_components/LoginPageClient";
+
+const LoginPage = async () => {
+  return (
+    <>
+      <h1>Welcome to MDM</h1>
+      <LoginPageClient />
+    </>
+  );
+};
+
+export default LoginPage;
+```
+
+```tsx
+// app/(auth)/login/_components/LoginPageClient.tsx
+"use client";
+
+import { useLoginForm } from "../_hooks/useLoginForm";
+
+export const LoginPageClient = () => {
+  const form = useLoginForm();
+
+  // ...
+
+  return <form>{/* ... */}</form>;
+};
+```
+
+## 12. Route handlers (API routes) : fonction fléchée async
+
+Même règle pour les route handlers (`app/**/route.ts`) : chaque méthode HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) est une **constante exportée en fonction fléchée asynchrone**, jamais `export async function GET(...)`.
+
+```ts
+// app/api/devices/route.ts
+export const GET = async (request: Request) => {
+  const devices = await fetchDevices();
+  return Response.json(devices);
+};
+
+export const POST = async (request: Request) => {
+  const body = await request.json();
+  const device = await createDevice(body);
+  return Response.json(device, { status: 201 });
+};
+```
+
+## 13. Métadonnées de page : `generateMetadata`
+
+Chaque `page.tsx` qui a besoin d'un titre passe **toujours** par `generateTitleMetadata` (`@/lib/page-metadata`) : `title` est obligatoire, `description` ne l'est pas.
+
+`generateMetadata` suit la même règle que les route handlers (§12) : une constante exportée en fonction fléchée asynchrone, jamais `export async function generateMetadata`. Next.js exige ce nom d'export précis, donc pas d'`export default` ici.
+
+`props` ne s'écrit jamais en `any`. Depuis Next.js 15, `params` et `searchParams` sont des `Promise` : on les type avec `PageProps` (`@/lib/page-metadata`), qui prend en générique la forme des `params` dynamiques de la route (vide par défaut pour une route statique). Le même type `PageProps` sert aussi pour le composant de page lui-même.
+
+```tsx
+// app/(auth)/login/page.tsx
+import { generateTitleMetadata, PageProps } from "@/lib/page-metadata";
+import { ResolvingMetadata } from "next";
+
+export const generateMetadata = async (props: PageProps, parent: ResolvingMetadata) => {
+  const prevMetadata = await parent;
+  const metadata = generateTitleMetadata({ title: "Login" });
+
+  return {
+    ...prevMetadata,
+    ...metadata,
+  };
+};
+
+const LoginPage = async (props: PageProps) => {
+  return (
+    <>
+      <h1>Welcome to MDM</h1>
+      <p>login to access</p>
+    </>
+  );
+};
+
+export default LoginPage;
+```
+
+Route avec un segment dynamique (`app/devices/[id]/page.tsx`) : on précise le générique `Params` de `PageProps`.
+
+```tsx
+export const generateMetadata = async (props: PageProps<{ id: string }>, parent: ResolvingMetadata) => {
+  const { id } = await props.params;
+  const prevMetadata = await parent;
+  const metadata = generateTitleMetadata({ title: `Appareil ${id}` });
+
+  return { ...prevMetadata, ...metadata };
+};
+```
+
 ```tsx
 // app/devices/page.tsx
-import { DataTable } from "@/components/data-table/DataTable";
-import { deviceColumns } from "./_components/device-columns";
-import { useFetchDeviceCollection } from "./_hooks/useFetchDeviceCollection";
+import { DevicesPageClient } from "./_components/DevicesPageClient";
 
-export default function DevicesPage() {
+const DevicesPage = async () => {
+  return <DevicesPageClient />;
+};
+
+export default DevicesPage;
+```
+
+```tsx
+// app/devices/_components/DevicesPageClient.tsx
+"use client";
+
+import { DataTable } from "@/components/data-table/DataTable";
+import { deviceColumns } from "./device-columns";
+import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
+
+export const DevicesPageClient = () => {
   const { data } = useFetchDeviceCollection();
 
   return <DataTable columns={deviceColumns} data={data ?? []} />;
-}
+};
 ```
+
+Le découpage `page.tsx` / `DevicesPageClient` suit la règle du §11.

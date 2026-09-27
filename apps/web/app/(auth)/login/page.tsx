@@ -1,19 +1,16 @@
-import { generateTitleMetadata } from "@/lib/page-metadata"
+import { generateTitleMetadata, PageProps } from "@/lib/page-metadata"
 import { ResolvingMetadata } from "next"
 
-
-
-
-export async function generateMetadata(props: any, parent: ResolvingMetadata) {
+export const generateMetadata = async (props: PageProps, parent: ResolvingMetadata) => {
     const prevMetadata = await parent;
-    const metadata = generateTitleMetadata({ title: "Login", description: "Login to your account" })
+    const metadata = generateTitleMetadata({ title: "Login" })
     return {
         ...prevMetadata,
         ...metadata
     }
 }
 
-const LoginPage = async (props: any) => {
+const LoginPage = async (props: PageProps) => {
     return (
         <>
             <h1>Welcome to MDM</h1>
