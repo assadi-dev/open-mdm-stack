@@ -41,7 +41,8 @@ export class AuthService {
             returnHeaders: true,
             body: {
                 provider,
-
+                callbackURL: `${ENV.APP_CLIENT_URL}`,
+                errorCallbackURL: `${ENV.APP_CLIENT_URL}`,
             }
         })
         return res;
