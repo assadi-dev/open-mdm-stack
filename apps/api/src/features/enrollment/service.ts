@@ -5,12 +5,15 @@ import { ChallengeRepository } from "./repositories";
 import { buildProvisioningPayload, generateRandomChallenge, OTPGenerator, OTPVerifier } from "./utils/generators";
 import { enrollmentValidator } from "./dto/validation";
 import { CreateProvisioningPayloadInput } from "./dto/schema";
+import { WifiNetworkRepository } from "@features/wifi-network/repository";
+import { decryptSecret } from "@lib/crypto";
 
 
 
 
 export class EnrollmentService {
     challengeRepo: ChallengeRepository
+
     constructor(challengeRepo: ChallengeRepository = new ChallengeRepository()) {
         this.challengeRepo = challengeRepo;
     }
@@ -82,12 +85,27 @@ export class EnrollmentService {
         if (!payload.success) {
             throw payload.error
         }
+        const provisioningInput = await this.resolveWifiNetwork(payload.data);
+
 
         if (format === "svg") {
-            return await this.generatePayloadProvisioningToSVG(payload.data);
+            return await this.generatePayloadProvisioningToSVG(provisioningInput);
         }
-        return await this.generateProvisioningPayload(payload.data);
+        return await this.generateProvisioningPayload(provisioningInput);
 
+    }
+
+
+    private resolveWifiNetwork = async (input: CreateProvisioningPayloadInput) => {
+        if (input.wifiId) {
+            const wifiNetworkRepository = new WifiNetworkRepository();
+            const wifiNetwork = await wifiNetworkRepository.findById(input.wifiId);
+
+            input.wifiSsid = wifiNetwork?.ssid
+            input.wifiPassword = wifiNetwork?.password ? decryptSecret(wifiNetwork?.password) : undefined
+            input.wifiSecurityType = wifiNetwork?.security
+        }
+        return input
     }
 
 }

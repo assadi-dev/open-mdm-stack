@@ -19,6 +19,7 @@ export const createProvisioningPayloadSchema = z.object({
     groupId: z.string().optional(),
     checksum: z.string().optional(),
     skipEncryption: z.boolean().optional().default(false),
+    wifiId: z.string().optional(),
 
 });
 
