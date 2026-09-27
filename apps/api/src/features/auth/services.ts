@@ -42,7 +42,7 @@ export class AuthService {
             body: {
                 provider,
                 callbackURL: `${ENV.APP_CLIENT_URL}`,
-                errorCallbackURL: `${ENV.APP_CLIENT_URL}`,
+                errorCallbackURL: `${ENV.APP_CLIENT_FALLBACK_URL}`,
             }
         })
         return res;
