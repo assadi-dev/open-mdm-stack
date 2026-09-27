@@ -18,7 +18,7 @@ export class WifiNetworkRepository {
     }
 
     async listOptions() {
-        return this.db.select({ id: wifiNetworks.id, name: wifiNetworks.name, ssid: wifiNetworks.ssid }).from(wifiNetworks).orderBy(wifiNetworks.name, wifiNetworks.ssid);
+        return this.db.select({ id: wifiNetworks.id, name: wifiNetworks.name, ssid: wifiNetworks.ssid, security: wifiNetworks.security }).from(wifiNetworks).orderBy(wifiNetworks.name, wifiNetworks.ssid);
     }
 
     async findAll() {
