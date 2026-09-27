@@ -9,6 +9,7 @@ export const UserSessionComponent = () => {
     const { data } = authClient.useSession()
 
 
+
     return (
         <>
             <p>Bonjour {data?.user.name}</p>

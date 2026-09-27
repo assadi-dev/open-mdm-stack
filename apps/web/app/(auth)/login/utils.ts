@@ -1,4 +1,4 @@
-import { BetterAuthError } from "@/app/types/betterAuth";
+import { BetterAuthError } from "@/types/betterAuth";
 import { ERROR_AUTH_MESSAGES, ERROR_MESSAGES } from "@/constants/errors";
 
 export const handleSignInError = (error: BetterAuthError) => {
