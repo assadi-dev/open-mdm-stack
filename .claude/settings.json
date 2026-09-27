@@ -118,7 +118,8 @@
       "mcp__shadcn__list_items_in_registries",
       "Bash(node -e ' *)",
       "Bash(rm -f app/fonts/GeistVF.woff app/fonts/GeistMonoVF.woff)",
-      "Bash(rmdir app/fonts)"
+      "Bash(rmdir app/fonts)",
+      "Bash(npx shadcn@latest add @shadcn/card @shadcn/tabs @shadcn/button @shadcn/input @shadcn/input-group @shadcn/checkbox @shadcn/separator @shadcn/field @shadcn/label --yes)"
     ]
   }
 }
