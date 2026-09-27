@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 import { generateTitleMetadata } from "@/lib/page-metadata";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,14 +13,19 @@ const inter = Inter({
 
 export const metadata: Metadata = generateTitleMetadata({ title: "", description: "Open MDM" })
 
-export default function RootLayout({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="fr" className={cn("font-sans", inter.variable)}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }
+
+export default RootLayout;

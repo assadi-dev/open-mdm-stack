@@ -132,7 +132,11 @@
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"trustedOrigins cross-origin cookie frontend different port\")",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"React client createAuthClient useSession signIn.social baseURL\")",
       "Bash(grep -i \"next-themes\\\\|^sonner$\")",
-      "Bash(npx shadcn@latest add @shadcn/sonner --yes)"
+      "Bash(npx shadcn@latest add @shadcn/sonner --yes)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5573/api/auth/ok)",
+      "Bash(lsof -iTCP:5573 -sTCP:LISTEN -P)",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P)",
+      "Bash(curl -s -D - -o /dev/null \"http://localhost:5573/api/auth/sign-in/social\" -X POST -H \"Content-Type: application/json\" -H \"Origin: http://localhost:3000\" --data '{\"provider\":\"google\",\"callbackURL\":\"/\"}')"
     ]
   }
 }
