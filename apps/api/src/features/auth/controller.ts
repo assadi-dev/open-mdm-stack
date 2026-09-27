@@ -43,8 +43,8 @@ export class AuthController {
             const body = req.body;
             const socialProvider = validateSocialProvider(provider)
 
-            const result = await this.authService.oAuthProvider(socialProvider, body);
-            console.log(result);
+            const { response: result, headers } = await this.authService.oAuthProvider(socialProvider, body);
+            headers.getSetCookie().forEach((cookie) => res.append("Set-Cookie", cookie));
             return res.json({
                 socialProvider,
                 url: result.url,
