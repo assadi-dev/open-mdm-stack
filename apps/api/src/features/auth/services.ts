@@ -37,14 +37,14 @@ export class AuthService {
 
     async oAuthProvider(provider: SocialProvider, inputs: any) {
 
-        const { response, headers } = await auth.api.signInSocial({
+        const res = await auth.api.signInSocial({
             returnHeaders: true,
             body: {
                 provider,
 
             }
         })
-        return { response, headers };
+        return res;
     }
 
     async logout(jwtToken: string): Promise<void> {
