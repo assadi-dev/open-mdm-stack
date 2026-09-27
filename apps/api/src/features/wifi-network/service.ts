@@ -14,7 +14,7 @@ export class WifiNetworkService {
     async create(input: CreateWifiNetworkInput) {
         const wifiNetwork = await this.repository.create({
             ...input,
-            password: encryptSecret(input.password),
+            password: input.password ? encryptSecret(input.password) : null,
         });
         return this.toPublic(wifiNetwork);
     }

@@ -13,7 +13,7 @@ export const createWifiNetworkSchema = z.object({
 export const updateWifiNetworkSchema = z.object({
     name: z.string().min(1).nullable().optional(),
     ssid: z.string().min(1).optional(),
-    password: z.string().min(1).optional(),
+    password: z.string().optional().nullable(),
     security: z.enum(wifiSecurityType).optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,

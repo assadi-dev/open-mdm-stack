@@ -10,7 +10,7 @@ export const wifiNetworks = pgTable("wifi_networks", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name"),
     ssid: text("ssid").notNull(),
-    password: text("password").notNull(),
+    password: text("password"),
     security: wifiSecurityTypeEnum("security").notNull(),
     ...updatedAndCreatedAt,
 });

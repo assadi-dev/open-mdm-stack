@@ -10,7 +10,7 @@ export class WifiNetworkRepository {
     async create(input: {
         name?: string;
         ssid: string;
-        password: string;
+        password?: string;
         security: typeof wifiSecurityType[number];
     }) {
         const [row] = await this.db.insert(wifiNetworks).values(input).returning();
