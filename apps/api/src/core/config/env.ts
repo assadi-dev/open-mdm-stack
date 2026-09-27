@@ -57,6 +57,10 @@ const env_schema = z.object({
     .string()
     .length(64, "WIFI_NETWORK_ENCRYPTION_KEY must be a 32-byte key encoded as 64 hex chars"),
 
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  OAUTH_REDIRECT_URI: z.string().min(1),
+
 });
 
 const result = env_schema.safeParse(process.env);

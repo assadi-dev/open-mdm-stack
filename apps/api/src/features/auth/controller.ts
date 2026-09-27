@@ -46,7 +46,9 @@ export class AuthController {
             const result = await this.authService.oAuthProvider(socialProvider, body);
             console.log(result);
             return res.json({
-                provider,
+                socialProvider,
+                url: result.url,
+                redirect: result.redirect
             });
         } catch (error) {
             throw error;
