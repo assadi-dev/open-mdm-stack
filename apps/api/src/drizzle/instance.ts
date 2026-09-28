@@ -1,4 +1,4 @@
 
-import { db } from "@repo/db/instance";
+import { db as instanceDb } from "@repo/db/instance";
 
-export { db };
+export const db = instanceDb;
