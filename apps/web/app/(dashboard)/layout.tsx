@@ -18,6 +18,9 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
         redirect("/login")
     }
 
+    console.log(session);
+
+
     return (
         <>
             {children}
