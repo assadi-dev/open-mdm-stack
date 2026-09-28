@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { ERROR_MESSAGES } from "@/constants/errors"
 import { handleSignInError } from "../utils"
 import { SUCCESS_AUTH_MESSAGES } from "@/constants/success"
+import { useRouter } from "next/navigation"
 
 
 export const useSigninForm = (): UseSigninFormHookReturn => {
@@ -21,6 +22,9 @@ export const useSigninForm = (): UseSigninFormHookReturn => {
             rememberMe: false,
         },
     })
+
+
+    const router = useRouter()
 
     const onSignIn: SubmitHandler<LoginForm> = async ({ email, password, rememberMe }) => {
         try {
@@ -35,10 +39,7 @@ export const useSigninForm = (): UseSigninFormHookReturn => {
             if (error) {
                 toast.error(handleSignInError(error))
             } else {
-
-
-                console.log(data.user);
-
+                router.replace(process.env.NEXT_PUBLIC_HOME_URL!)
                 toast.success(SUCCESS_AUTH_MESSAGES.login)
             }
 

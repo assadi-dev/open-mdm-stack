@@ -140,7 +140,9 @@
       "Bash(lsof -iTCP:3000 -sTCP:LISTEN -Pn)",
       "Bash(lsof -iTCP:5573 -sTCP:LISTEN -Pn)",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install @hookform/resolvers)",
-      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express cors middleware order before toNodeHandler preflight OPTIONS 404\")"
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express cors middleware order before toNodeHandler preflight OPTIONS 404\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"Next.js server component get session forward cookies without separate database instance\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"authClient getSession server component forward headers separate backend server no shared database\")"
     ]
   }
 }
