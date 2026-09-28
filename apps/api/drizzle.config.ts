@@ -4,7 +4,7 @@ import { ENV } from "./src/core/config/env";
 
 
 export default {
-    schema: "src/drizzle/schemas",
+    schema: ["src/drizzle/schemas", "../../packages/db/src/schemas"],
     out: "src/drizzle/migrations",
     dialect: "postgresql",
     dbCredentials: {

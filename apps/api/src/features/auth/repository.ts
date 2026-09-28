@@ -1,6 +1,6 @@
 import { HTTPNotFoundException } from "@core/exception";
 import { db } from "@drizzle/instance";
-import { session, user } from "@drizzle/schemas/auth-schema";
+import { session, user } from "@repo/db/schemas/auth-schema";
 import { eq } from "drizzle-orm";
 
 

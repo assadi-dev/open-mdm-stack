@@ -1,12 +1,20 @@
 import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { customSession } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
+import * as schema from "@repo/db/schemas/auth-schema";
+import { db } from "./drizzle/instance";
 
 
 export const auth = betterAuth({
-
-    baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5573",
+    database: drizzleAdapter(db, {
+        provider: "pg",
+        schema,
+    }),
+    emailAndPassword: {
+        enabled: true,
+    },
     plugins: [
         customSession(async ({ user, session }) => {
             return {

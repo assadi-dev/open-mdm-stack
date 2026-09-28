@@ -1,5 +1,6 @@
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 
 
@@ -9,11 +10,13 @@ type DashboardLayoutProps = {
 
 const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
 
-    const { data } = await authClient.getSession({
-        fetchOptions: {
-            headers: await headers(),
-        },
+    const session = await auth.api.getSession({
+        headers: await headers(),
     })
+
+    if (!session) {
+        redirect("/login")
+    }
 
     return (
         <>

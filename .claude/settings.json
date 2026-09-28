@@ -142,7 +142,12 @@
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install @hookform/resolvers)",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"express cors middleware order before toNodeHandler preflight OPTIONS 404\")",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"Next.js server component get session forward cookies without separate database instance\")",
-      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"authClient getSession server component forward headers separate backend server no shared database\")"
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"authClient getSession server component forward headers separate backend server no shared database\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/better-auth/better-auth\" \"automatically reads BETTER_AUTH_SECRET BETTER_AUTH_URL environment variable default baseURL secret\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install)",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest library \"drizzle-kit\" \"config schema multiple paths array glob\")",
+      "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/drizzle-team/drizzle-orm-docs\" \"drizzle-kit config.ts schema field array of paths multiple schema files monorepo\")",
+      "Bash(npx turbo *)"
     ]
   }
 }
