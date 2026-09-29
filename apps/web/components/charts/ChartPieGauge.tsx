@@ -68,13 +68,13 @@ export const ChartPieGauge = ({ value, label, valueLabel, caption, max = 100, si
         className="pointer-events-none absolute inset-x-0 flex flex-col items-center text-center"
         style={{ top: center + 2 - 42 }}
       >
-        <span className="text-[32px] leading-9.5 font-semibold tracking-[-0.8px] tabular-nums">{valueLabel ?? value}</span>
+        <span className="text-[2rem] leading-9.5 font-semibold tracking-[-0.8px] tabular-nums">{valueLabel ?? value}</span>
       </div>
       <div aria-hidden="true" className="mt-1 flex w-full justify-between px-3 text-xs leading-4 text-muted-foreground">
         <span>0</span>
         <span>{max}</span>
       </div>
-      {caption && <span className="mt-2 text-center text-[13px] leading-4.5 text-muted-foreground">{caption}</span>}
+      {caption && <span className="mt-2 text-center text-[0.8125rem] leading-4.5 text-muted-foreground">{caption}</span>}
     </div>
   );
 };

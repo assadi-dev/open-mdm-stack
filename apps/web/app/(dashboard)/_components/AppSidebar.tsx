@@ -9,7 +9,7 @@ import { SidebarNavGroup } from "./SidebarNavGroup";
 export const AppSidebar = () => (
   <Sidebar>
     <SidebarHeader>
-      <div className="px-1.5 py-0.5 text-[22px] leading-7 font-semibold tracking-[-0.4px]">{NAVIGATION.brand}</div>
+      <div className="px-1.5 py-0.5 text-[1.375rem] leading-7 font-semibold tracking-[-0.4px]">{NAVIGATION.brand}</div>
     </SidebarHeader>
     <SidebarContent>
       <SidebarNavGroup label={NAVIGATION.group.main} items={NAVIGATION.main} />

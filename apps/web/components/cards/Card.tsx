@@ -25,7 +25,7 @@ export const CardTitle = ({ className, ...props }: ComponentProps<typeof ShadcnC
 );
 
 export const CardDescription = ({ className, ...props }: ComponentProps<typeof ShadcnCardDescription>) => (
-  <ShadcnCardDescription className={cn("text-[13px]", className)} {...props} />
+  <ShadcnCardDescription className={cn("text-[0.8125rem]", className)} {...props} />
 );
 
 export const CardFooter = ({ className, ...props }: ComponentProps<typeof ShadcnCardFooter>) => (

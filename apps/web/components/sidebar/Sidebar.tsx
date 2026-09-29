@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-// 280px de carte + 24px de marge gauche (`p-6 pr-0` sur Sidebar). La variable est mesurée en border-box.
-const SIDEBAR_WIDTH = "19rem";
+// 280px de carte + 24px de marge gauche (`p-6 pr-0` sur Sidebar), mesurés en border-box. En px : la racine est à 95 % (voir globals.css).
+const SIDEBAR_WIDTH = "304px";
 
 export const SidebarProvider = ({ style, ...props }: ComponentProps<typeof ShadcnSidebarProvider>) => (
   <ShadcnSidebarProvider style={{ "--sidebar-width": SIDEBAR_WIDTH, ...style } as CSSProperties} {...props} />
@@ -58,7 +58,7 @@ export const SidebarGroup = ({ className, ...props }: ComponentProps<typeof Shad
 );
 
 export const SidebarGroupLabel = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarGroupLabel>) => (
-  <ShadcnSidebarGroupLabel className={cn("px-3.5 text-[13px] text-muted-foreground", className)} {...props} />
+  <ShadcnSidebarGroupLabel className={cn("px-3.5 text-[0.8125rem] text-muted-foreground", className)} {...props} />
 );
 
 export const SidebarMenu = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarMenu>) => (
@@ -68,7 +68,7 @@ export const SidebarMenu = ({ className, ...props }: ComponentProps<typeof Shadc
 export const SidebarMenuButton = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarMenuButton>) => (
   <ShadcnSidebarMenuButton
     className={cn(
-      "h-11 gap-3 rounded-md px-3.5 text-[15px] font-medium [&_svg]:size-5 data-active:bg-sidebar-primary data-active:font-semibold data-active:text-sidebar-primary-foreground",
+      "h-11 gap-3 rounded-md px-3.5 text-[0.9375rem] font-medium [&_svg]:size-5 data-active:bg-sidebar-primary data-active:font-semibold data-active:text-sidebar-primary-foreground",
       className,
     )}
     {...props}
@@ -78,7 +78,7 @@ export const SidebarMenuButton = ({ className, ...props }: ComponentProps<typeof
 export const SidebarMenuBadge = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarMenuBadge>) => (
   <ShadcnSidebarMenuBadge
     className={cn(
-      "right-3.5 rounded-full bg-danger text-[11px] font-semibold text-white peer-hover/menu-button:text-white peer-data-active/menu-button:text-white peer-data-[size=default]/menu-button:top-3",
+      "right-3.5 rounded-full bg-danger text-[0.6875rem] font-semibold text-white peer-hover/menu-button:text-white peer-data-active/menu-button:text-white peer-data-[size=default]/menu-button:top-3",
       className,
     )}
     {...props}

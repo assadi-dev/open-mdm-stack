@@ -22,7 +22,7 @@ export const ItemMedia = ({ variant, className, ...props }: ComponentProps<typeo
 );
 
 export const ItemDescription = ({ className, ...props }: ComponentProps<typeof ShadcnItemDescription>) => (
-  <ShadcnItemDescription className={cn("text-[13px] leading-4.5", className)} {...props} />
+  <ShadcnItemDescription className={cn("text-[0.8125rem] leading-4.5", className)} {...props} />
 );
 
 export const Item = ShadcnItem;

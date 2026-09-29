@@ -14,8 +14,8 @@ export const PageHeader = ({ title, subtitle, breadcrumbs = [], children }: Page
       {breadcrumbs.length > 0 && (
         <BreadcrumbDisplay breadcrumbs={breadcrumbs} />
       )}
-      <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.6px]">{title}</h1>
-      {subtitle && <p className="text-[13px] leading-4.5 text-muted-foreground">{subtitle}</p>}
+      <h1 className="text-[1.625rem] leading-8 font-semibold tracking-[-0.6px]">{title}</h1>
+      {subtitle && <p className="text-[0.8125rem] leading-4.5 text-muted-foreground">{subtitle}</p>}
     </div>
 
     <div className="flex shrink-0 items-center gap-3">

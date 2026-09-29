@@ -14,7 +14,7 @@ import { BreadcrumbEntry } from "@/app/(dashboard)/_types/page-header.types";
 import Link from "next/link";
 
 export const BreadcrumbList = ({ className, ...props }: ComponentProps<typeof ShadcnBreadcrumbList>) => (
-  <ShadcnBreadcrumbList className={cn("text-[13px]", className)} {...props} />
+  <ShadcnBreadcrumbList className={cn("text-[0.8125rem]", className)} {...props} />
 );
 
 export const Breadcrumb = ShadcnBreadcrumb;

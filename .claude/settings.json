@@ -169,7 +169,13 @@
       "Bash(npx --yes ctx7@latest docs /tanstack/table \"v9 tableFeatures registering rowSelectionFeature globalFilteringFeature createFilteredRowModel filterFns with useTable, controlled state globalFilter rowSelection onGlobalFilterChange, getSelectedRowModel, resetRowSelection, getRowId\")",
       "Bash(npx --yes ctx7@latest docs /tanstack/table \"v9 column sorting getToggleSortingHandler getIsSorted, row selection getIsAllPageRowsSelected toggleAllPageRowsSelected row.getIsSelected row.getToggleSelectedHandler, pagination nextPage previousPage setPageIndex getPageCount getCanNextPage, createColumnHelper display column\")",
       "Bash(npx shadcn@latest add pagination --yes)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(sed -i '' 's/process.argv\\\\[2\\\\] ?? \"run\"/process.env.TAG ?? \"run\"/' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/scale.mjs)",
+      "Bash(TAG=before node --input-type=module)",
+      "Bash(sed -i '' 's/const SIDEBAR_WIDTH = \"19rem\";/const SIDEBAR_WIDTH = \"304px\";/; s#^// 280px de carte + 24px de marge gauche \\(`p-6 pr-0` sur Sidebar\\). La variable est mesurée en border-box.#// 280px de carte + 24px de marge gauche \\(`p-6 pr-0` sur Sidebar\\), mesurés en border-box. En px : la racine est à 95 % \\(voir globals.css\\).#' components/sidebar/Sidebar.tsx)",
+      "Bash(TAG=after node --input-type=module)",
+      "Bash(rm -r \"app/\\(preview\\)\" e2e/_tmp playwright.tmp.config.ts)",
+      "Bash(sed -n '/^## Typographie/,/^## Espacement/p' design.md)"
     ]
   }
 }

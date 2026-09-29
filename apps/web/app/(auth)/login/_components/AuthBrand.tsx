@@ -5,6 +5,6 @@ export const AuthBrand = () => (
     <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
       <ShieldCheck className="size-[18px]" aria-hidden />
     </span>
-    <span className="text-[17px] leading-6 font-semibold">Open MDM</span>
+    <span className="text-[1.0625rem] leading-6 font-semibold">Open MDM</span>
   </div>
 );

@@ -23,7 +23,7 @@ export const DataTablePagination = <TData extends RowData>({ dataTable, classNam
 
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3 px-6 py-4", className)}>
-      <span className="text-[13px] leading-4.5 text-muted-foreground tabular-nums">
+      <span className="text-[0.8125rem] leading-4.5 text-muted-foreground tabular-nums">
         {`${formatNumber(from)}–${formatNumber(to)} ${DATA_TABLE.pagination.range} ${formatNumber(totalRows)}`}
       </span>
       <Pagination aria-label={DATA_TABLE.pagination.label} className="mx-0 w-auto">

@@ -88,7 +88,7 @@ export const ChartAreaFlow = ({ data, label, highlight, height = 150, className 
             {highlight.top && (
               <Badge
                 variant="secondary"
-                className="absolute top-0 h-auto -translate-x-1/2 bg-ink px-3 text-[13px] leading-4.5 text-ink-foreground tabular-nums"
+                className="absolute top-0 h-auto -translate-x-1/2 bg-ink px-3 text-[0.8125rem] leading-4.5 text-ink-foreground tabular-nums"
                 style={{ left: highlightLeft }}
               >
                 {highlight.top}
@@ -97,7 +97,7 @@ export const ChartAreaFlow = ({ data, label, highlight, height = 150, className 
             {highlight.bottom && (
               <Badge
                 variant="secondary"
-                className="absolute bottom-0 h-auto -translate-x-1/2 border-card-border bg-card-strong px-3 text-[13px] leading-4.5 text-foreground tabular-nums"
+                className="absolute bottom-0 h-auto -translate-x-1/2 border-card-border bg-card-strong px-3 text-[0.8125rem] leading-4.5 text-foreground tabular-nums"
                 style={{ left: highlightLeft }}
               >
                 {highlight.bottom}

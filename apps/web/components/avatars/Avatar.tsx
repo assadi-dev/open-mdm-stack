@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const AvatarFallback = ({ className, ...props }: ComponentProps<typeof ShadcnAvatarFallback>) => (
-  <ShadcnAvatarFallback className={cn("text-[13px] font-semibold text-foreground", className)} {...props} />
+  <ShadcnAvatarFallback className={cn("text-[0.8125rem] font-semibold text-foreground", className)} {...props} />
 );
 
 export const Avatar = ShadcnAvatar;

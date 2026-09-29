@@ -62,6 +62,12 @@
   --gradient-flame: linear-gradient(90deg, var(--flame-500) 0%, var(--flame-400) 55%, var(--flame-200) 100%);
 }
 
+/* Réduction de 5 % du texte : la racine passe à 95 % (voir `html` plus bas) et les tailles de texte sont en rem.
+   L'espacement est figé en px pour que les hauteurs, marges et gabarits de la charte ne bougent pas. */
+@theme {
+  --spacing: 4px;
+}
+
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
@@ -119,6 +125,7 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   html {
+    font-size: 95%;
     min-height: 100%;
     background-color: var(--background);
     background-image: var(--gradient-ambient);
@@ -131,4 +138,13 @@
    Hors @layer : ces règles priment sur les utilitaires Tailwind. */
 [data-slot="alert-dialog-overlay"] {
   background-color: color-mix(in oklab, var(--foreground) 40%, transparent);
+}
+
+/* Sonner écrit ses tailles de texte en px : on les aligne sur la réduction de 5 % (13 px → 0,8125 rem, 12 px → 0,75 rem). */
+.toaster [data-sonner-toast][data-styled="true"] {
+  font-size: 0.8125rem;
+}
+
+.toaster [data-sonner-toast][data-styled="true"] [data-button] {
+  font-size: 0.75rem;
 }

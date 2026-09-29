@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const TITLE_CLASSES = {
   default: "",
-  lg: "text-[22px] leading-7 tracking-[-0.4px]",
+  lg: "text-[1.375rem] leading-7 tracking-[-0.4px]",
 };
 
 type SectionCardProps = Omit<ComponentProps<typeof Card>, "title"> & {

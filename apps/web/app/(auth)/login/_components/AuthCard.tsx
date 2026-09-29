@@ -16,12 +16,12 @@ export const AuthCard = () => {
     <Card className="w-[420px] [--card-spacing:--spacing(7)]">
       <CardContent className="flex flex-col gap-5">
         <div className="flex flex-col items-center gap-1.5 text-center">
-          <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.4px]">Bienvenue</h1>
+          <h1 className="text-[1.375rem] leading-7 font-semibold tracking-[-0.4px]">Bienvenue</h1>
           <p className="text-sm text-muted-foreground">Connectez-vous pour accéder à votre console.</p>
         </div>
 
         <Button type="button" variant="outline" className="w-full gap-2.5" onClick={signInWithGoogle} disabled={isPending}>
-          <span aria-hidden className="text-[15px] font-semibold">
+          <span aria-hidden className="text-[0.9375rem] font-semibold">
             G
           </span>
           {ACTION_LABELS.continueWithGoogle}

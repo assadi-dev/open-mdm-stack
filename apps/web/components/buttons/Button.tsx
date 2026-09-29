@@ -20,7 +20,7 @@ const VARIANT_CLASSES: Partial<Record<ButtonVariant, string>> = {
 };
 
 const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
-  default: "h-11 px-4.5 text-[15px] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
+  default: "h-11 px-4.5 text-[0.9375rem] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
   sm: "h-9 px-3.5 font-semibold",
   lg: "h-12 px-6",
   icon: "size-11 rounded-full [&_svg:not([class*='size-'])]:size-4.5",

@@ -55,7 +55,7 @@ export const ChartPieDonutText = ({ data, value, label, caption, size = 190, cla
         {series.map((item) => (
           <li
             key={item.key}
-            className="grid grid-cols-[10px_1fr_auto] items-center gap-2.5 text-[13px] leading-4.5 font-medium whitespace-nowrap"
+            className="grid grid-cols-[10px_1fr_auto] items-center gap-2.5 text-[0.8125rem] leading-4.5 font-medium whitespace-nowrap"
           >
             <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: item.color }} />
             <span>{item.label}</span>

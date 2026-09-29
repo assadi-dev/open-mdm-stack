@@ -50,6 +50,9 @@ Ne jamais écrire une couleur en dur ni utiliser une primitive `flame-*`/`sand-*
 
 ## Typographie (classes Tailwind arbitraires, toutes en Inter)
 
+**Le texte est réduit de 5 %** (`html { font-size: 95% }` dans `globals.css`). Les tailles du tableau ci-dessous sont les valeurs de la charte, à **écrire en rem** (px ÷ 16 : `13px` → `text-[0.8125rem]`), jamais en `text-[Npx]` : un texte en px ne suit pas la réduction. L'espacement, lui, est figé en px (`--spacing: 4px`) : hauteurs, marges et rayons ne bougent pas. Pour ajuster la réduction, changer uniquement le `font-size` de `html`.
+
+
 | Style | Taille/interligne | Poids | Usage |
 |---|---|---|---|
 | `page-title` | `text-[26px] leading-[32px]` | 600 | h1 de l'en-tête de page |

@@ -18,7 +18,7 @@ export const StatCard = ({ label, value, hint, delta }: StatCardProps) => (
   <Card className="gap-4 py-5 has-data-[slot=card-footer]:pb-5">
     <CardHeader>
       <CardDescription className="leading-4.5 font-medium text-foreground">{label}</CardDescription>
-      <CardTitle className="text-[32px] leading-9.5 tracking-[-0.8px] tabular-nums">{value}</CardTitle>
+      <CardTitle className="text-[2rem] leading-9.5 tracking-[-0.8px] tabular-nums">{value}</CardTitle>
       <CardAction>
         <CardOptionsButton />
       </CardAction>
