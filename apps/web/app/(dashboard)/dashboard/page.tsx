@@ -1,7 +1,7 @@
 import type { ResolvingMetadata } from "next";
 import { DASHBOARD } from "@/constants/dashboard";
 import { generateTitleMetadata, type PageProps } from "@/lib/page-metadata";
-import { PageHeader } from "../_components/PageHeader";
+import { DashboardPageClient } from "./_components/DashboardPageClient";
 
 export const generateMetadata = async (props: PageProps, parent: ResolvingMetadata) => {
     const prevMetadata = await parent;
@@ -14,7 +14,7 @@ export const generateMetadata = async (props: PageProps, parent: ResolvingMetada
 };
 
 const DashboardPage = async () => {
-    return <PageHeader title={DASHBOARD.page.title} />;
+    return <DashboardPageClient />;
 };
 
 export default DashboardPage;

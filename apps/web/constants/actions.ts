@@ -3,6 +3,7 @@ export const ACTION_LABELS = {
   login: "Se connecter",
   logout: "Déconnexion",
   options: "Options",
+  retry: "Réessayer",
   signup: "Créer mon compte",
   showPassword: "Afficher le mot de passe",
   hidePassword: "Masquer le mot de passe",

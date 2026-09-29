@@ -1,20 +1,5 @@
-import Link from "next/link";
-import { Fragment } from "react";
-import {
-  Breadcrumb,
-  BreadcrumbDisplay,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/breadcrumbs/Breadcrumb";
-import { SidebarTrigger } from "@/components/sidebar/Sidebar";
-import { HEADER } from "@/constants/header";
+import { BreadcrumbDisplay } from "@/components/breadcrumbs/Breadcrumb";
 import type { BreadcrumbEntry } from "../_types/page-header.types";
-import { AccountButton } from "./AccountButton";
-import { GlobalSearch } from "./GlobalSearch";
-import { NotificationButton } from "./NotificationButton";
 
 type PageHeaderProps = {
   title: string;
@@ -38,5 +23,3 @@ export const PageHeader = ({ title, subtitle, breadcrumbs = [], children }: Page
     </div>
   </div>
 );
-
-
