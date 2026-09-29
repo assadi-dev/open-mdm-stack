@@ -17,11 +17,10 @@ export const generateMetadata = async (props: PageProps, parent: ResolvingMetada
 
 const LoginPage = async () => {
     const session = await getSessionServer()
-    console.log(process.env.NEXT_PUBLIC_HOME_URL);
 
-    /*if (session) {
+    if (session) {
         redirect(process.env.NEXT_PUBLIC_HOME_URL!)
-    }*/
+    }
 
     return (
         <div className="flex min-h-screen flex-col items-center gap-6 p-8">
