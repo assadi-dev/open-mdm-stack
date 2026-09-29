@@ -159,7 +159,11 @@
       "Bash(npx --yes ctx7@latest docs /websites/playwright_dev \"authentication setup project saving storageState reuse across tests with dependencies in playwright.config.ts\")",
       "Bash(npx --yes ctx7@latest docs /websites/playwright_dev \"webServer option in playwright.config.ts command url reuseExistingServer timeout\")",
       "Bash(sed -i '' 's#^await mock.goto.*#// mockup déjà capturée#; /^await mock\\\\./d; /^const mock = /d' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/shoot.mjs)",
-      "Bash(sed -i '' '/mockup déjà capturée/d' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/shoot.mjs)"
+      "Bash(sed -i '' '/mockup déjà capturée/d' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/shoot.mjs)",
+      "Bash(node -e 'console.log\\(\"recharts\", require\\(\"./node_modules/recharts/package.json\"\\).version\\)')",
+      "Bash(npx --yes ctx7@latest library \"Recharts\" \"range area chart with dataKey array, numeric XAxis, half-circle Pie with cornerRadius and paddingAngle\")",
+      "Bash(npx --yes ctx7@latest docs /recharts/recharts \"Area chart range area where dataKey is an array of [min, max] values, and XAxis type number with domain and ticks\")",
+      "Bash(npx --yes ctx7@latest docs /recharts/recharts \"Pie chart innerRadius outerRadius in pixels, cornerRadius, paddingAngle, startAngle endAngle for semicircle gauge, Cell fill\")"
     ]
   }
 }
