@@ -16,3 +16,5 @@ export const STATUS = {
   commandRunning: { label: "Commande en cours", tone: "info" },
   running: { label: "En cours", tone: "info" },
 } as const satisfies Record<string, StatusDefinition>;
+
+export type StatusKey = keyof typeof STATUS;

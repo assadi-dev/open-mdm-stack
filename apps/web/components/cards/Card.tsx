@@ -11,7 +11,13 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Card = ({ className, ...props }: ComponentProps<typeof ShadcnCard>) => (
-  <ShadcnCard className={cn("ring-card-border [--card-spacing:--spacing(6)]", className)} {...props} />
+  <ShadcnCard
+    className={cn(
+      "ring-card-border [--card-spacing:--spacing(6)] has-data-[slot=card-footer]:pb-(--card-spacing)",
+      className,
+    )}
+    {...props}
+  />
 );
 
 export const CardTitle = ({ className, ...props }: ComponentProps<typeof ShadcnCardTitle>) => (
@@ -22,7 +28,10 @@ export const CardDescription = ({ className, ...props }: ComponentProps<typeof S
   <ShadcnCardDescription className={cn("text-[13px]", className)} {...props} />
 );
 
+export const CardFooter = ({ className, ...props }: ComponentProps<typeof ShadcnCardFooter>) => (
+  <ShadcnCardFooter className={cn("gap-2 border-t-0 bg-transparent py-0", className)} {...props} />
+);
+
 export const CardHeader = ShadcnCardHeader;
 export const CardAction = ShadcnCardAction;
 export const CardContent = ShadcnCardContent;
-export const CardFooter = ShadcnCardFooter;
