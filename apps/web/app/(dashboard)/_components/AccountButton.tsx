@@ -18,8 +18,8 @@ export const AccountButton = () => {
         <AvatarFallback>{formatInitials(name)}</AvatarFallback>
       </Avatar>
       <span className="hidden flex-col items-start xl:flex">
-        <span className="text-sm leading-5 font-medium">{name}</span>
-        <span className="text-xs leading-4.5 font-normal text-muted-foreground">{HEADER.account.role}</span>
+        <span className="text-sm leading-5 font-medium text-nowrap">{name}</span>
+        <span className="text-xs leading-4.5 font-normal text-muted-foreground text-nowrap">{HEADER.account.role}</span>
       </span>
       <ChevronDown />
     </Button>
