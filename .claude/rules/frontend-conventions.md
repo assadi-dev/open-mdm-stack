@@ -28,6 +28,7 @@ app/dashboard/
 ├── _services/     un fichier par rôle : appels API, clés de requête, fonctions utilitaires
 ├── _types/        types TypeScript de la page
 ├── _dto/          schémas Zod + objet de validation/parsing
+├── _mocks/        données fictives, tant que l'API n'expose pas la ressource
 └── page.tsx
 ```
 
@@ -35,6 +36,7 @@ app/dashboard/
 - `_services/dashboard.queries.ts` : uniquement les clés des requêtes TanStack Query (voir §5).
 - `_services/dashboard.utils.ts` : uniquement les fonctions utilitaires.
 - `_dto/device.dto.ts` : les schémas Zod et un objet qui expose les méthodes de validation et de parsing.
+- `_mocks/dashboard.mock.ts` : données fictives typées, importées uniquement par `_services/dashboard.api.ts` (jamais par un composant ou un hook). Passer à l'API réelle ne touche que ce fichier et `dashboard.api.ts`.
 
 ```ts
 // _dto/device.dto.ts
@@ -270,109 +272,56 @@ Tailles, épaisseur de trait et usage par contexte (nav, bouton, badge, statut�
 
 ## 10. Tableaux avec TanStack Table
 
-Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest` publiée, ex. `9.2.4`). Aucune page n'appelle `useTable` ni ne déclare ses propres `tableFeatures` : on passe systématiquement par le wrapper unique `components/data-table/DataTable.tsx`.
+Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest` publiée, ex. `9.2.4`), via deux briques partagées : le hook `hooks/useDataTable.ts` (état et actions) et le composant `components/data-table/DataTable.tsx` (affichage). Aucune page n'appelle `useTable` ni ne déclare ses propres `tableFeatures`.
 
-- **La v9 change l'API par rapport à la v8** (encore la version la plus répandue dans les exemples et tutoriels existants) : le hook s'appelle `useTable` (pas `useReactTable`), un objet `features` construit via `tableFeatures(...)` est obligatoire, et le rendu passe par la méthode `table.FlexRender` (pas d'import `flexRender` séparé). Le row model « core » est inclus par défaut ; seuls le tri et la pagination doivent être déclarés comme features.
-- Le wrapper enregistre **une seule fois** les features communes (tri + pagination). Les pages n'ont jamais à répéter cette configuration.
-- Chaque page ne définit que ses colonnes, dans `_components/<entite>-columns.tsx`, avec `createColumnHelper<typeof dataTableFeatures, Entite>()` (le `dataTableFeatures` exporté par le wrapper).
-- Les libellés d'en-tête suivent la règle des constantes (§6) : pas de texte en dur dans un fichier de colonnes.
-- Le wrapper rend le balisage avec les primitives shadcn de `components/ui/table.tsx`, jamais modifiées directement (voir §4).
-
-```tsx
-// components/data-table/DataTable.tsx
-"use client";
-
-import { useState } from "react";
-import {
-  createPaginatedRowModel,
-  createSortedRowModel,
-  rowPaginationFeature,
-  rowSortingFeature,
-  sortFns,
-  tableFeatures,
-  useTable,
-  type ColumnDef,
-  type PaginationState,
-  type SortingState,
-} from "@tanstack/react-table";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-export const dataTableFeatures = tableFeatures({
-  rowSortingFeature,
-  rowPaginationFeature,
-  sortedRowModel: createSortedRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-  sortFns,
-});
-
-type DataTableProps<TData> = {
-  columns: ColumnDef<typeof dataTableFeatures, TData>[];
-  data: TData[];
-  emptyMessage?: string;
-};
-
-export const DataTable = <TData,>({ columns, data, emptyMessage = "Aucun résultat." }: DataTableProps<TData>) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
-
-  const table = useTable({
-    features: dataTableFeatures,
-    columns,
-    data,
-    state: { sorting, pagination },
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-  });
-
-  return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id}>
-                {header.isPlaceholder ? null : <table.FlexRender header={header} />}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.length ? (
-          table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getAllCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  <table.FlexRender cell={cell} />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-  );
-};
-```
+- **La v9 change l'API par rapport à la v8** (encore la version la plus répandue dans les exemples et tutoriels existants) : le hook s'appelle `useTable` (pas `useReactTable`), un objet `features` construit via `tableFeatures(...)` est obligatoire, et le rendu passe par la méthode `table.FlexRender` (pas d'import `flexRender` séparé). Le filtre global exige `columnFilteringFeature` avant `globalFilteringFeature`.
+- `components/data-table/data-table-features.ts` enregistre **une seule fois** les fonctionnalités : tri, pagination, filtre global (recherche) et sélection de lignes. Il exporte `dataTableFeatures`, le type `DataTableColumnDef<TData>` et `createDataTableColumnHelper<TData>()`.
+- Le hook porte tout l'état : `search` / `setSearch`, `sorting`, `pagination` (`pageIndex`, `pageCount`, `totalRows`, `previous`, `next`, `goTo`, `setPageSize`…) et `selection` (`selectedRows`, `selectedCount`, `clear`). Avec `enableSelection: true`, il ajoute la colonne de cases à cocher. `selectedRows` ne contient que les lignes **visibles** (filtrées) : une action groupée ne touche jamais une ligne masquée par la recherche.
+- Le composant reçoit le résultat du hook : `<DataTable dataTable={dataTable} />`. La recherche, la pagination et la barre d'actions (`toolbarActions`, `selectionActions`) sont optionnelles. `DataTableSearch` et `DataTablePagination` s'utilisent aussi seuls (ex. recherche dans l'en-tête d'une Card).
+- Chaque page ne définit que ses colonnes, dans `_components/<entite>-columns.tsx`, avec `createDataTableColumnHelper<Entite>()`. Le tri est **actif par défaut** sur les colonnes à accesseur : mettre `enableSorting: false` sur celles où il n'a pas de sens (statut, actions). Les colonnes numériques et les dates démarrent en tri décroissant.
+- La recherche et le tri portent sur la **valeur d'accesseur**. Pour chercher sur ce que l'utilisateur lit (ex. le libellé d'un statut), l'accesseur retourne le libellé et `cell` affiche le badge. Pour trier une date sur la date et non sur le texte, l'accesseur retourne le timestamp et `cell` le formate (`formatRelativeTime`). `enableGlobalFilter: false` exclut une colonne de la recherche.
+- Les libellés d'en-tête suivent la règle des constantes (§6) : pas de texte en dur dans un fichier de colonnes. Les textes du tableau lui-même (recherche, pagination, sélection) sont dans `constants/data-table.ts`.
+- Le composant rend le balisage avec le wrapper `components/tables/Table.tsx`, jamais avec `components/ui/table.tsx` (voir §4).
 
 ```tsx
 // app/devices/_components/device-columns.tsx
-import { createColumnHelper } from "@tanstack/react-table";
-import { dataTableFeatures } from "@/components/data-table/DataTable";
+import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
+import { DEVICE } from "@/constants/device";
 import type { Device } from "../_types/device.types";
 
-const helper = createColumnHelper<typeof dataTableFeatures, Device>();
+const helper = createDataTableColumnHelper<Device>();
 
 export const deviceColumns = [
   helper.accessor("model", { header: DEVICE.table.model }),
-  helper.accessor("serial", { header: DEVICE.table.serial }),
+  helper.accessor("serial", { header: DEVICE.table.serial, enableSorting: false }),
 ];
+```
+
+```tsx
+// app/devices/_components/DevicesPageClient.tsx
+"use client";
+
+import { DataTable } from "@/components/data-table/DataTable";
+import { useDataTable } from "@/hooks/useDataTable";
+import { deviceColumns } from "./device-columns";
+import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
+
+export const DevicesPageClient = () => {
+  const { data } = useFetchDeviceCollection();
+  const dataTable = useDataTable({
+    data: data ?? [],
+    columns: deviceColumns,
+    enableSelection: true,
+    getRowId: (device) => device.id,
+  });
+
+  return (
+    <DataTable
+      dataTable={dataTable}
+      selectionActions={(devices) => <RemoveDevicesButton devices={devices} />}
+    />
+  );
+};
 ```
 
 ## 11. Déclaration des pages : Server Component + délégation client
@@ -507,13 +456,15 @@ export default DevicesPage;
 "use client";
 
 import { DataTable } from "@/components/data-table/DataTable";
+import { useDataTable } from "@/hooks/useDataTable";
 import { deviceColumns } from "./device-columns";
 import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
 
 export const DevicesPageClient = () => {
   const { data } = useFetchDeviceCollection();
+  const dataTable = useDataTable({ data: data ?? [], columns: deviceColumns });
 
-  return <DataTable columns={deviceColumns} data={data ?? []} />;
+  return <DataTable dataTable={dataTable} />;
 };
 ```
 

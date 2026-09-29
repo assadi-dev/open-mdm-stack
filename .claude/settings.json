@@ -163,7 +163,13 @@
       "Bash(node -e 'console.log\\(\"recharts\", require\\(\"./node_modules/recharts/package.json\"\\).version\\)')",
       "Bash(npx --yes ctx7@latest library \"Recharts\" \"range area chart with dataKey array, numeric XAxis, half-circle Pie with cornerRadius and paddingAngle\")",
       "Bash(npx --yes ctx7@latest docs /recharts/recharts \"Area chart range area where dataKey is an array of [min, max] values, and XAxis type number with domain and ticks\")",
-      "Bash(npx --yes ctx7@latest docs /recharts/recharts \"Pie chart innerRadius outerRadius in pixels, cornerRadius, paddingAngle, startAngle endAngle for semicircle gauge, Cell fill\")"
+      "Bash(npx --yes ctx7@latest docs /recharts/recharts \"Pie chart innerRadius outerRadius in pixels, cornerRadius, paddingAngle, startAngle endAngle for semicircle gauge, Cell fill\")",
+      "Bash(node -e 'for \\(const p of [\"react-table\",\"table-core\"]\\) { try { console.log\\(p, require\\(\"./node_modules/@tanstack/\"+p+\"/package.json\"\\).version\\) } catch\\(e\\) { console.log\\(p, \"absent\"\\) } }')",
+      "Bash(npx --yes ctx7@latest library \"TanStack Table\" \"v9 useTable tableFeatures rowSelectionFeature globalFilteringFeature rowSortingFeature rowPaginationFeature\")",
+      "Bash(npx --yes ctx7@latest docs /tanstack/table \"v9 tableFeatures registering rowSelectionFeature globalFilteringFeature createFilteredRowModel filterFns with useTable, controlled state globalFilter rowSelection onGlobalFilterChange, getSelectedRowModel, resetRowSelection, getRowId\")",
+      "Bash(npx --yes ctx7@latest docs /tanstack/table \"v9 column sorting getToggleSortingHandler getIsSorted, row selection getIsAllPageRowsSelected toggleAllPageRowsSelected row.getIsSelected row.getToggleSelectedHandler, pagination nextPage previousPage setPageIndex getPageCount getCanNextPage, createColumnHelper display column\")",
+      "Bash(npx shadcn@latest add pagination --yes)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }
