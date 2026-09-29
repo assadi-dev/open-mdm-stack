@@ -147,7 +147,10 @@
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npm install)",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest library \"drizzle-kit\" \"config schema multiple paths array glob\")",
       "Bash(npm_config_cache=/tmp/npm-cache-ctx7 npx ctx7@latest docs \"/drizzle-team/drizzle-orm-docs\" \"drizzle-kit config.ts schema field array of paths multiple schema files monorepo\")",
-      "Bash(npx turbo *)"
+      "Bash(npx turbo *)",
+      "Bash(npx shadcn@latest add badge table sidebar breadcrumb avatar progress dropdown-menu item chart tooltip --yes)",
+      "Bash(git log *)",
+      "Bash(node --input-type=module)"
     ]
   }
 }

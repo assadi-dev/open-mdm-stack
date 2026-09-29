@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 import { generateTitleMetadata } from "@/lib/page-metadata";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,7 +22,7 @@ const RootLayout = async ({
   return (
     <html lang="fr" className={cn("font-sans", inter.variable)}>
       <body>
-        {children}
+        <QueryProvider>{children}</QueryProvider>
         <Toaster />
       </body>
     </html>
