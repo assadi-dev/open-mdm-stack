@@ -1,6 +1,6 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
 /**

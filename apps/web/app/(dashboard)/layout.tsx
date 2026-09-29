@@ -1,7 +1,4 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
+import { isUserAuthticated } from "@/lib/auth/session-server";
 
 
 type DashboardLayoutProps = {
@@ -9,18 +6,7 @@ type DashboardLayoutProps = {
 }
 
 const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
-
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    })
-
-    if (!session) {
-        redirect("/login")
-    }
-
-    console.log(session);
-
-
+    await isUserAuthticated()
     return (
         <>
             {children}
