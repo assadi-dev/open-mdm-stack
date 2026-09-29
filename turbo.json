@@ -31,6 +31,15 @@
         "^check-types"
       ]
     },
+    "test:e2e": {
+      "cache": false,
+      "passThroughEnv": [
+        "CI",
+        "E2E_USER_EMAIL",
+        "E2E_USER_PASSWORD",
+        "PLAYWRIGHT_BASE_URL"
+      ]
+    },
     "dev": {
       "dependsOn": [
         "^build"

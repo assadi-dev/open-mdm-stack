@@ -1,4 +1,6 @@
+import { SidebarInset, SidebarProvider } from "@/components/sidebar/Sidebar";
 import { isUserAuthticated } from "@/lib/auth/session-server";
+import { AppSidebar } from "./_components/AppSidebar";
 
 
 type DashboardLayoutProps = {
@@ -8,9 +10,10 @@ type DashboardLayoutProps = {
 const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
     await isUserAuthticated()
     return (
-        <>
-            {children}
-        </>
+        <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
     )
 }
 

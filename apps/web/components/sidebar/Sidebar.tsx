@@ -54,7 +54,7 @@ export const SidebarContent = ({ className, ...props }: ComponentProps<typeof Sh
 );
 
 export const SidebarGroup = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarGroup>) => (
-  <ShadcnSidebarGroup className={cn("px-0", className)} {...props} />
+  <ShadcnSidebarGroup className={cn("in-data-[slot=sidebar-inner]:px-0", className)} {...props} />
 );
 
 export const SidebarGroupLabel = ({ className, ...props }: ComponentProps<typeof ShadcnSidebarGroupLabel>) => (

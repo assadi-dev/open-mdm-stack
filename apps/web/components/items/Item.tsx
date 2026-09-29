@@ -21,10 +21,13 @@ export const ItemMedia = ({ variant, className, ...props }: ComponentProps<typeo
   />
 );
 
+export const ItemDescription = ({ className, ...props }: ComponentProps<typeof ShadcnItemDescription>) => (
+  <ShadcnItemDescription className={cn("text-[13px] leading-4.5", className)} {...props} />
+);
+
 export const Item = ShadcnItem;
 export const ItemActions = ShadcnItemActions;
 export const ItemContent = ShadcnItemContent;
-export const ItemDescription = ShadcnItemDescription;
 export const ItemFooter = ShadcnItemFooter;
 export const ItemGroup = ShadcnItemGroup;
 export const ItemHeader = ShadcnItemHeader;

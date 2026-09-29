@@ -150,7 +150,16 @@
       "Bash(npx turbo *)",
       "Bash(npx shadcn@latest add badge table sidebar breadcrumb avatar progress dropdown-menu item chart tooltip --yes)",
       "Bash(git log *)",
-      "Bash(node --input-type=module)"
+      "Bash(node --input-type=module)",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(pg_isready)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/format-test.mts)",
+      "Bash(export npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/npm-cache)",
+      "Bash(npx --yes ctx7@latest library \"Playwright\" \"test configuration webServer projects authentication storageState setup project\")",
+      "Bash(npx --yes ctx7@latest docs /websites/playwright_dev \"authentication setup project saving storageState reuse across tests with dependencies in playwright.config.ts\")",
+      "Bash(npx --yes ctx7@latest docs /websites/playwright_dev \"webServer option in playwright.config.ts command url reuseExistingServer timeout\")",
+      "Bash(sed -i '' 's#^await mock.goto.*#// mockup déjà capturée#; /^await mock\\\\./d; /^const mock = /d' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/shoot.mjs)",
+      "Bash(sed -i '' '/mockup déjà capturée/d' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/54f6d69d-7174-4fc8-957c-8b327687d936/scratchpad/shoot.mjs)"
     ]
   }
 }

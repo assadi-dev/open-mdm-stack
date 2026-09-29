@@ -23,9 +23,9 @@ const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
   default: "h-11 px-4.5 text-[15px] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
   sm: "h-9 px-3.5 font-semibold",
   lg: "h-12 px-6",
-  icon: "size-11 rounded-full",
-  "icon-sm": "size-9 rounded-full",
-  "icon-lg": "size-12 rounded-full",
+  icon: "size-11 rounded-full [&_svg:not([class*='size-'])]:size-4.5",
+  "icon-sm": "size-9 rounded-full [&_svg:not([class*='size-'])]:size-4.5",
+  "icon-lg": "size-12 rounded-full [&_svg:not([class*='size-'])]:size-4.5",
 };
 
 export const Button = ({ variant = "default", size = "default", className, ...props }: ButtonProps) => (
