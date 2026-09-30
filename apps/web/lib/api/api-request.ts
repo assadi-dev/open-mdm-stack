@@ -1,5 +1,7 @@
 import { getSessionServer } from "../auth/session-server";
-import { BACKEND_API_BASE_URL, buildUrl } from "./api-handlers";
+import { BACKEND_API_BASE_URL, buildUrl, handleResponse } from "./api-handlers";
+import { HTTP_ERROR } from "./intefaces/http-status";
+import { Unauthorized } from "./intefaces/http-errors";
 import { IApiRequest } from "./intefaces/interfaces";
 
 
@@ -64,19 +66,15 @@ class ApiRequest implements IApiRequest {
         return this.handleResponse(response);
     }
 
-    private async handleResponse<T>(response: Response): Promise<T> {
-        const json = await response.json();
-        if (!response.ok) {
-            throw json;
-        }
-        return json;
+    private handleResponse<T>(response: Response): Promise<T> {
+        return handleResponse<T>(response);
     }
 
     private async buildOptions(options?: RequestInit) {
 
         const currentSession = await getSessionServer()
         if (!currentSession) {
-            throw new Error("Unauthorized")
+            throw new Unauthorized(HTTP_ERROR.UNAUTHORIZED.message)
         }
         this.headers = {
             "Content-Type": "application/json",

@@ -5,9 +5,11 @@ import {
     Forbidden,
     InternalError,
     LimitExceeded,
+    NotFound,
     NotImplemented,
     Unauthorized,
     UnprocessableEntity,
+    createHttpError,
 } from "./intefaces/http-errors";
 import { DefaultErrorStrategy } from "./strategy/default-error-strategy";
 import { ErrorContextStrategy } from "./strategy/error-strategy";
@@ -23,6 +25,7 @@ const errorContext = new ErrorContextStrategy(
         new InstanceErrorStrategy(BadRequest),
         new InstanceErrorStrategy(Unauthorized),
         new InstanceErrorStrategy(Forbidden),
+        new InstanceErrorStrategy(NotFound),
         new InstanceErrorStrategy(Conflict),
         new InstanceErrorStrategy(UnprocessableEntity),
         new InstanceErrorStrategy(LimitExceeded),
@@ -32,12 +35,30 @@ const errorContext = new ErrorContextStrategy(
     new DefaultErrorStrategy(),
 );
 
-export const handleResponse = async <T>(response: Response): Promise<T> => {
-    const json = await response.json();
-    if (!response.ok) {
-        throw json;
+const parseJson = (text: string): unknown => {
+    try {
+        return JSON.parse(text);
+    } catch {
+        return undefined;
     }
-    return json;
+}
+
+const extractMessage = (body: unknown): string | undefined =>
+    typeof body === "object" && body !== null && "message" in body && typeof body.message === "string"
+        ? body.message
+        : undefined;
+
+export const handleResponse = async <T>(response: Response): Promise<T> => {
+    const text = await response.text();
+    const body = text ? parseJson(text) : undefined;
+
+    if (!response.ok) {
+        throw createHttpError(response.status, extractMessage(body));
+    }
+    if (text && body === undefined) {
+        throw new InternalError("Invalid response from server");
+    }
+    return body as T;
 }
 
 
