@@ -31,6 +31,10 @@ export class WifiNetworkService {
         return this.toPublic(wifiNetwork);
     }
 
+    async collection(filter?: any) {
+        return this.repository.collection(filter);
+    }
+
     async update(id: string, input: UpdateWifiNetworkInput) {
         const existing = await this.repository.findById(id);
         if (!existing) {

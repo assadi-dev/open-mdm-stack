@@ -23,8 +23,8 @@ export class WifiNetworkController {
 
     collections = async (req: Request, res: Response) => {
         const paginationFilter = {}
-        //Implemente la pagination et le trie 
-        return res.json(DEFAULT_PAGINATION_DATA);
+        const result = await this.wifiNetworkService.collection(paginationFilter);
+        return res.json(result);
 
 
     }

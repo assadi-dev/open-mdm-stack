@@ -3,6 +3,8 @@ import { wifiNetworks, wifiSecurityType } from "@drizzle/schemas/wifi-network-sc
 import { desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { wifiNetworkRepositoryFactory } from "./factory/repositories";
+import { buildPaginatedData } from "@features/paginations/services";
+import { DEFAULT_PAGINATION_DATA } from "@features/paginations/domain/paginations";
 
 export class WifiNetworkRepository {
 
@@ -18,16 +20,13 @@ export class WifiNetworkRepository {
         return row;
     }
 
-    async collections(filters: any) {
-        const rows = await this.db
-            .select({
-                id: wifiNetworks.id,
-                name: wifiNetworks.name,
-                security: wifiNetworks.security,
-                createdAt: wifiNetworks.createdAt,
-            })
-            .from(wifiNetworks);
-        return rows.map(wifiNetworkRepositoryFactory.toCollection);
+    async collection(filters: { fields?: any } = {}) {
+        const selection = wifiNetworkRepositoryFactory.toSelectCollection(wifiNetworks);
+        const query = this.db.select(selection).from(wifiNetworks);
+        query.orderBy(desc(wifiNetworks.createdAt))
+        const resultData = await query
+        return buildPaginatedData(resultData, DEFAULT_PAGINATION_DATA.metadata);
+
     }
 
     async listOptions() {
