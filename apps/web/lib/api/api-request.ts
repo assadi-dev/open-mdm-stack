@@ -29,8 +29,6 @@ class ApiRequest implements IApiRequest {
     public async get<T>(path: string, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
         const httpOptions = await this.buildOptions({ method: "GET", ...options })
-        console.log(httpOptions);
-
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
