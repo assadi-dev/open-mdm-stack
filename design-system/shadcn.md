@@ -79,6 +79,10 @@ npx shadcn@latest add button badge card input input-group field label select che
   --ink-foreground: var(--sand-0);
   --tab-active: var(--ink);
   --tab-active-foreground: var(--ink-foreground);
+  --tab-active-hover: var(--sand-800);
+  --tertiary: var(--sand-800);
+  --tertiary-foreground: var(--sand-0);
+  --tertiary-hover: var(--sand-700);
   --success: #1FBF5E; --success-soft: #1FBF5E1F; --success-text: #0B6E34;
   --warning: #E8A317; --warning-soft: #E8A31724; --warning-text: #7F5300;
   --danger: #E5484D;  --danger-soft: #E5484D1A;  --danger-text: #A91F2F;
@@ -133,6 +137,7 @@ npx shadcn@latest add button badge card input input-group field label select che
   --color-ink-foreground: var(--ink-foreground);
   --color-tab-active: var(--tab-active);
   --color-tab-active-foreground: var(--tab-active-foreground);
+  --color-tab-active-hover: var(--tab-active-hover);
   --color-success: var(--success); --color-success-soft: var(--success-soft); --color-success-text: var(--success-text);
   --color-warning: var(--warning); --color-warning-soft: var(--warning-soft); --color-warning-text: var(--warning-text);
   --color-danger: var(--danger);   --color-danger-soft: var(--danger-soft);   --color-danger-text: var(--danger-text);
@@ -187,7 +192,8 @@ import { Button as ShadcnButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ShadcnButtonProps = ComponentProps<typeof ShadcnButton>;
-type ButtonVariant = NonNullable<ShadcnButtonProps["variant"]> | "ink";
+type CustomButtonVariant = "ink" | "selected";
+type ButtonVariant = NonNullable<ShadcnButtonProps["variant"]> | CustomButtonVariant;
 type ButtonSize = NonNullable<ShadcnButtonProps["size"]>;
 type ButtonProps = Omit<ShadcnButtonProps, "variant" | "size"> & {
   variant?: ButtonVariant;
@@ -201,7 +207,11 @@ const VARIANT_CLASSES: Partial<Record<ButtonVariant, string>> = {
   destructive: "bg-destructive text-white hover:bg-destructive/90",
   link: "text-primary-text",
   ink: "bg-ink text-ink-foreground hover:bg-ink/90",
+  selected: "bg-tab-active text-tab-active-foreground hover:bg-tab-active-hover hover:text-tab-active-foreground",
 };
+
+const isCustomVariant = (variant: ButtonVariant): variant is CustomButtonVariant =>
+  variant === "ink" || variant === "selected";
 
 const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
   default: "h-11 px-4.5 text-[15px] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
@@ -214,7 +224,7 @@ const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
 
 export const Button = ({ variant = "default", size = "default", className, ...props }: ButtonProps) => (
   <ShadcnButton
-    variant={variant === "ink" ? "default" : variant}
+    variant={isCustomVariant(variant) ? "default" : variant}
     size={size}
     className={cn("rounded-md", VARIANT_CLASSES[variant], SIZE_CLASSES[size], className)}
     {...props}
@@ -227,6 +237,7 @@ export const Button = ({ variant = "default", size = "default", className, ...pr
 | Tous | `shadow-none` partout où le fichier généré pose une ombre, avec le même préfixe (ex. `group-data-[variant=default]/tabs-list:data-active:shadow-none`) | La DA n'a pas d'ombre |
 | **Button** | Voir l'exemple : `rounded-md` · tailles `default` 44px, `sm` 36px, `lg` 48px, icônes rondes `size-11` / `size-9` / `size-12` · `secondary` : `border-card-border hover:bg-secondary/80` · `outline` : `border-border-strong bg-transparent` · `destructive` : `bg-destructive text-white hover:bg-destructive/90` · `link` : `text-primary-text` · `default` : `hover:bg-primary/90` | Contrôles de 44px. base-nova livre un `destructive` pâle (`bg-destructive/10`) : la charte le veut plein, blanc dessus à 7,2:1 |
 | | ➕ `ink` : `bg-ink text-ink-foreground hover:bg-ink/90`, sur la variante `default` | Bouton sombre de la DA (« Verrouiller ») |
+| | ➕ `selected` : `bg-tab-active text-tab-active-foreground hover:bg-tab-active-hover hover:text-tab-active-foreground`, sur la variante `default` | Même noir que l'onglet actif ; au survol, noir plus clair (`sand-800`) et texte blanc |
 | **Badge** | `h-6 rounded-full px-2.5 py-1 gap-1.5 font-semibold [&>svg]:size-3.5!` · `default` : `bg-primary-soft text-primary-text` | Pill 12/600 ; le blanc sur orange en 12px échoue. `!` parce que le fichier généré force `size-3!` |
 | | ➕ `success`, `warning`, `danger`, `info` : `bg-{s}-soft text-{s}-text`, sur la variante `secondary`. Pastille : `<span className="size-[7px] rounded-full bg-{s}" />` | Statuts, toujours avec pastille ou icône |
 | **Card** | `ring-card-border [--card-spacing:--spacing(6)]` (KPI : `gap-4 py-5` en plus) · CardTitle `text-lg font-semibold tracking-[-0.3px]` · CardDescription `text-[13px]` | Le contour de base-nova est un `ring`, pas une `border`. `--card-spacing` pilote le padding et le gap |

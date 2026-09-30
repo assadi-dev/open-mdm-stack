@@ -10,7 +10,7 @@ Stack : Next.js 16, React 19, Tailwind v4, **shadcn/ui** sur **Base UI** (style 
 2. **Le fond est toujours le dégradé d'ambiance**, jamais un aplat : `background-color: var(--background); background-image: var(--gradient-ambient); background-attachment: fixed;` sur `html`. Aucune page, aucune Card sur un aplat.
 3. **Les surfaces sont du verre** (`card` / `card-strong`), jamais opaques — sauf `popover` (menus, listes de Select), `AlertDialogContent`, et le fond du QR code.
 4. **Aucune ombre.** Les wrappers neutralisent les `shadow-*` des composants shadcn. On ne modifie jamais `components/ui/`.
-5. **Un seul `Button variant="default"` (orange) par vue.** Les autres actions : `ink`, `secondary`, `outline`, `ghost`, `destructive` (voir tableau plus bas).
+5. **Un seul `Button variant="default"` (orange) par vue.** Les autres actions : `ink`, `selected`, `secondary`, `outline`, `ghost`, `destructive` (voir tableau plus bas).
 6. **Jamais la couleur seule pour un statut.** Toujours icône lucide ou pastille + libellé texte.
 7. **Une seule police : Inter**, poids 400/500/600 uniquement.
 8. Tout le contenu UI est **en français**, verbes à l'infinitif, casse de phrase (pas de Title Case), pas d'emoji, pas de point d'exclamation.
@@ -30,6 +30,7 @@ Ne jamais écrire une couleur en dur ni utiliser une primitive `flame-*`/`sand-*
 | Fond teinté orange | `primary-soft` | Badge `default` |
 | Bouton sombre, tooltip | `ink` / `ink-foreground` | `Button variant="ink"` |
 | Onglet actif | `tab-active` / `tab-active-foreground` | alias de `ink` / `ink-foreground`, `TabsTrigger` |
+| Bouton « sélectionné » | `tab-active` / `tab-active-foreground`, survol `tab-active-hover` | `Button variant="selected"` : noir de l'onglet actif, noir plus clair (`sand-800`) au survol, texte blanc |
 | Verre standard | `card` / `card-border` | Card, Sidebar, en-tête de page |
 | Verre dense | `card-strong` | champs, en-tête de Table, pills |
 | Séparateurs | `border` · `border-strong` | encre 8 % / 14 % |
@@ -92,7 +93,7 @@ Base 4px (`--spacing` Tailwind). Contrôles : Button 44px, Input/Select/recherch
 
 Button, Badge, Card, Input, InputGroup, Field, Label, Select, Checkbox, Switch, Tabs, Table, Sidebar, Breadcrumb, Pagination, Item, Avatar, Progress, Separator, Tooltip, Alert, DropdownMenu, AlertDialog, Chart (Recharts).
 
-**3 variantes ajoutées, rien d'autre, portées par les wrappers :** `Button variant="ink"` · `Badge variant="success|warning|danger|info"` · `Alert variant="success|warning|info"`.
+**4 variantes ajoutées, rien d'autre, portées par les wrappers :** `Button variant="ink|tertiary"` · `Badge variant="success|warning|danger|info"` · `Alert variant="success|warning|info"`.
 
 **3 graphes = compositions de `Chart`**, code exact dans `design-system/shadcn.md` §4 : `ChartPieDonutText` (donut, trou 70 %), `ChartAreaFlow` (aires en plage, dégradé flux), `ChartPieGauge` (demi-cercle 18 segments, dégradé flamme).
 

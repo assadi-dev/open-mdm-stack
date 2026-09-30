@@ -10,12 +10,35 @@
   --radius: 16px;
 
   /* Primitives Flame & Sand */
-  --flame-50: #FFF6EC; --flame-100: #FDE8D0; --flame-200: #F7D3A8; --flame-300: #F2B474; --flame-400: #EA903A;
-  --flame-500: #E27100; --flame-600: #C15F00; --flame-700: #9E4A00; --flame-800: #743806; --flame-900: #4F2805;
-  --sand-0: #FFFFFF; --sand-50: #FEF7EC; --sand-100: #FBF0DD; --sand-200: #F2EDE5; --sand-300: #E6DFD2; --sand-400: #D3CEC5;
-  --sand-500: #A8A29A; --sand-600: #87837E; --sand-700: #66615A; --sand-800: #3D3A36; --sand-900: #2D2C2A; --sand-950: #1F1C18;
-  --ambient-top: #D3D3D3; --ambient-mid: #E6DFD2; --ambient-bottom: #FEEED2;
-  --flow-orange: #EB9629; --flow-sage: #C0A771; --flow-sky: #7DC1DE;
+  --flame-50: #FFF6EC;
+  --flame-100: #FDE8D0;
+  --flame-200: #F7D3A8;
+  --flame-300: #F2B474;
+  --flame-400: #EA903A;
+  --flame-500: #E27100;
+  --flame-600: #C15F00;
+  --flame-700: #9E4A00;
+  --flame-800: #743806;
+  --flame-900: #4F2805;
+  --sand-0: #FFFFFF;
+  --sand-50: #FEF7EC;
+  --sand-100: #FBF0DD;
+  --sand-200: #F2EDE5;
+  --sand-300: #E6DFD2;
+  --sand-400: #D3CEC5;
+  --sand-500: #A8A29A;
+  --sand-600: #87837E;
+  --sand-700: #66615A;
+  --sand-800: #3D3A36;
+  --sand-900: #2D2C2A;
+  --sand-950: #1F1C18;
+  --ambient-top: #D3D3D3;
+  --ambient-mid: #E6DFD2;
+  --ambient-bottom: #FEEED2;
+  --flow-orange: #EB9629;
+  --flow-sage: #C0A771;
+  --flow-sky: #7DC1DE;
+
 
   /* Variables shadcn */
   --background: var(--ambient-mid);
@@ -36,7 +59,11 @@
   --border: #1F1C1814;
   --input: #FFFFFF99;
   --ring: var(--flame-400);
-  --chart-1: var(--flame-500); --chart-2: #3B8FEF; --chart-3: #12A091; --chart-4: #8C3F8F; --chart-5: #A8A29A;
+  --chart-1: var(--flame-500);
+  --chart-2: #3B8FEF;
+  --chart-3: #12A091;
+  --chart-4: #8C3F8F;
+  --chart-5: #A8A29A;
   --sidebar: #FFFFFF47;
   --sidebar-foreground: var(--sand-950);
   --sidebar-primary: var(--flame-500);
@@ -57,12 +84,24 @@
   --ink-foreground: var(--sand-0);
   --tab-active: var(--ink);
   --tab-active-foreground: var(--ink-foreground);
-  --success: #1FBF5E; --success-soft: #1FBF5E1F; --success-text: #0B6E34;
-  --warning: #E8A317; --warning-soft: #E8A31724; --warning-text: #7F5300;
-  --danger: #E5484D;  --danger-soft: #E5484D1A;  --danger-text: #A91F2F;
-  --info: #3B8FEF;    --info-soft: #3B8FEF1A;    --info-text: #155CB2;
+  --tab-active-hover: var(--sand-800);
+  --success: #1FBF5E;
+  --success-soft: #1FBF5E1F;
+  --success-text: #0B6E34;
+  --warning: #E8A317;
+  --warning-soft: #E8A31724;
+  --warning-text: #7F5300;
+  --danger: #E5484D;
+  --danger-soft: #E5484D1A;
+  --danger-text: #A91F2F;
+  --info: #3B8FEF;
+  --info-soft: #3B8FEF1A;
+  --info-text: #155CB2;
   --chart-track: #F4E2CB;
-  --seq-1: #EA903A; --seq-2: #D96C00; --seq-3: #AA5400; --seq-4: #743806;
+  --seq-1: #EA903A;
+  --seq-2: #D96C00;
+  --seq-3: #AA5400;
+  --seq-4: #743806;
   --gradient-ambient: linear-gradient(180deg, var(--ambient-top) 0%, var(--ambient-mid) 50%, var(--ambient-bottom) 100%);
   --gradient-flow: linear-gradient(90deg, var(--flow-orange) 0%, var(--flow-sage) 50%, var(--flow-sky) 100%);
   --gradient-flame: linear-gradient(90deg, var(--flame-500) 0%, var(--flame-400) 55%, var(--flame-200) 100%);
@@ -117,10 +156,19 @@
   --color-ink-foreground: var(--ink-foreground);
   --color-tab-active: var(--tab-active);
   --color-tab-active-foreground: var(--tab-active-foreground);
-  --color-success: var(--success); --color-success-soft: var(--success-soft); --color-success-text: var(--success-text);
-  --color-warning: var(--warning); --color-warning-soft: var(--warning-soft); --color-warning-text: var(--warning-text);
-  --color-danger: var(--danger);   --color-danger-soft: var(--danger-soft);   --color-danger-text: var(--danger-text);
-  --color-info: var(--info);       --color-info-soft: var(--info-soft);       --color-info-text: var(--info-text);
+  --color-tab-active-hover: var(--tab-active-hover);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-text: var(--success-text);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-text: var(--warning-text);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-text: var(--danger-text);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-text: var(--info-text);
   --color-chart-track: var(--chart-track);
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -131,7 +179,10 @@
 }
 
 @layer base {
-  * { @apply border-border outline-ring/50; }
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html {
     font-size: 95%;
     min-height: 100%;
@@ -139,7 +190,10 @@
     background-image: var(--gradient-ambient);
     background-attachment: fixed;
   }
-  body { @apply font-sans text-sm text-foreground antialiased; }
+
+  body {
+    @apply font-sans text-sm text-foreground antialiased;
+  }
 }
 
 /* Sous-parties shadcn qu'aucun wrapper n'atteint (voir design-system/shadcn.md §3).

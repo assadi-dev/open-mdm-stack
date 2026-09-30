@@ -200,7 +200,8 @@
       "Bash(sed -i '' 's#await page.screenshot\\({ path: `${SP}/login-dev.png`#await page.screenshot\\({ path: `${SP}/login-dev.png`#' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs.mjs)",
       "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs.mjs /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad)",
       "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
-      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public --project=public --reporter=list)"
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public --project=public --reporter=list)",
+      "Bash(grep -n 'variant=\"ink\"\\\\|\"ink\"\\\\|3 variantes\\\\|Trois ajouts\\\\|`ink`' design.md design-system/README.md design-system/shadcn.md)"
     ]
   }
 }

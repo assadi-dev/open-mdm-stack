@@ -33,6 +33,7 @@ Open MDM administre une flotte Android souveraine, sans services Google. L'inter
 | Fond teinté orange | `primary-soft` | Badge `default`, survol des items de menu |
 | Bouton sombre, tooltip, pill de valeur | `ink` / `ink-foreground` | `Button variant="ink"` |
 | Onglet actif | `tab-active` / `tab-active-foreground` | Alias de `ink` / `ink-foreground`, porté par `TabsTrigger` |
+| Bouton « sélectionné » | `tab-active` / `tab-active-foreground`, survol `tab-active-hover` | `Button variant="tertiary"` : noir de l'onglet actif, noir plus clair (`sand-800`) au survol, texte blanc |
 | Séparateurs | `border` · `border-strong` | Encre 8 % et 14 % |
 | Erreur, action destructive | `destructive` (= `danger-text`) | Blanc dessus 7,2:1 |
 
@@ -76,7 +77,7 @@ Une seule famille : **Inter**, en 400, 500 et 600 uniquement (600 pour les titre
 
 ## États
 
-- Survol : `default` et `ink` passent à /90, `secondary` à /80, `ghost` et `outline` prennent `accent`. Un item de menu prend `primary-soft`. Une ligne de Table prend `muted/50`, une ligne sélectionnée `muted`.
+- Survol : `default` et `ink` passent à /90, `selected` à `tab-active-hover` (noir plus clair), `secondary` à /80, `ghost` et `outline` prennent `accent`. Un item de menu prend `primary-soft`. Une ligne de Table prend `muted/50`, une ligne sélectionnée `muted`.
 - Focus : l'anneau shadcn, 3px en `ring/50`. Désactivé : opacité 0,5.
 - Champ invalide : bordure `destructive`, et `FieldError` avec l'icône `circle-alert`. Le libellé passe en `destructive`.
 
@@ -106,6 +107,6 @@ Tout ce qui s'écarte du brief est dérivé des échelles Flame et Sand, et just
 - `popover` = `sand-50` (opaque) : un menu posé au-dessus des données doit rester lisible.
 - `destructive` = `danger-text` : shadcn l'utilise en fond de bouton avec du texte blanc, et en texte d'erreur. `danger` tomberait à 3,9:1 et 2,9:1.
 - `radius-sm` = 10px : rayon concentrique des items dans un popover (14 − 4 de padding).
-- Trois ajouts de variantes, pas de composants, portés par les wrappers : `Button variant="ink"`, `Badge variant="success | warning | danger | info"` et `Alert variant="success | warning | info"`.
+- Quatre ajouts de variantes, pas de composants, portés par les wrappers : `Button variant="ink"`, `Button variant="selected"`, `Badge variant="success | warning | danger | info"` et `Alert variant="success | warning | info"`.
 - **Non appliqué, à décider** : un anneau de focus plein en `flame-600` (3,2:1 au pire cas) à la place de `ring/50`.
 - **Hors périmètre** : le mode sombre (V2).

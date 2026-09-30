@@ -3,7 +3,8 @@ import { Button as ShadcnButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ShadcnButtonProps = ComponentProps<typeof ShadcnButton>;
-type ButtonVariant = NonNullable<ShadcnButtonProps["variant"]> | "ink";
+type CustomButtonVariant = "ink" | "tertiary";
+type ButtonVariant = NonNullable<ShadcnButtonProps["variant"]> | CustomButtonVariant;
 type ButtonSize = NonNullable<ShadcnButtonProps["size"]>;
 type ButtonProps = Omit<ShadcnButtonProps, "variant" | "size"> & {
   variant?: ButtonVariant;
@@ -17,7 +18,11 @@ const VARIANT_CLASSES: Partial<Record<ButtonVariant, string>> = {
   destructive: "bg-destructive text-white hover:bg-destructive/90",
   link: "text-primary-text",
   ink: "bg-ink text-ink-foreground hover:bg-ink/90",
+  tertiary: "bg-tab-active text-tab-active-foreground hover:bg-tab-active-hover hover:text-tab-active-foreground",
 };
+
+const isCustomVariant = (variant: ButtonVariant): variant is CustomButtonVariant =>
+  variant === "ink" || variant === "tertiary";
 
 const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
   default: "h-11 px-4.5 text-[0.9375rem] font-semibold [&_svg:not([class*='size-'])]:size-4.5",
@@ -30,7 +35,7 @@ const SIZE_CLASSES: Partial<Record<ButtonSize, string>> = {
 
 export const Button = ({ variant = "default", size = "default", className, ...props }: ButtonProps) => (
   <ShadcnButton
-    variant={variant === "ink" ? "default" : variant}
+    variant={isCustomVariant(variant) ? "default" : variant}
     size={size}
     className={cn("rounded-md", VARIANT_CLASSES[variant], SIZE_CLASSES[size], className)}
     {...props}
