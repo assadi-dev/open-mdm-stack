@@ -5,7 +5,6 @@ import {
     validateUpdateWifiNetworkInput,
     validateWifiNetworkIdParam,
 } from "./validator";
-import { DEFAULT_LIMIT, DEFAULT_PAGINATION_DATA } from "@features/paginations/domain/paginations";
 
 export class WifiNetworkController {
     private wifiNetworkService: WifiNetworkService;
