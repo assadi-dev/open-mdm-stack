@@ -13,6 +13,11 @@ import { DefaultErrorStrategy } from "./strategy/default-error-strategy";
 import { ErrorContextStrategy } from "./strategy/error-strategy";
 import { InstanceErrorStrategy } from "./strategy/instance-error-strategy";
 
+const API_VERSION = "v1"
+
+export const BACKEND_API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/${API_VERSION}`;
+
+
 const errorContext = new ErrorContextStrategy(
     [
         new InstanceErrorStrategy(BadRequest),
@@ -48,4 +53,10 @@ export const debugApiError = (error: unknown) => {
         console.error(error.message);
     }
 
+}
+
+export const buildUrl = (path: string) => {
+    const url = `${BACKEND_API_BASE_URL}/${path.trim()}`;
+    console.log("call api external resource ---->", url)
+    return url
 }

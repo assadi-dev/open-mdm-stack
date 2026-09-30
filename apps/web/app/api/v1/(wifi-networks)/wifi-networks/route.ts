@@ -8,9 +8,11 @@ export const GET = async () => {
 
     try {
 
-        const wifiNetworks = await httpRequest.get(WIFI_NETWORKS_ENDPOINTS.collections)
+        const wifiNetworks = await httpRequest.get(WIFI_NETWORKS_ENDPOINTS.list)
 
-        return NextResponse.json(wifiNetworks);
+        console.log(wifiNetworks)
+
+        return NextResponse.json("test");
     } catch (error) {
         return handleApiError(error);
     }

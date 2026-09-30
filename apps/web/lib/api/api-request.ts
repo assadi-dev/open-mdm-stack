@@ -1,9 +1,7 @@
 import { getSessionServer } from "../auth/session-server";
+import { BACKEND_API_BASE_URL, buildUrl } from "./api-handlers";
 import { IApiRequest } from "./intefaces/interfaces";
 
-const API_VERSION = "v1"
-
-export const BACKEND_API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/${API_VERSION}`;
 
 
 class ApiRequest implements IApiRequest {
@@ -19,7 +17,7 @@ class ApiRequest implements IApiRequest {
 
 
     public async request<T>(path: string, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
+        const url = buildUrl(path);
         const httpOptions = await this.buildOptions(options)
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
@@ -27,7 +25,7 @@ class ApiRequest implements IApiRequest {
     }
 
     public async get<T>(path: string, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
+        const url = buildUrl(path);
         const httpOptions = await this.buildOptions({ method: "GET", ...options })
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
@@ -37,15 +35,14 @@ class ApiRequest implements IApiRequest {
 
 
     public async post<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
-        const httpOptions = await this.buildOptions({ method: "POST", ...options, body: JSON.stringify(body) })
+        const url = buildUrl(path); const httpOptions = await this.buildOptions({ method: "POST", ...options, body: JSON.stringify(body) })
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
     }
 
     public async put<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
+        const url = buildUrl(path);
         const httpOptions = await this.buildOptions({ method: "PUT", ...options, body: JSON.stringify(body) })
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
@@ -53,7 +50,7 @@ class ApiRequest implements IApiRequest {
     }
 
     public async delete<T>(path: string, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
+        const url = buildUrl(path);
         const httpOptions = await this.buildOptions({ method: "DELETE", ...options })
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
@@ -61,7 +58,7 @@ class ApiRequest implements IApiRequest {
     }
 
     public async patch<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}/${path}`;
+        const url = buildUrl(path);
         const httpOptions = await this.buildOptions({ method: "PATCH", ...options, body: JSON.stringify(body) })
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
