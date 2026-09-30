@@ -20,8 +20,8 @@ class ApiRequest implements IApiRequest {
 
     public async request<T>(path: string, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
-        const params = await this.buildOptions(options)
-        const response = await fetch(url, params);
+        const httpOptions = await this.buildOptions(options)
+        const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
     }
@@ -38,32 +38,32 @@ class ApiRequest implements IApiRequest {
 
     public async post<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
-        const params = await this.buildOptions({ method: "POST", ...options, body: JSON.stringify(body) })
-        const response = await fetch(url, params);
+        const httpOptions = await this.buildOptions({ method: "POST", ...options, body: JSON.stringify(body) })
+        const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
     }
 
     public async put<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
-        const params = await this.buildOptions({ method: "PUT", ...options, body: JSON.stringify(body) })
-        const response = await fetch(url, params);
+        const httpOptions = await this.buildOptions({ method: "PUT", ...options, body: JSON.stringify(body) })
+        const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
     }
 
     public async delete<T>(path: string, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
-        const params = await this.buildOptions({ method: "DELETE", ...options })
-        const response = await fetch(url, params);
+        const httpOptions = await this.buildOptions({ method: "DELETE", ...options })
+        const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
     }
 
     public async patch<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {
         const url = `${this.baseUrl}/${path}`;
-        const params = await this.buildOptions({ method: "PATCH", ...options, body: JSON.stringify(body) })
-        const response = await fetch(url, params);
+        const httpOptions = await this.buildOptions({ method: "PATCH", ...options, body: JSON.stringify(body) })
+        const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
     }
 
