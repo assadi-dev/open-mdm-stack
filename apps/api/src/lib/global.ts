@@ -21,6 +21,7 @@ export const HttpError = (err: unknown) => {
         return {
             statusCode: err.statusCode,
             message: err.message,
+            code: err.statusCode
         };
     } else if (err instanceof APIError) {
         // Better Auth's own error (e.g. auth.api.signInEmail on a wrong
@@ -35,6 +36,7 @@ export const HttpError = (err: unknown) => {
         };
     } else {
         return {
+            code: 500,
             statusCode: 500,
             message: "Internal Server Error",
         };

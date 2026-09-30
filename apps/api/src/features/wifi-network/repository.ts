@@ -2,6 +2,7 @@ import { db as defaultDb } from "@drizzle/instance";
 import { wifiNetworks, wifiSecurityType } from "@drizzle/schemas/wifi-network-schema";
 import { desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { wifiNetworkRepositoryFactory } from "./factory/repositories";
 
 export class WifiNetworkRepository {
 
@@ -15,6 +16,18 @@ export class WifiNetworkRepository {
     }) {
         const [row] = await this.db.insert(wifiNetworks).values(input).returning();
         return row;
+    }
+
+    async collections(filters: any) {
+        const rows = await this.db
+            .select({
+                id: wifiNetworks.id,
+                name: wifiNetworks.name,
+                security: wifiNetworks.security,
+                createdAt: wifiNetworks.createdAt,
+            })
+            .from(wifiNetworks);
+        return rows.map(wifiNetworkRepositoryFactory.toCollection);
     }
 
     async listOptions() {

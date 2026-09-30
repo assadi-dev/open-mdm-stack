@@ -5,6 +5,7 @@ import {
     validateUpdateWifiNetworkInput,
     validateWifiNetworkIdParam,
 } from "./validator";
+import { DEFAULT_LIMIT, DEFAULT_PAGINATION_DATA } from "@features/paginations/domain/paginations";
 
 export class WifiNetworkController {
     private wifiNetworkService: WifiNetworkService;
@@ -19,6 +20,14 @@ export class WifiNetworkController {
         const wifiNetwork = await this.wifiNetworkService.create(input);
         return res.status(201).json(wifiNetwork);
     };
+
+    collections = async (req: Request, res: Response) => {
+        const paginationFilter = {}
+        //Implemente la pagination et le trie 
+        return res.json(DEFAULT_PAGINATION_DATA);
+
+
+    }
 
     // GET /wifi-networks  (admin)
     list = async (req: Request, res: Response) => {

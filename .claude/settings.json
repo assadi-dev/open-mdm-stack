@@ -213,7 +213,9 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=list)",
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=list -g \"affiche le titre\")",
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=dot --repeat-each=3)",
-      "Bash(curl -s -m 5 -w \"\\\\nstatus=%{http_code} type=%{content_type}\\\\n\" http://localhost:5573/api/v1/wifi-networks/lists)"
+      "Bash(curl -s -m 5 -w \"\\\\nstatus=%{http_code} type=%{content_type}\\\\n\" http://localhost:5573/api/v1/wifi-networks/lists)",
+      "Bash(echo \"tsc strict exit code: $?\")",
+      "Bash(git -C ../.. status --short apps/api)"
     ]
   }
 }
