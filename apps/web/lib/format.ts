@@ -30,7 +30,10 @@ export const formatRelativeTime = (date: Date | string | number, now: Date = new
   return new Intl.RelativeTimeFormat("fr", { numeric: "auto" }).format(0, "second");
 };
 
-export const formatDeviceName = (model: string, serial: string) => `${model} · #${serial.slice(-4).toUpperCase()}`;
+export const formatDate = (date: Date | string | number) =>
+  new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(date));
+
+export const formatDeviceName =(model: string, serial: string) => `${model} · #${serial.slice(-4).toUpperCase()}`;
 
 export const formatInitials = (name: string) => {
   const [first = "", ...others] = name.trim().split(/\s+/);

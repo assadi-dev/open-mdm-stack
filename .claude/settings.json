@@ -201,7 +201,14 @@
       "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs.mjs /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad)",
       "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public --project=public --reporter=list)",
-      "Bash(grep -n 'variant=\"ink\"\\\\|\"ink\"\\\\|3 variantes\\\\|Trois ajouts\\\\|`ink`' design.md design-system/README.md design-system/shadcn.md)"
+      "Bash(grep -n 'variant=\"ink\"\\\\|\"ink\"\\\\|3 variantes\\\\|Trois ajouts\\\\|`ink`' design.md design-system/README.md design-system/shadcn.md)",
+      "Bash(npx shadcn@latest add alert alert-dialog --dry-run)",
+      "Bash(npx shadcn@latest add alert alert-dialog --yes)",
+      "Bash(grep -n -i -E \"dialog|\\\\.om-alert[ {,]|\\\\.om-alert\\\\b\" bundle.css)",
+      "Bash(grep -o -E \"AlertDialogCancel.{0,300}\" bundle.js)",
+      "Bash(grep -o -E \"AlertDialogAction.{0,300}\" bundle.js)",
+      "Bash(npx next *)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/047533db-6e92-4700-91e4-726ef6a871a2/scratchpad/intl-check.mjs)"
     ]
   }
 }

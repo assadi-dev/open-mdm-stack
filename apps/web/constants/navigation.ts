@@ -23,7 +23,7 @@ const MAIN_ITEMS: NavigationItem[] = [
 
 const ADMIN_ITEMS: NavigationItem[] = [
   { label: "Groupes", href: "/groups", icon: Layers, enabled: false },
-  { label: "Réseaux Wi-Fi", href: "/wifi-networks", icon: Wifi, enabled: false },
+  { label: "Réseaux Wi-Fi", href: "/wifi-networks", icon: Wifi, enabled: true },
   { label: "Journal d'audit", href: "/audit", icon: ScrollText, enabled: false },
   { label: "Paramètres", href: "/settings", icon: Settings, enabled: false },
 ];
