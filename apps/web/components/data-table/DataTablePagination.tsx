@@ -10,21 +10,27 @@ import { getPageItems } from "./data-table-utils";
 
 type DataTablePaginationProps<TData extends RowData> = {
   dataTable: DataTableController<TData>;
+  itemsLabel?: string;
   className?: string;
 };
 
-export const DataTablePagination = <TData extends RowData>({ dataTable, className }: DataTablePaginationProps<TData>) => {
+export const DataTablePagination = <TData extends RowData>({
+  dataTable,
+  itemsLabel,
+  className,
+}: DataTablePaginationProps<TData>) => {
   const { pageIndex, pageSize, pageCount, totalRows, canPrevious, canNext, previous, next, goTo } = dataTable.pagination;
 
   if (pageCount <= 1) return null;
 
   const from = pageIndex * pageSize + 1;
   const to = Math.min(totalRows, (pageIndex + 1) * pageSize);
+  const range = `${formatNumber(from)}–${formatNumber(to)} ${DATA_TABLE.pagination.range} ${formatNumber(totalRows)}`;
 
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3 px-6 py-4", className)}>
       <span className="text-[0.8125rem] leading-4.5 text-muted-foreground tabular-nums">
-        {`${formatNumber(from)}–${formatNumber(to)} ${DATA_TABLE.pagination.range} ${formatNumber(totalRows)}`}
+        {itemsLabel ? `${range} ${itemsLabel}` : range}
       </span>
       <Pagination aria-label={DATA_TABLE.pagination.label} className="mx-0 w-auto">
         <PaginationContent className="gap-1">

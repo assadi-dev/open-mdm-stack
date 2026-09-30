@@ -6,17 +6,24 @@ import type { DataTableController } from "@/hooks/useDataTable";
 
 type DataTableSearchProps<TData extends RowData> = {
   dataTable: DataTableController<TData>;
+  placeholder?: string;
+  label?: string;
   className?: string;
 };
 
-export const DataTableSearch = <TData extends RowData>({ dataTable, className }: DataTableSearchProps<TData>) => (
+export const DataTableSearch = <TData extends RowData>({
+  dataTable,
+  placeholder = DATA_TABLE.search.placeholder,
+  label = DATA_TABLE.search.label,
+  className,
+}: DataTableSearchProps<TData>) => (
   <InputGroup className={className}>
     <InputGroupInput
       type="search"
       value={dataTable.search}
       onChange={(event) => dataTable.setSearch(event.target.value)}
-      placeholder={DATA_TABLE.search.placeholder}
-      aria-label={DATA_TABLE.search.label}
+      placeholder={placeholder}
+      aria-label={label}
     />
     <InputGroupAddon align="inline-end">
       <Search className="size-5" />
