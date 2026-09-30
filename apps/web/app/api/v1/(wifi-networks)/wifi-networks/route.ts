@@ -6,6 +6,8 @@ export const GET = async () => {
 
     try {
 
+
+
         return NextResponse.json({
             message: "OK"
         });

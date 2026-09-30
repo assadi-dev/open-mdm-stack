@@ -1,4 +1,5 @@
-import { HTTP_ERROR } from "../intefaces/http-errors";
+
+import { HTTP_ERROR } from "../intefaces/http-status";
 import type { ErrorResult, IErrorStrategy } from "../intefaces/interfaces";
 
 export class DefaultErrorStrategy implements IErrorStrategy {
