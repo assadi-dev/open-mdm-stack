@@ -31,7 +31,8 @@ Open MDM administre une flotte Android souveraine, sans services Google. L'inter
 | Accent, élément actif | `primary` | Texte blanc dessus seulement en ≥ 15px semi-bold |
 | Texte ou lien orange | `primary-text` | Jamais `primary` en texte (2,4:1) |
 | Fond teinté orange | `primary-soft` | Badge `default`, survol des items de menu |
-| Bouton sombre, onglet actif, tooltip, pill de valeur | `ink` / `ink-foreground` | `Button variant="ink"` |
+| Bouton sombre, tooltip, pill de valeur | `ink` / `ink-foreground` | `Button variant="ink"` |
+| Onglet actif | `tab-active` / `tab-active-foreground` | Alias de `ink` / `ink-foreground`, porté par `TabsTrigger` |
 | Séparateurs | `border` · `border-strong` | Encre 8 % et 14 % |
 | Erreur, action destructive | `destructive` (= `danger-text`) | Blanc dessus 7,2:1 |
 

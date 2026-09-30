@@ -28,7 +28,8 @@ Ne jamais écrire une couleur en dur ni utiliser une primitive `flame-*`/`sand-*
 | Accent / actif | `primary` | texte blanc dessus ≥ 15px semi-bold seulement |
 | Lien / texte orange | `primary-text` | jamais `primary` en texte |
 | Fond teinté orange | `primary-soft` | Badge `default` |
-| Bouton sombre, onglet actif, tooltip | `ink` / `ink-foreground` | `Button variant="ink"` |
+| Bouton sombre, tooltip | `ink` / `ink-foreground` | `Button variant="ink"` |
+| Onglet actif | `tab-active` / `tab-active-foreground` | alias de `ink` / `ink-foreground`, `TabsTrigger` |
 | Verre standard | `card` / `card-border` | Card, Sidebar, en-tête de page |
 | Verre dense | `card-strong` | champs, en-tête de Table, pills |
 | Séparateurs | `border` · `border-strong` | encre 8 % / 14 % |

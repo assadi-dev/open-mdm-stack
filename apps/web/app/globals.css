@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Charte claire uniquement : les variantes `dark:` des composants shadcn ne s'appliquent que sous une classe `.dark`
+   (jamais posée), et non selon le thème sombre du système. */
+@custom-variant dark (&:is(.dark *));
+
 :root {
   --radius: 16px;
 
@@ -51,6 +55,8 @@
   --primary-text: var(--flame-700);
   --ink: var(--sand-900);
   --ink-foreground: var(--sand-0);
+  --tab-active: var(--ink);
+  --tab-active-foreground: var(--ink-foreground);
   --success: #1FBF5E; --success-soft: #1FBF5E1F; --success-text: #0B6E34;
   --warning: #E8A317; --warning-soft: #E8A31724; --warning-text: #7F5300;
   --danger: #E5484D;  --danger-soft: #E5484D1A;  --danger-text: #A91F2F;
@@ -109,6 +115,8 @@
   --color-primary-text: var(--primary-text);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
+  --color-tab-active: var(--tab-active);
+  --color-tab-active-foreground: var(--tab-active-foreground);
   --color-success: var(--success); --color-success-soft: var(--success-soft); --color-success-text: var(--success-text);
   --color-warning: var(--warning); --color-warning-soft: var(--warning-soft); --color-warning-text: var(--warning-text);
   --color-danger: var(--danger);   --color-danger-soft: var(--danger-soft);   --color-danger-text: var(--danger-text);

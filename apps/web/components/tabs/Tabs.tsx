@@ -17,7 +17,7 @@ export const TabsList = ({ className, ...props }: ComponentProps<typeof ShadcnTa
 export const TabsTrigger = ({ className, ...props }: ComponentProps<typeof ShadcnTabsTrigger>) => (
   <ShadcnTabsTrigger
     className={cn(
-      "px-4 data-active:bg-ink data-active:text-ink-foreground data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:shadow-none",
+      "h-full cursor-pointer px-4 text-foreground data-active:bg-tab-active data-active:text-tab-active-foreground data-active:hover:text-tab-active-foreground data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:shadow-none",
       className,
     )}
     {...props}

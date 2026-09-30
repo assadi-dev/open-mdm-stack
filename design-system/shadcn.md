@@ -15,6 +15,7 @@ npx shadcn@latest add button badge card input input-group field label select che
 - `iconLibrary` : `lucide`.
 - Police : `Inter` chargée par `next/font/google` avec `variable: "--font-inter"` et `weight: ["400", "500", "600"]`, appliquée sur `<html>`. Le preset nova amène Geist : le remplacer par Inter partout, y compris dans les variables de police que l'init ajoute.
 - `globals.css` : remplacer le thème généré par celui du §2, en gardant les `@import` que l'init place en tête du fichier.
+- `globals.css` : garder la ligne `@custom-variant dark (&:is(.dark *))` du §2. Sans elle, Tailwind v4 applique les variantes `dark:` des composants shadcn dès que le système est en mode sombre (onglet actif clair, texte grisé…), alors que la charte n'a qu'un thème clair.
 - Les fichiers de `components/ui/` restent tels que la CLI les génère (`.claude/rules/frontend-conventions.md` §4).
 
 ## 2. `app/globals.css`
@@ -22,6 +23,10 @@ npx shadcn@latest add button badge card input input-group field label select che
 ```css
 @import "tailwindcss";
 @import "tw-animate-css";
+
+/* Charte claire uniquement : les variantes `dark:` des composants shadcn ne s'appliquent que sous une classe `.dark`
+   (jamais posée), et non selon le thème sombre du système. */
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --radius: 16px;
@@ -72,6 +77,8 @@ npx shadcn@latest add button badge card input input-group field label select che
   --primary-text: var(--flame-700);
   --ink: var(--sand-900);
   --ink-foreground: var(--sand-0);
+  --tab-active: var(--ink);
+  --tab-active-foreground: var(--ink-foreground);
   --success: #1FBF5E; --success-soft: #1FBF5E1F; --success-text: #0B6E34;
   --warning: #E8A317; --warning-soft: #E8A31724; --warning-text: #7F5300;
   --danger: #E5484D;  --danger-soft: #E5484D1A;  --danger-text: #A91F2F;
@@ -124,6 +131,8 @@ npx shadcn@latest add button badge card input input-group field label select che
   --color-primary-text: var(--primary-text);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
+  --color-tab-active: var(--tab-active);
+  --color-tab-active-foreground: var(--tab-active-foreground);
   --color-success: var(--success); --color-success-soft: var(--success-soft); --color-success-text: var(--success-text);
   --color-warning: var(--warning); --color-warning-soft: var(--warning-soft); --color-warning-text: var(--warning-text);
   --color-danger: var(--danger);   --color-danger-soft: var(--danger-soft);   --color-danger-text: var(--danger-text);
@@ -228,7 +237,7 @@ export const Button = ({ variant = "default", size = "default", className, ...pr
 | **SelectItem**, **DropdownMenuItem** | `rounded-sm px-2.5 py-2 focus:bg-primary-soft` | Survol visible sur crème. Le fichier généré utilise `focus:`, pas `data-highlighted:` |
 | **Checkbox** | `border-[1.5px] border-muted-foreground bg-card-strong` | Contour à 4,6:1 (`border-input` serait invisible) |
 | **Switch** | `data-unchecked:bg-muted-foreground` | Piste éteinte visible (4,6:1) |
-| **Tabs** | TabsList `group-data-horizontal/tabs:h-11` · TabsTrigger `px-4 data-active:bg-ink data-active:text-ink-foreground data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:shadow-none` | Onglet actif en Obsidian, comme la pill de filtre de la référence |
+| **Tabs** | TabsList `group-data-horizontal/tabs:h-11` · TabsTrigger `h-full cursor-pointer px-4 text-foreground data-active:bg-tab-active data-active:text-tab-active-foreground data-active:hover:text-tab-active-foreground data-active:font-semibold group-data-[variant=default]/tabs-list:data-active:shadow-none` | Onglet actif en Obsidian (token `tab-active`, alias de `ink`), onglets inactifs en `foreground` (le fichier généré les met à `foreground/60`, trop pâle) ; aucun style au survol, sauf `data-active:hover:text-tab-active-foreground` qui empêche le `hover:text-foreground` généré de foncer le texte de l'onglet actif, comme la pill de filtre de la référence |
 | **Table** | TableHeader `bg-card-strong` · TableHead `h-10 px-4 text-xs text-muted-foreground` · TableCell `px-4 py-3` | En-tête en verre dense, lignes aérées |
 | **Sidebar** | SidebarProvider : `style={{ "--sidebar-width": "17.5rem", ...style }}` · Sidebar : `p-6 pr-0 *:data-[slot=sidebar-inner]:rounded-2xl! *:data-[slot=sidebar-inner]:p-3 *:data-[slot=sidebar-inner]:shadow-none!` | Sidebar de 280px posée comme une carte. La largeur passe par la variable, que `SidebarProvider` laisse surcharger via `style` |
 | | SidebarMenuButton : `h-11 px-3.5 gap-3 rounded-md text-[15px] [&_svg]:size-5 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:font-semibold` | Lien actif orange |
