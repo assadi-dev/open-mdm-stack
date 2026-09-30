@@ -38,5 +38,14 @@ export const handleResponse = async <T>(response: Response): Promise<T> => {
 
 export const handleApiError = async (error: unknown) => {
     const { message, code } = errorContext.handle(error);
+    debugApiError(error);
     return NextResponse.json({ message }, { status: code });
+}
+
+
+export const debugApiError = (error: unknown) => {
+    if (error instanceof Error) {
+        console.error(error.message);
+    }
+
 }
