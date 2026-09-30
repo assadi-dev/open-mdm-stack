@@ -1,3 +1,4 @@
+import { signBackendToken } from "../auth/backend-token";
 import { getSessionServer } from "../auth/session-server";
 import { BACKEND_API_BASE_URL, buildUrl, handleResponse } from "./api-handlers";
 import { HTTP_ERROR } from "./intefaces/http-status";
@@ -76,9 +77,10 @@ class ApiRequest implements IApiRequest {
         if (!currentSession) {
             throw new Unauthorized(HTTP_ERROR.UNAUTHORIZED.message)
         }
+        const backendToken = await signBackendToken(currentSession.session.token)
         this.headers = {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${currentSession.session.token}`
+            "Authorization": `Bearer ${backendToken}`
         };
         if (!options) {
             return {

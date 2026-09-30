@@ -9,10 +9,7 @@ export const GET = async () => {
     try {
 
         const wifiNetworks = await httpRequest.get(WIFI_NETWORKS_ENDPOINTS.list)
-
-        console.log(wifiNetworks)
-
-        return NextResponse.json("test");
+        return NextResponse.json(wifiNetworks);
     } catch (error) {
         return handleApiError(error);
     }
