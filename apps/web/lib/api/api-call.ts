@@ -1,12 +1,12 @@
 import { getSessionServer } from "../auth/session-server";
-import { IApiCall } from "./domain/interfaces";
+import { IApiRequest } from "./intefaces/interfaces";
 
 const API_VERSION = "v1"
 
 export const BACKEND_API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/${API_VERSION}`;
 
 
-class ApiCall implements IApiCall {
+class ApiRequest implements IApiRequest {
     private readonly baseUrl: string;
     private headers: Record<string, string>;
 
