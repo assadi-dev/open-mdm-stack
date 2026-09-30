@@ -193,7 +193,14 @@
       "Bash(sed -i 's/waitUntil: \"networkidle\"/waitUntil: \"domcontentloaded\"/' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/shot.mjs)",
       "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/shot.mjs /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad)",
       "Bash(sed 's#page.goto\\(\"/devices\"\\)#page.goto\\(\"/devices-preview\"\\)#' e2e/authenticated/devices.spec.ts)",
-      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public/devices-tmp.spec.ts --project=public --reporter=list)"
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public/devices-tmp.spec.ts --project=public --reporter=list)",
+      "Bash(sed -i '' 's#127.0.0.1:3000#localhost:3000#' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs2.mjs)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs2.mjs)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/tabs-compare.mjs /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad)",
+      "Bash(sed -i '' 's#await page.screenshot\\({ path: `${SP}/login-dev.png`#await page.screenshot\\({ path: `${SP}/login-dev.png`#' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs.mjs)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad/login-tabs.mjs /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/2303d2ce-60d9-4227-ba13-b8cf15564787/scratchpad)",
+      "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/public --project=public --reporter=list)"
     ]
   }
 }
