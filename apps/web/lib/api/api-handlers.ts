@@ -1,7 +1,34 @@
 import { NextResponse } from "next/server";
+import {
+    BadRequest,
+    Conflict,
+    Forbidden,
+    InternalError,
+    LimitExceeded,
+    NotImplemented,
+    Unauthorized,
+    UnprocessableEntity,
+} from "./intefaces/http-errors";
+import { DefaultErrorStrategy } from "./strategy/default-error-strategy";
+import { ErrorContextStrategy } from "./strategy/error-strategy";
+import { InstanceErrorStrategy } from "./strategy/instance-error-strategy";
 
-export const handleResponse = <T>(response: Response): Promise<T> => {
-    const json = response.json();
+const errorContext = new ErrorContextStrategy(
+    [
+        new InstanceErrorStrategy(BadRequest),
+        new InstanceErrorStrategy(Unauthorized),
+        new InstanceErrorStrategy(Forbidden),
+        new InstanceErrorStrategy(Conflict),
+        new InstanceErrorStrategy(UnprocessableEntity),
+        new InstanceErrorStrategy(LimitExceeded),
+        new InstanceErrorStrategy(NotImplemented),
+        new InstanceErrorStrategy(InternalError),
+    ],
+    new DefaultErrorStrategy(),
+);
+
+export const handleResponse = async <T>(response: Response): Promise<T> => {
+    const json = await response.json();
     if (!response.ok) {
         throw json;
     }
@@ -10,14 +37,6 @@ export const handleResponse = <T>(response: Response): Promise<T> => {
 
 
 export const handleApiError = async (error: unknown) => {
-    if (error instanceof Error) {
-        return NextResponse.json(
-            { message: error.message },
-            { status: 500 }
-        )
-    }
-    return NextResponse.json(
-        { message: "internal error" },
-        { status: 500 }
-    )
+    const { message, code } = errorContext.handle(error);
+    return NextResponse.json({ message }, { status: code });
 }
