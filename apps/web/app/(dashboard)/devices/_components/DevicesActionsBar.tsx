@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Badge } from "@/components/badges/Badge";
 import { Button } from "@/components/buttons/Button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/tabs/Tabs";
@@ -28,14 +28,9 @@ export const DevicesActionsBar = ({ tab, onTabChange, counts }: DevicesActionsBa
         ))}
       </TabsList>
     </Tabs>
-    <div className="flex items-center gap-2">
-      <Button variant="secondary" size="icon" aria-label={DEVICE.button.export}>
-        <Download />
-      </Button>
-      <Button nativeButton={false} render={<Link href={ENROLLMENT_HREF} />}>
-        <Plus />
-        {DEVICE.button.create}
-      </Button>
-    </div>
+    <Button nativeButton={false} render={<Link href={ENROLLMENT_HREF} />}>
+      <Plus />
+      {DEVICE.button.create}
+    </Button>
   </div>
 );

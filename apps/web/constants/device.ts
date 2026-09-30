@@ -14,7 +14,6 @@ export const DEVICE = {
   },
   button: {
     create: "Enrôler un appareil",
-    export: "Exporter en CSV",
     filter: "Filtrer",
     viewDetail: "Voir le détail",
   },
