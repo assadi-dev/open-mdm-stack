@@ -208,7 +208,11 @@
       "Bash(grep -o -E \"AlertDialogCancel.{0,300}\" bundle.js)",
       "Bash(grep -o -E \"AlertDialogAction.{0,300}\" bundle.js)",
       "Bash(npx next *)",
-      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/047533db-6e92-4700-91e4-726ef6a871a2/scratchpad/intl-check.mjs)"
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/047533db-6e92-4700-91e4-726ef6a871a2/scratchpad/intl-check.mjs)",
+      "Bash(sed 's#\"/wifi-networks\"#\"/wifi-networks-preview\"#' e2e/authenticated/wifi-networks.spec.ts)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=list)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=list -g \"affiche le titre\")",
+      "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/wifi-networks-tmp.spec.ts --reporter=dot --repeat-each=3)"
     ]
   }
 }
