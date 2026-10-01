@@ -3,6 +3,7 @@ import { WifiNetworkService } from "./service";
 import {
     validateCreateWifiNetworkInput,
     validateUpdateWifiNetworkInput,
+    validateWifiNetworkCollectionQuery,
     validateWifiNetworkIdParam,
 } from "./validator";
 
@@ -20,15 +21,14 @@ export class WifiNetworkController {
         return res.status(201).json(wifiNetwork);
     };
 
+    // GET /wifi-networks?page&limit&search&sort&security  (admin)
     collections = async (req: Request, res: Response) => {
-        const paginationFilter = {}
-        const result = await this.wifiNetworkService.collection(paginationFilter);
+        const query = validateWifiNetworkCollectionQuery(req.query);
+        const result = await this.wifiNetworkService.collection(query);
         return res.json(result);
+    };
 
-
-    }
-
-    // GET /wifi-networks  (admin)
+    // GET /wifi-networks/lists  (admin)
     list = async (req: Request, res: Response) => {
         const wifiNetworks = await this.wifiNetworkService.list();
         return res.json(wifiNetworks);

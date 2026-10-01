@@ -8,6 +8,7 @@ import request from "supertest";
 const { repoMock, authRepoMock, verifyJWTMock } = vi.hoisted(() => ({
     repoMock: {
         create: vi.fn(),
+        collection: vi.fn(),
         listOptions: vi.fn(),
         findById: vi.fn(),
         update: vi.fn(),
@@ -101,6 +102,46 @@ describe("wifi-network routes", () => {
 
             expect(res.body.ssid).toBe("office-ssid");
             expect(res.body).not.toHaveProperty("password");
+        });
+    });
+
+    describe("GET /api/v1/wifi-networks", () => {
+        it("rejects a request with no bearer token", async () => {
+            await request(app).get("/api/v1/wifi-networks").expect(401);
+
+            expect(repoMock.collection).not.toHaveBeenCalled();
+        });
+
+        it("rejects a sort on a column that isn't sortable", async () => {
+            authenticate();
+
+            await request(app)
+                .get("/api/v1/wifi-networks?sort=password")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(400);
+
+            expect(repoMock.collection).not.toHaveBeenCalled();
+        });
+
+        it("hands the parsed query string to the repository", async () => {
+            authenticate();
+            repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
+
+            await request(app)
+                .get("/api/v1/wifi-networks?page=2&limit=50&search=office&sort=-createdAt,ssid&security=WPA2,WPA3")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(200);
+
+            expect(repoMock.collection).toHaveBeenCalledWith({
+                page: 2,
+                limit: 50,
+                search: "office",
+                sort: [
+                    { id: "createdAt", desc: true },
+                    { id: "ssid", desc: false },
+                ],
+                filters: { security: ["WPA2", "WPA3"] },
+            });
         });
     });
 

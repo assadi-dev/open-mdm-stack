@@ -2,7 +2,7 @@ import { HTTPNotFoundException } from "@core/exception";
 import { encryptSecret } from "@lib/crypto";
 import { WifiNetworkSqlInferSelect } from "@drizzle/schemas/wifi-network-schema";
 import { WifiNetworkRepository } from "./repository";
-import { CreateWifiNetworkInput, UpdateWifiNetworkInput } from "./dto/schema";
+import { CreateWifiNetworkInput, UpdateWifiNetworkInput, WifiNetworkCollectionQuery } from "./dto/schema";
 
 export class WifiNetworkService {
     private repository: WifiNetworkRepository;
@@ -31,8 +31,8 @@ export class WifiNetworkService {
         return this.toPublic(wifiNetwork);
     }
 
-    async collection(filter?: any) {
-        return this.repository.collection(filter);
+    async collection(query: WifiNetworkCollectionQuery) {
+        return this.repository.collection(query);
     }
 
     async update(id: string, input: UpdateWifiNetworkInput) {

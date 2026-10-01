@@ -1,6 +1,11 @@
 import z from "zod";
 import { HTTPNotFoundException } from "@core/exception";
-import { wifiNetworkDecoder, CreateWifiNetworkInput, UpdateWifiNetworkInput } from "./dto/schema";
+import {
+    wifiNetworkDecoder,
+    CreateWifiNetworkInput,
+    UpdateWifiNetworkInput,
+    WifiNetworkCollectionQuery,
+} from "./dto/schema";
 
 export const validateCreateWifiNetworkInput = (body: unknown): CreateWifiNetworkInput => {
     const result = wifiNetworkDecoder.create(body);
@@ -12,6 +17,14 @@ export const validateCreateWifiNetworkInput = (body: unknown): CreateWifiNetwork
 
 export const validateUpdateWifiNetworkInput = (body: unknown): UpdateWifiNetworkInput => {
     const result = wifiNetworkDecoder.update(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateWifiNetworkCollectionQuery = (query: unknown): WifiNetworkCollectionQuery => {
+    const result = wifiNetworkDecoder.collection(query);
     if (!result.success) {
         throw result.error;
     }

@@ -5,6 +5,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { wifiNetworkRepositoryFactory } from "./factory/repositories";
 import { buildPaginatedData } from "@features/paginations/services";
 import { DEFAULT_PAGINATION_DATA } from "@features/paginations/domain/paginations";
+import type { WifiNetworkCollectionQuery } from "./dto/schema";
 
 export class WifiNetworkRepository {
 
@@ -20,7 +21,7 @@ export class WifiNetworkRepository {
         return row;
     }
 
-    async collection(filters: { fields?: any } = {}) {
+    async collection(collectionQuery: WifiNetworkCollectionQuery) {
         const selection = wifiNetworkRepositoryFactory.toSelectCollection(wifiNetworks);
         const query = this.db.select(selection).from(wifiNetworks);
         query.orderBy(desc(wifiNetworks.createdAt))
