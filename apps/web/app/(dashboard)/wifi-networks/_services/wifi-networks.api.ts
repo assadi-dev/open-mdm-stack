@@ -32,3 +32,9 @@ export const updateWifiNetworkApi = async (input: UpdateWifiNetworkInput) =>
 export const removeWifiNetworkApi = async (id: string) => {
   removeWifiNetworkMock(id);
 };
+
+// Action vide pour l'instant : rien n'est supprimé. L'API n'a pas de suppression groupée,
+// la brancher = un DELETE /api/v1/wifi-networks/:id par réseau (route proxy à créer).
+export const removeWifiNetworksApi = async (ids: string[]) => {
+  void ids;
+};

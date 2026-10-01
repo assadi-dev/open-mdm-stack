@@ -38,7 +38,7 @@ export const WifiNetworkRowActions = ({ network }: WifiNetworkRowActionsProps) =
         </DropdownMenuContent>
       </DropdownMenu>
       <WifiNetworkFormDialog open={isEditOpen} onOpenChange={setEditOpen} network={network} />
-      <DeleteWifiNetworkDialog network={network} open={isDeleteOpen} onOpenChange={setDeleteOpen} />
+      <DeleteWifiNetworkDialog networks={[network]} open={isDeleteOpen} onOpenChange={setDeleteOpen} />
     </div>
   );
 };

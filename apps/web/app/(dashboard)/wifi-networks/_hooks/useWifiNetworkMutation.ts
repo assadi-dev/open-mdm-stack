@@ -1,7 +1,12 @@
 import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import { createWifiNetworkApi, removeWifiNetworkApi, updateWifiNetworkApi } from "../_services/wifi-networks.api";
+import {
+  createWifiNetworkApi,
+  removeWifiNetworkApi,
+  removeWifiNetworksApi,
+  updateWifiNetworkApi,
+} from "../_services/wifi-networks.api";
 import { WIFI_NETWORKS } from "../_services/wifi-networks.queries";
 
 export const useWifiNetworkMutation = () => {
@@ -27,6 +32,10 @@ export const useWifiNetworkMutation = () => {
     mutationFn: removeWifiNetworkApi,
     ...afterMutation("delete", [WIFI_NETWORKS.collection]),
   });
+  const removeMany = useMutation({
+    mutationFn: removeWifiNetworksApi,
+    ...afterMutation("deleteMany", [WIFI_NETWORKS.collection]),
+  });
 
-  return { create, update, remove };
+  return { create, update, remove, removeMany };
 };

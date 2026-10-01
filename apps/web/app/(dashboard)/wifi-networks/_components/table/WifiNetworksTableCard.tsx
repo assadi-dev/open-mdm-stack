@@ -11,6 +11,7 @@ import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
 import { toResultsLabel } from "../../_services/wifi-networks.utils";
 import type { WifiNetwork } from "../../_types/wifi-network.types";
+import { RemoveWifiNetworksAction } from "../selection-actions/RemoveWifiNetworksAction";
 import { wifiNetworkColumns } from "./wifi-network-columns";
 
 type WifiNetworksTableCardProps = {
@@ -51,7 +52,14 @@ export const WifiNetworksTableCard = ({ networks, server, isPending, isError, on
         </div>
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-56">
-        <DataTable dataTable={dataTable} showSearch={false} showPagination={false} />
+        <DataTable
+          dataTable={dataTable}
+          showSearch={false}
+          showPagination={false}
+          selectionActions={(selected) => [
+            <RemoveWifiNetworksAction key="remove" networks={selected} onDeleted={dataTable.selection.clear} />,
+          ]}
+        />
         <DataTablePagination
           dataTable={dataTable}
           itemsLabel={WIFI_NETWORK.pagination.items}

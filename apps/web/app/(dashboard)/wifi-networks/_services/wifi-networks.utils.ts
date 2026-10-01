@@ -41,6 +41,12 @@ export const toResultsLabel = (count: number) =>
 
 export const toDeleteTitle = (ssid: string) => `${WIFI_NETWORK.dialog.delete.title} « ${ssid} » ?`;
 
+// « Supprimer 3 réseaux ? »
+export const toDeleteManyTitle = (count: number) => {
+  const { title, items } = WIFI_NETWORK.dialog.deleteMany;
+  return `${title} ${formatNumber(count)} ${items} ?`;
+};
+
 // Le mot de passe part seulement s'il est saisi et utile : un réseau ouvert n'en a pas, un champ vide conserve l'actuel.
 const toPassword = ({ security, password }: WifiNetworkFormValues) =>
   security !== "NONE" && password.length > 0 ? { password } : {};

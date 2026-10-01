@@ -57,15 +57,18 @@ app/(dashboard)/wifi-networks/_components/
 │   ├── WifiNetworkFormFields.tsx    ses champs, branchés sur React Hook Form (§7)
 │   └── inputs/                      les champs propres à la page : select, checkbox, switch
 │       └── WifiSecuritySelect.tsx
-└── modals/                        les boîtes de dialogue et modales
-    ├── WifiNetworkFormDialog.tsx
-    └── DeleteWifiNetworkDialog.tsx
+├── modals/                        les boîtes de dialogue et modales
+│   ├── WifiNetworkFormDialog.tsx
+│   └── DeleteWifiNetworkDialog.tsx    un réseau (action de ligne) ou plusieurs (sélection)
+└── selection-actions/             les actions de la barre de sélection multiple (§10)
+    └── RemoveWifiNetworksAction.tsx
 ```
 
 - **`table/`** : la carte du tableau, le fichier de colonnes, les composants de cellule (badge, masque, ligne principale + secondaire…) et les actions de ligne.
 - **`forms/`** : le formulaire et ses champs. Le lien avec React Hook Form (`register`, `Controller`) reste dans le composant de champs.
 - **`forms/inputs/`** : un champ de saisie propre à la page (select des types de sécurité, checkbox, switch…). Il reçoit `value`, `onValueChange`, `onBlur` et ne connaît pas React Hook Form. Un champ réutilisable entre pages va dans `components/inputs/`, `components/selects/`… (§3).
-- **`modals/`** : les boîtes de dialogue (`AlertDialog`, `Dialog`). Une modale qui contient un formulaire importe le composant de `forms/`, elle ne le redéclare pas.
+- **`modals/`** : les boîtes de dialogue (`AlertDialog`, `Dialog`). Une modale qui contient un formulaire importe le composant de `forms/`, elle ne le redéclare pas. Une confirmation qui sert à une ligne et à une sélection reçoit une liste (`networks: WifiNetwork[]`) plutôt que d'exister en deux versions.
+- **`selection-actions/`** : une action groupée par fichier, nommée `<Verbe><Ressources>Action` (ex. `RemoveWifiNetworksAction`). Elle rend un `ActionBarItem` et reçoit les lignes cochées ; la carte du tableau la passe à `selectionActions`. Une action qui demande une confirmation appelle `event.preventDefault()` dans `onSelect` (la barre et la sélection restent pendant la confirmation) et rend sa boîte de `modals/` à côté de l'item ; elle vide la sélection après réussite (`onDeleted={dataTable.selection.clear}`).
 - Les sous-dossiers se créent quand la page en a besoin : une page sans formulaire n'a pas de `forms/`.
 - Imports relatifs : depuis un sous-dossier, les dossiers de la page sont à `../../_hooks`, `../../_services`… (`../../../` depuis `forms/inputs/`).
 

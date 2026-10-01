@@ -3,16 +3,19 @@ export const WIFI_NETWORK = {
     create: "Réseau Wi-Fi ajouté.",
     update: "Réseau Wi-Fi mis à jour.",
     delete: "Réseau Wi-Fi supprimé.",
+    deleteMany: "Réseaux Wi-Fi supprimés.",
   },
   error: {
     create: "Impossible d'ajouter le réseau Wi-Fi. Réessayez.",
     update: "Impossible de mettre à jour le réseau Wi-Fi. Réessayez.",
     delete: "Impossible de supprimer le réseau Wi-Fi. Réessayez.",
+    deleteMany: "Impossible de supprimer les réseaux Wi-Fi. Réessayez.",
   },
   button: {
     create: "Ajouter une connexion wifi",
     update: "Modifier",
     delete: "Supprimer",
+    deleteMany: "Supprimer",
     filter: "Filtrer",
   },
   page: {
@@ -83,6 +86,13 @@ export const WIFI_NETWORK = {
       title: "Supprimer le réseau",
       description:
         "Ce réseau ne sera plus proposé lors de l’enrôlement ni poussé aux appareils enrôlés. Cette action est irréversible.",
+      submit: "Supprimer",
+    },
+    deleteMany: {
+      title: "Supprimer",
+      items: "réseaux",
+      description:
+        "Ces réseaux ne seront plus proposés lors de l’enrôlement ni poussés aux appareils enrôlés. Cette action est irréversible.",
       submit: "Supprimer",
     },
   },
