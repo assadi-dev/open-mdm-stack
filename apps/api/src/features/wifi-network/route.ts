@@ -8,6 +8,7 @@ const controller = new WifiNetworkController();
 
 wifiNetworkRouter.post("/", requireAuth, controller.create);
 wifiNetworkRouter.get("/", requireAuth, controller.collections);
+wifiNetworkRouter.query("/", requireAuth, controller.collections);
 wifiNetworkRouter.get("/lists", requireAuth, controller.list);
 wifiNetworkRouter.get("/:id", requireAuth, controller.getById);
 wifiNetworkRouter.patch("/:id", requireAuth, controller.update);
