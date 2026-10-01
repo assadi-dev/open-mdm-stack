@@ -264,7 +264,8 @@
       "Bash(md5 -q desktop-light-checked.png desktop-dark-checked.png mobile-light-checked.png mobile-dark-checked.png)",
       "Bash(sed -i '' 's#^const URL = #const PAGE_URL = #; s#page.goto\\(URL,#page.goto\\(PAGE_URL,#' verify2.cjs)",
       "Bash(node verify2.cjs)",
-      "Bash(cd /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory *)"
+      "Bash(cd /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory *)",
+      "Bash(node verify3.cjs)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

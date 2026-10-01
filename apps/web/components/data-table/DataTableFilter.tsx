@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/popovers/Popover";
@@ -49,6 +49,9 @@ const FilterActions = ({ size, canReset, onApply, onReset }: FilterActionsProps)
 export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, canReset, children }: DataTableFilterProps) => {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  // À l'ouverture, le focus va sur la carte et non sur le premier champ : sur mobile, un champ de saisie ferait monter le clavier,
+  // et un champ focalisé garde le premier Échap pour lui (il en faut alors deux pour fermer).
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleOpenChange = (next: boolean) => {
     if (next) onOpen?.();
@@ -70,7 +73,7 @@ export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, 
       {activeCount > 0 && (
         <span className="flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground tabular-nums">
           {activeCount}
-          <span className="sr-only">{DATA_TABLE.filter.active}</span>
+          <span className="sr-only">{activeCount > 1 ? DATA_TABLE.filter.active.many : DATA_TABLE.filter.active.one}</span>
         </span>
       )}
     </Button>
@@ -80,7 +83,7 @@ export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, 
     return (
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger render={trigger} />
-        <SheetContent side="bottom" className="justify-between">
+        <SheetContent ref={contentRef} initialFocus={contentRef} side="bottom" className="justify-between">
           <div className="flex min-h-0 flex-col">
             <SheetHeader className="p-5 pr-14">
               <SheetTitle>{DATA_TABLE.filter.title}</SheetTitle>
@@ -98,7 +101,7 @@ export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger render={trigger} />
-      <PopoverContent className="justify-between">
+      <PopoverContent ref={contentRef} initialFocus={contentRef} className="justify-between">
         <div className="flex flex-col gap-3">
           <PopoverHeader>
             <PopoverTitle>{DATA_TABLE.filter.title}</PopoverTitle>

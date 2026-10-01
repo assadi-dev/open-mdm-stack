@@ -7,7 +7,7 @@ export const DATA_TABLE = {
     title: "Filtres",
     apply: "Appliquer les filtres",
     reset: "Réinitialiser",
-    active: "filtres actifs",
+    active: { one: "filtre actif", many: "filtres actifs" },
   },
   empty: "Aucun résultat.",
   selection: {

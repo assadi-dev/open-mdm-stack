@@ -54,6 +54,8 @@ export const WIFI_NETWORK = {
     },
     security: {
       label: "Sécurité",
+      placeholder: "Tous les types",
+      showAll: "Afficher tout",
     },
   },
   results: { one: "résultat", many: "résultats" },
