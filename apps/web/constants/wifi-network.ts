@@ -76,11 +76,13 @@ export const WIFI_NETWORK = {
       title: "Ajouter une connexion wifi",
       description: "Ce réseau sera proposé lors de l’enrôlement et poussé aux appareils déjà enrôlés.",
       submit: "Ajouter le réseau",
+      submitting: "Ajout en cours…",
     },
     update: {
       title: "Modifier la connexion wifi",
       description: "Les modifications seront poussées aux appareils déjà enrôlés.",
       submit: "Enregistrer",
+      submitting: "Enregistrement…",
     },
     delete: {
       title: "Supprimer le réseau",
