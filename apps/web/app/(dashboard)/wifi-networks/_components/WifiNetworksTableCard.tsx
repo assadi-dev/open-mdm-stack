@@ -8,27 +8,27 @@ import { DataTable } from "@/components/data-table/DataTable";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import { useDataTable } from "@/hooks/useDataTable";
+import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
 import { toResultsLabel } from "../_services/wifi-networks.utils";
 import type { WifiNetwork } from "../_types/wifi-network.types";
 import { wifiNetworkColumns } from "./wifi-network-columns";
 
-const PAGE_SIZE = 8;
-
 type WifiNetworksTableCardProps = {
+  // La page courante seulement : l'API trie, filtre et pagine.
   networks: WifiNetwork[];
+  server: DataTableServerOptions;
   isPending: boolean;
   isError: boolean;
   onRetry: () => void;
 };
 
-export const WifiNetworksTableCard = ({ networks, isPending, isError, onRetry }: WifiNetworksTableCardProps) => {
+export const WifiNetworksTableCard = ({ networks, server, isPending, isError, onRetry }: WifiNetworksTableCardProps) => {
   const dataTable = useDataTable({
     data: networks,
     columns: wifiNetworkColumns,
-    pageSize: PAGE_SIZE,
     enableSelection: true,
     getRowId: (network) => network.id,
+    server,
   });
 
   return (

@@ -27,13 +27,12 @@ test.describe("réseaux Wi-Fi", () => {
     await expect(page.locator("tbody tr").first()).toBeVisible();
   });
 
-  test("affiche le titre, le nombre de réseaux et d'appareils connectés", async ({ page }) => {
+  test("affiche le titre et le nombre de réseaux enregistrés", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1, name: WIFI_NETWORK.page.title })).toBeVisible();
 
     // Le titre de section « Réseaux enregistrés » contient les mêmes mots : on cible le sous-titre par son ancrage numérique.
-    const subtitle = page.getByText(new RegExp(`^\\d+ ${WIFI_NETWORK.page.subtitle.registered.many} · `));
-    await expect(subtitle).toBeVisible();
-    await expect(subtitle).toContainText(WIFI_NETWORK.page.subtitle.connected.many);
+    const { one, many } = WIFI_NETWORK.page.subtitle.registered;
+    await expect(page.getByText(new RegExp(`^\\d+ (${one}|${many})$`))).toBeVisible();
   });
 
   test("explique la distribution automatique des réseaux", async ({ page }) => {
@@ -47,13 +46,6 @@ test.describe("réseaux Wi-Fi", () => {
     await expect(page.locator("tbody tr")).toHaveCount(4);
     await expect(page.getByRole("img", { name: WIFI_NETWORK.passwordMasked })).toHaveCount(4);
     expect(await columnTexts(page, 3)).toEqual(expect.arrayContaining([WIFI_NETWORK.security.WPA2, WIFI_NETWORK.security.WPA3]));
-  });
-
-  test("signale un réseau chiffré par un protocole hérité", async ({ page }) => {
-    const legacy = page.locator("tbody tr", { hasText: WIFI_NETWORK.flags.legacy });
-
-    await expect(legacy).toHaveCount(1);
-    await expect(legacy).toContainText(WIFI_NETWORK.security.WEP);
   });
 
   test("recherche un réseau par son nom", async ({ page }) => {

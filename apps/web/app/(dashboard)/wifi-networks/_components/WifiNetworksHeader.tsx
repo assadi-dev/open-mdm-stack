@@ -1,12 +1,14 @@
 import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { PageHeader } from "../../_components/PageHeader";
 import { toWifiNetworksSubtitle } from "../_services/wifi-networks.utils";
-import type { WifiNetwork } from "../_types/wifi-network.types";
 
 type WifiNetworksHeaderProps = {
-  networks?: WifiNetwork[];
+  registeredCount?: number;
 };
 
-export const WifiNetworksHeader = ({ networks }: WifiNetworksHeaderProps) => (
-  <PageHeader title={WIFI_NETWORK.page.title} subtitle={networks ? toWifiNetworksSubtitle(networks) : undefined} />
+export const WifiNetworksHeader = ({ registeredCount }: WifiNetworksHeaderProps) => (
+  <PageHeader
+    title={WIFI_NETWORK.page.title}
+    subtitle={registeredCount === undefined ? undefined : toWifiNetworksSubtitle(registeredCount)}
+  />
 );

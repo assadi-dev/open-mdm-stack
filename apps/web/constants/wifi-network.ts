@@ -20,7 +20,6 @@ export const WIFI_NETWORK = {
     section: "Réseaux enregistrés",
     subtitle: {
       registered: { one: "réseau enregistré", many: "réseaux enregistrés" },
-      connected: { one: "appareil connecté", many: "appareils connectés" },
     },
   },
   notice: {
@@ -44,14 +43,6 @@ export const WIFI_NETWORK = {
     WPA: "WPA",
     WPA2: "WPA2",
     WPA3: "WPA3",
-  },
-  band: {
-    "2.4": "2,4 GHz",
-    "5": "5 GHz",
-  },
-  flags: {
-    hidden: "caché",
-    legacy: "hérité",
   },
   filters: {
     search: {

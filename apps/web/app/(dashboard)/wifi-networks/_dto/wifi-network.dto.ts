@@ -1,23 +1,24 @@
 import { z } from "zod";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
+import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 
 // Valeurs de l'enum `wifi_security_type` de l'API, moins `EAP` : la maquette ne propose pas la sécurité d'entreprise.
 export const WIFI_SECURITY_KEYS = ["NONE", "WEP", "WPA", "WPA2", "WPA3"] as const;
-export const WIFI_BAND_KEYS = ["2.4", "5"] as const;
 
 const SSID_MAX_LENGTH = 32;
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 63;
 
+// Ce que `GET /wifi-networks` renvoie pour chaque réseau. `name` est facultatif côté API.
 export const wifiNetworkSchema = z.object({
   id: z.string(),
+  name: z.string().nullable(),
   ssid: z.string(),
   security: z.enum(WIFI_SECURITY_KEYS),
-  band: z.enum(WIFI_BAND_KEYS).nullable(),
-  hidden: z.boolean(),
-  connectedDevices: z.number().int().nonnegative(),
   createdAt: z.iso.datetime(),
 });
+
+const wifiNetworkCollectionSchema = toPaginatedSchema(wifiNetworkSchema);
 
 type WifiNetworkFormOptions = {
   // À la modification, un mot de passe vide conserve l'actuel, sauf si le réseau était ouvert : il n'en a alors aucun à conserver.
@@ -46,5 +47,5 @@ export const buildWifiNetworkFormSchema = ({ passwordRequired }: WifiNetworkForm
 
 export const WifiNetworkDto = {
   parse: (data: unknown) => wifiNetworkSchema.parse(data),
-  parseCollection: (data: unknown) => z.array(wifiNetworkSchema).parse(data),
+  parseCollection: (data: unknown) => wifiNetworkCollectionSchema.parse(data),
 };

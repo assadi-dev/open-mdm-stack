@@ -1,18 +1,26 @@
+import { createHttpError } from "@/lib/api/intefaces/http-errors";
 import { WifiNetworkDto } from "../_dto/wifi-network.dto";
-import {
-  createWifiNetworkMock,
-  listWifiNetworksMock,
-  removeWifiNetworkMock,
-  updateWifiNetworkMock,
-} from "../_mocks/wifi-networks.mock";
+import { createWifiNetworkMock, removeWifiNetworkMock, updateWifiNetworkMock } from "../_mocks/wifi-networks.mock";
 import type { CreateWifiNetworkInput, UpdateWifiNetworkInput } from "../_types/wifi-network.types";
 
-// Les données viennent de `_mocks/` : la liste de l'API (`GET /wifi-networks/lists`) ne renvoie que id, ssid et sécurité,
-// sans date de création, bande, réseau caché ni nombre d'appareils connectés, que la page affiche.
-// Passer à l'API réelle : remplacer chaque mock par un `fetch` (POST /wifi-networks, PATCH et DELETE /wifi-networks/:id),
-// le parsing Zod reste identique.
+const COLLECTION_URL = "/api/v1/wifi-networks";
+// Le sous-titre compte tous les réseaux enregistrés, sans la recherche ni les filtres du tableau : une ligne suffit pour lire le total.
+const REGISTERED_COUNT_QUERY = "limit=1";
 
-export const fetchWifiNetworkCollectionApi = async () => WifiNetworkDto.parseCollection(listWifiNetworksMock());
+// La liste passe par le proxy Next (`app/api/v1/(wifi-networks)`) vers l'API, avec la query du tableau (`page=1&limit=8&sort=-createdAt`).
+// L'ajout, la modification et la suppression restent sur `_mocks/` : le proxy n'expose pas encore POST, PATCH ni DELETE.
+// Passer à l'API réelle : remplacer chaque mock par un `fetch` (POST /wifi-networks, PATCH et DELETE /wifi-networks/:id).
+
+export const fetchWifiNetworkCollectionApi = async (query: string) => {
+  const response = await fetch(`${COLLECTION_URL}?${query}`);
+  if (!response.ok) throw createHttpError(response.status);
+  return WifiNetworkDto.parseCollection(await response.json());
+};
+
+export const fetchWifiNetworkCountApi = async () => {
+  const { metadata } = await fetchWifiNetworkCollectionApi(REGISTERED_COUNT_QUERY);
+  return metadata.total;
+};
 
 export const createWifiNetworkApi = async (input: CreateWifiNetworkInput) =>
   WifiNetworkDto.parse(createWifiNetworkMock(input));

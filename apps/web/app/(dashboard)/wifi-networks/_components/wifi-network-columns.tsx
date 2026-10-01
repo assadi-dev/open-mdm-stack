@@ -3,7 +3,7 @@ import { Badge } from "@/components/badges/Badge";
 import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { formatDate } from "@/lib/format";
-import { toNetworkDetails, toSecurityVariant } from "../_services/wifi-networks.utils";
+import { toSecurityVariant } from "../_services/wifi-networks.utils";
 import type { WifiNetwork } from "../_types/wifi-network.types";
 import { WifiNetworkRowActions } from "./WifiNetworkRowActions";
 import { WifiPasswordMask } from "./WifiPasswordMask";
@@ -12,14 +12,15 @@ const helper = createDataTableColumnHelper<WifiNetwork>();
 
 const SECONDARY_LINE = "text-xs leading-4.5 text-muted-foreground";
 
-// La recherche et le tri portent sur la valeur d'accesseur : le réseau expose son nom et sa ligne de détail, la sécurité son libellé,
-// la date son timestamp. Le mot de passe n'a pas de valeur (masque), il n'est ni trié ni cherché.
+// L'API trie, cherche et filtre : chaque id de colonne triable est un champ qu'elle sait trier (name, security, createdAt).
+// Le mot de passe n'a pas de valeur (masque), il n'est ni trié ni cherché.
 export const wifiNetworkColumns = [
-  helper.accessor((network) => `${network.ssid} ${toNetworkDetails(network)}`, {
-    id: "network",
+  // Le nom du réseau, et son SSID dessous. Sans nom, le SSID prend la première ligne.
+  helper.accessor((network) => network.name ?? network.ssid, {
+    id: "name",
     header: WIFI_NETWORK.table.network,
     cell: ({ row }) => {
-      const details = toNetworkDetails(row.original);
+      const { name, ssid } = row.original;
 
       return (
         <div className="flex items-center gap-2.5">
@@ -29,9 +30,9 @@ export const wifiNetworkColumns = [
           >
             <Wifi className="size-4" />
           </span>
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.ssid}</span>
-            {details && <span className={SECONDARY_LINE}>{details}</span>}
+          <div className="flex flex-col text-nowrap">
+            <span className="font-medium">{name ?? ssid}</span>
+            {name && <span className={SECONDARY_LINE}>{ssid}</span>}
           </div>
         </div>
       );
