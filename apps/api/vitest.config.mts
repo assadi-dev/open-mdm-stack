@@ -28,6 +28,8 @@ export default defineConfig({
             MDM_DPC_SIGNATURE_CHECKSUM: "test-dpc-signature-checksum",
             MQTT_BACKEND_PASSWORD: "test-mqtt-backend-password",
             WIFI_NETWORK_ENCRYPTION_KEY: "0".repeat(64),
+            GOOGLE_CLIENT_ID: "test-google-client-id",
+            GOOGLE_CLIENT_SECRET: "test-google-client-secret",
         },
     },
 });

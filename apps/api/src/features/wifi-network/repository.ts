@@ -3,8 +3,7 @@ import { wifiNetworks, wifiSecurityType } from "@drizzle/schemas/wifi-network-sc
 import { desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { wifiNetworkRepositoryFactory } from "./factory/repositories";
-import { buildPaginatedData } from "@features/paginations/services";
-import { DEFAULT_PAGINATION_DATA } from "@features/paginations/domain/paginations";
+import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
 import type { WifiNetworkCollectionQuery } from "./dto/schema";
 
 export class WifiNetworkRepository {
@@ -23,11 +22,14 @@ export class WifiNetworkRepository {
 
     async collection(collectionQuery: WifiNetworkCollectionQuery) {
         const selection = wifiNetworkRepositoryFactory.toSelectCollection(wifiNetworks);
-        const query = this.db.select(selection).from(wifiNetworks);
-        query.orderBy(desc(wifiNetworks.createdAt))
-        const resultData = await query
-        return buildPaginatedData(resultData, DEFAULT_PAGINATION_DATA.metadata);
+        const config = wifiNetworkRepositoryFactory.toCollectionConfig(wifiNetworks);
+        const { where, orderBy, limit, offset } = toCollectionClauses(collectionQuery, config);
 
+        const [data, total] = await Promise.all([
+            this.db.select(selection).from(wifiNetworks).where(where).orderBy(...orderBy).limit(limit).offset(offset),
+            this.db.$count(wifiNetworks, where),
+        ]);
+        return buildPaginatedData(data, { page: collectionQuery.page, limit, total });
     }
 
     async listOptions() {
