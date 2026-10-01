@@ -76,6 +76,12 @@ export const debugApiError = (error: unknown) => {
 
 }
 
+// Le proxy relaie la query string telle quelle (pagination, tri, recherche, filtres) : c'est l'API qui la valide.
+export const withSearchParams = (path: string, searchParams?: URLSearchParams) => {
+    const query = searchParams?.toString();
+    return query ? `${path}?${query}` : path;
+}
+
 export const buildUrl = (path: string) => {
     const url = `${BACKEND_API_BASE_URL}/${path.trim()}`;
     console.log("call api external resource ---->", url)
