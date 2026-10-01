@@ -656,15 +656,14 @@ Le dashboard n'appelle jamais l'API backend directement : chaque requête passe 
 |---|---|---|
 | Lire la collection | `GET /api/v1/wifi-networks` | aucun (query string, §14) |
 | Ajouter | `POST /api/v1/wifi-network` | l'objet à créer |
-| Modifier | `PATCH /api/v1/wifi-network/[id]` | les champs modifiés |
-| Supprimer un élément | `DELETE /api/v1/wifi-network/[id]` | aucun |
-| Supprimer plusieurs (**seule exception**) | `DELETE /api/v1/wifi-networks` | `{ "ids": ["…", "…"] }` |
+| Modifier | `PATCH /api/v1/wifi-network/[id]` | les champs modifiés (l'id est dans l'URL, pas dans le corps) |
+| Supprimer un ou plusieurs (**seule exception**) | `DELETE /api/v1/wifi-networks` | `{ "ids": ["…", "…"] }` |
 
-- **Toute écriture est au singulier.** Seule la suppression groupée reste au pluriel : elle porte sur plusieurs éléments et reçoit le tableau des ids dans le corps, jamais dans l'URL.
+- **Toute écriture est au singulier.** Seule la suppression reste au pluriel : **un seul appel pour un élément comme pour plusieurs**, qui reçoit toujours un tableau d'ids dans le corps, jamais dans l'URL. Supprimer un seul élément envoie un tableau d'un id : il n'y a pas de `DELETE /wifi-network/[id]`.
 - La règle concerne les routes **du proxy** et les URL appelées par le front (deux constantes dans `_services/<page>.api.ts` : la collection au pluriel, l'élément au singulier). Les chemins vers le backend, eux, restent ceux de l'API (`wifi-networks`) et vivent dans `endpoints.ts`.
-- Les routes d'une ressource sont rangées ensemble dans un groupe `app/api/v1/(wifi-networks)/` : `wifi-networks/route.ts` (lecture et suppression groupée), `wifi-network/route.ts` (ajout), `wifi-network/[id]/route.ts` (modification, suppression), `endpoints.ts` (chemins de l'API backend) et `schema.ts` (schémas Zod des corps).
-- **Le proxy valide le corps avec Zod avant d'appeler l'API** : `readJsonBody` (400 si le corps n'est pas un objet JSON) puis `validateBody(schema, body)` (400 si un champ obligatoire manque ou a un mauvais type). On envoie à l'API les **données validées**, pas le corps brut : `validateBody` retire les clés inconnues. Le proxy ne vérifie que la forme du contrat ; les longueurs et les formats restent validés par l'API, qui fait foi.
-- Un `POST` répond `201` avec la ressource créée. Les erreurs passent par `handleApiError` (§12).
+- Les routes d'une ressource sont rangées ensemble dans un groupe `app/api/v1/(wifi-networks)/` : `wifi-networks/route.ts` (lecture et suppression), `wifi-network/route.ts` (ajout), `wifi-network/[id]/route.ts` (modification), `endpoints.ts` (chemins de l'API backend) et `schema.ts` (schémas Zod des corps).
+- **Le proxy valide le corps avec Zod avant d'appeler l'API** : `readJsonBody` (400 si le corps n'est pas un objet JSON) puis `validateBody(schema, body)` (400 si un champ obligatoire manque ou a un mauvais type). On envoie à l'API les **données validées**, pas le corps brut : `validateBody` retire les clés inconnues. L'id d'une route `[id]` est validé de la même façon (`validateBody(z.uuid(), id)`) avant d'être recopié dans le chemin de l'API. Le proxy ne vérifie que la forme du contrat ; les longueurs et les formats restent validés par l'API, qui fait foi.
+- Un `POST` répond `201` avec la ressource créée, un `PATCH` `200` avec la ressource modifiée, un `DELETE` `204` sans corps. Les erreurs passent par `handleApiError` (§12).
 
 ```ts
 // app/api/v1/(wifi-networks)/wifi-network/route.ts
@@ -690,4 +689,33 @@ export const createWifiNetworkBodySchema = z
     password: z.string().min(1).optional(),
   })
   .refine(({ security, password }) => security === "NONE" || password !== undefined, { path: ["password"], message: "Required" });
+```
+
+```ts
+// app/api/v1/(wifi-networks)/wifi-network/[id]/route.ts
+// PATCH /api/v1/wifi-network/[id]  { name?, ssid?, security?, password? }
+export const PATCH = async (request: NextRequest, { params }: RouteContext<"/api/v1/wifi-network/[id]">) => {
+  try {
+    const id = validateBody(wifiNetworkIdSchema, (await params).id);
+    const input = validateBody(updateWifiNetworkBodySchema, await readJsonBody(request));
+    const wifiNetwork = await httpRequest.patch(WIFI_NETWORKS_ENDPOINTS.item(id), input);
+    return NextResponse.json(wifiNetwork);
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+```
+
+```ts
+// app/api/v1/(wifi-networks)/wifi-networks/route.ts
+// DELETE /api/v1/wifi-networks  { ids: [...] }  : un réseau = une liste d'un id
+export const DELETE = async (request: NextRequest) => {
+  try {
+    const input = validateBody(deleteWifiNetworksBodySchema, await readJsonBody(request));
+    await httpRequest.delete(WIFI_NETWORKS_ENDPOINTS.removeMany, { body: JSON.stringify(input) });
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
 ```

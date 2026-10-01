@@ -272,7 +272,11 @@
       "Read(//Users/assadi/Projects/Turbo/**)",
       "Read(//Users/assadi/Projects/Turbo/api/**)",
       "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/web && sed -n 1,70p lib/api/intefaces/http-errors.ts; echo \"--- strategies\"; cat lib/api/strategy/default-error-strategy.ts | head -30; echo \"--- api pkg\"; grep -n \"\\\\\"test\\\\|vitest\\\\|\\\\\"dev\\\\\"\" ../api/package.json; lsof -i :4000 -i :5432 2>/dev/null | head -4; ls -a | grep env)",
-      "Bash(node create.cjs)"
+      "Bash(node create.cjs)",
+      "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/api && cat src/features/wifi-network/repository.ts; echo ----FK; grep -rn \"wifiNetworks\\\\|wifi_networks\\\\|wifiId\" src/drizzle --include=\"*.ts\" | grep -v \"schemas/wifi-network-schema.ts\" | head; ls src/drizzle src/drizzle/schemas | head -30; echo ----CONV; grep -n \"^## \\\\|^### \" ../../.claude/rules/backend-conventions.md)",
+      "Read(//Users/assadi/Projects/.claude/rules/**)",
+      "Bash(sed 's#console.log\\(#require\\(\"node:fs\"\\).writeFileSync\\(\"/private/tmp/claude-501/sql.out\", #' /private/tmp/claude-501/sql.test.ts)",
+      "Bash(sed -i '' 's#^import { it } from \"vitest\";#import { it } from \"vitest\";\\\\nimport { writeFileSync } from \"node:fs\";#; s#require\\(\"node:fs\"\\).writeFileSync#writeFileSync#' src/features/wifi-network/tests/zz-sql.test.ts)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

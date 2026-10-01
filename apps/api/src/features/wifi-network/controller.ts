@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { WifiNetworkService } from "./service";
 import {
     validateCreateWifiNetworkInput,
+    validateDeleteWifiNetworksInput,
     validateUpdateWifiNetworkInput,
     validateWifiNetworkCollectionQuery,
     validateWifiNetworkIdParam,
@@ -53,6 +54,13 @@ export class WifiNetworkController {
     remove = async (req: Request<{ id: string }>, res: Response) => {
         const id = validateWifiNetworkIdParam(req.params.id);
         await this.wifiNetworkService.delete(id);
+        return res.status(204).send();
+    };
+
+    // DELETE /wifi-networks  { ids: [...] }  (admin) — one id deletes a single network
+    removeMany = async (req: Request, res: Response) => {
+        const { ids } = validateDeleteWifiNetworksInput(req.body);
+        await this.wifiNetworkService.deleteMany(ids);
         return res.status(204).send();
     };
 }

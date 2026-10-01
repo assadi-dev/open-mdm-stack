@@ -1,4 +1,4 @@
-import type { UpdateWifiNetworkInput, WifiNetwork } from "../_types/wifi-network.types";
+import type { WifiNetwork } from "../_types/wifi-network.types";
 
 // Les quatre réseaux de la maquette, dans le même ordre.
 // Les dates sont à midi UTC : le jour affiché ne bouge dans aucun fuseau.
@@ -19,13 +19,6 @@ const findNetworkIndex = (id: string) => {
   const index = getNetworks().findIndex((network) => network.id === id);
   if (index === -1) throw new Error(`Réseau Wi-Fi introuvable : ${id}`);
   return index;
-};
-
-export const updateWifiNetworkMock = ({ id, name, ssid, security }: UpdateWifiNetworkInput): WifiNetwork => {
-  const index = findNetworkIndex(id);
-  const updated: WifiNetwork = { ...(getNetworks()[index] as WifiNetwork), name, ssid, security };
-  networks = getNetworks().map((network, position) => (position === index ? updated : network));
-  return updated;
 };
 
 export const removeWifiNetworkMock = (id: string) => {

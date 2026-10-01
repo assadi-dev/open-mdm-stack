@@ -7,6 +7,7 @@ const { repoMock } = vi.hoisted(() => ({
         findById: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        deleteMany: vi.fn(),
     },
 }));
 
@@ -141,6 +142,17 @@ describe("WifiNetworkService", () => {
             repoMock.delete.mockResolvedValue(undefined);
 
             await expect(service.delete(NETWORK_ID)).rejects.toMatchObject({ statusCode: 404 });
+        });
+    });
+
+    describe("deleteMany", () => {
+        it("deletes the given wifi networks in a single repository call", async () => {
+            repoMock.deleteMany.mockResolvedValue(undefined);
+
+            await service.deleteMany([NETWORK_ID, "0b8f4d2c-6a1e-4f3b-9c7d-5e2a1b3c4d5e"]);
+
+            expect(repoMock.deleteMany).toHaveBeenCalledTimes(1);
+            expect(repoMock.deleteMany).toHaveBeenCalledWith([NETWORK_ID, "0b8f4d2c-6a1e-4f3b-9c7d-5e2a1b3c4d5e"]);
         });
     });
 });
