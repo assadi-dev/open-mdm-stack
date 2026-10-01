@@ -168,10 +168,12 @@ export const MultiSelect = ({
         </ComboboxList>
         {(showSelectAll || showClear) && (
           <div className="flex items-center justify-between gap-1 border-t border-border p-1">
-            <Button variant="ghost" size="sm" disabled={!showSelectAll} onClick={() => change(selectableValues)}>
-              {MULTI_SELECT.selectAll}
-            </Button>
-            <Button variant="ghost" size="sm" disabled={!showClear} onClick={() => change([])}>
+            {!hideSelectAll && (
+              <Button variant="ghost" size="sm" disabled={!showSelectAll} onClick={() => change(selectableValues)}>
+                {MULTI_SELECT.selectAll}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" className="ml-auto" disabled={!showClear} onClick={() => change([])}>
               {MULTI_SELECT.clear}
             </Button>
           </div>
