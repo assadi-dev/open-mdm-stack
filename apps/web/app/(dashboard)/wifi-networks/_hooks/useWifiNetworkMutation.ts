@@ -1,12 +1,7 @@
 import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import {
-  createWifiNetworkApi,
-  removeWifiNetworkApi,
-  removeWifiNetworksApi,
-  updateWifiNetworkApi,
-} from "../_services/wifi-networks.api";
+import { createWifiNetworkApi, removeWifiNetworksApi, updateWifiNetworkApi } from "../_services/wifi-networks.api";
 import { WIFI_NETWORKS } from "../_services/wifi-networks.queries";
 
 export const useWifiNetworkMutation = () => {
@@ -28,8 +23,9 @@ export const useWifiNetworkMutation = () => {
     mutationFn: updateWifiNetworkApi,
     ...afterMutation("update", [WIFI_NETWORKS.collection]),
   });
+  // Un seul réseau et plusieurs font le même appel : un seul réseau envoie une liste d'un id. Seuls les messages diffèrent.
   const remove = useMutation({
-    mutationFn: removeWifiNetworkApi,
+    mutationFn: (id: string) => removeWifiNetworksApi([id]),
     ...afterMutation("delete", [WIFI_NETWORKS.collection]),
   });
   const removeMany = useMutation({

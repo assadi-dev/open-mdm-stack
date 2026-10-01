@@ -276,12 +276,14 @@
       "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/api && cat src/features/wifi-network/repository.ts; echo ----FK; grep -rn \"wifiNetworks\\\\|wifi_networks\\\\|wifiId\" src/drizzle --include=\"*.ts\" | grep -v \"schemas/wifi-network-schema.ts\" | head; ls src/drizzle src/drizzle/schemas | head -30; echo ----CONV; grep -n \"^## \\\\|^### \" ../../.claude/rules/backend-conventions.md)",
       "Read(//Users/assadi/Projects/.claude/rules/**)",
       "Bash(sed 's#console.log\\(#require\\(\"node:fs\"\\).writeFileSync\\(\"/private/tmp/claude-501/sql.out\", #' /private/tmp/claude-501/sql.test.ts)",
-      "Bash(sed -i '' 's#^import { it } from \"vitest\";#import { it } from \"vitest\";\\\\nimport { writeFileSync } from \"node:fs\";#; s#require\\(\"node:fs\"\\).writeFileSync#writeFileSync#' src/features/wifi-network/tests/zz-sql.test.ts)"
+      "Bash(sed -i '' 's#^import { it } from \"vitest\";#import { it } from \"vitest\";\\\\nimport { writeFileSync } from \"node:fs\";#; s#require\\(\"node:fs\"\\).writeFileSync#writeFileSync#' src/features/wifi-network/tests/zz-sql.test.ts)",
+      "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack && grep -n \"remove\" .claude/rules/frontend-conventions.md | head -30; sed -n '/^### Invalidation après une mutation/,/^## 6/p' .claude/rules/frontend-conventions.md | head -50)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",
       "/Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory",
-      "/Users/assadi/.claude/projects/-Users-assadi-Projects-turbo-open-mdm-stack/memory"
+      "/Users/assadi/.claude/projects/-Users-assadi-Projects-turbo-open-mdm-stack/memory",
+      "/Users/assadi/Projects/Turbo/open-mdm-stack/apps/web/app/api/v1/.claude/rules"
     ]
   }
 }

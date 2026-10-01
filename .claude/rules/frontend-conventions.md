@@ -138,8 +138,8 @@ export const Button = ({ className, ...props }: ButtonProps) => (
 Tout appel API passe par TanStack Query, dans un hook de `_hooks/`.
 
 - **Lecture** : un hook dédié par requête, préfixé `useFetch`. Ex. `useFetchDeviceCollection` récupère la collection d'appareils.
-- **Écriture** (ajout, modification, suppression…) : toutes les actions d'une ressource sont regroupées dans un seul hook, suffixé `Mutation`. Ex. `useDeviceMutation` retourne `{ create, update, remove }`.
-- Les actions retournées portent un **verbe d'action seul** : `create`, `update`, `remove`, pas `createDevice`. `delete` étant un mot réservé en JavaScript, l'action s'appelle `remove` (et `removeMany`), mais ses textes restent sous la clé `delete` (et `deleteMany`) dans les constantes.
+- **Écriture** (ajout, modification, suppression…) : toutes les actions d'une ressource sont regroupées dans un seul hook, suffixé `Mutation`. Ex. `useDeviceMutation` retourne `{ create, update, remove, removeMany }`.
+- Les actions retournées portent un **verbe d'action seul** : `create`, `update`, `remove`, pas `createDevice`. `delete` étant un mot réservé en JavaScript, l'action s'appelle `remove` (et `removeMany`), mais ses textes restent sous la clé `delete` (et `deleteMany`) dans les constantes. **`remove` et `removeMany` appellent la même fonction d'API**, `remove<Ressources>Api(ids: string[])` : supprimer un seul élément envoie un tableau d'un id (§15). Seuls les messages de toast les distinguent.
 - **Jamais de `fetch` écrit dans `queryFn` ou `mutationFn`.** On passe la fonction importée depuis `_services/<page>.api.ts`, nommée `<verbe><Ressource>Api`.
 
 ```ts
@@ -190,7 +190,7 @@ Chaque mutation réussie invalide **toutes les requêtes dont elle change les do
 import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DEVICE } from "@/constants/device";
-import { createDeviceApi, updateDeviceApi, removeDeviceApi } from "../_services/dashboard.api";
+import { createDeviceApi, updateDeviceApi, removeDevicesApi } from "../_services/dashboard.api";
 import { DEVICES } from "../_services/dashboard.queries";
 
 export const useDeviceMutation = () => {
@@ -212,12 +212,17 @@ export const useDeviceMutation = () => {
     mutationFn: updateDeviceApi,
     ...afterMutation("update", [DEVICES.collection]),
   });
+  // Un seul appareil et plusieurs font le même appel : un seul appareil envoie une liste d'un id.
   const remove = useMutation({
-    mutationFn: removeDeviceApi,
+    mutationFn: (id: string) => removeDevicesApi([id]),
     ...afterMutation("delete", [DEVICES.collection, DEVICES.enrolledDevices]),
   });
+  const removeMany = useMutation({
+    mutationFn: removeDevicesApi,
+    ...afterMutation("deleteMany", [DEVICES.collection, DEVICES.enrolledDevices]),
+  });
 
-  return { create, update, remove };
+  return { create, update, remove, removeMany };
 };
 ```
 
@@ -648,22 +653,79 @@ export const WifiNetworksTableCard = ({ networks, server, ...queryState }: WifiN
 };
 ```
 
-## 15. Routes proxy : lectures au pluriel, écritures au singulier
+## 15. Routes proxy : organisation des écritures et de la suppression
 
 Le dashboard n'appelle jamais l'API backend directement : chaque requête passe par un route handler de `app/api/v1/` (le proxy, §12), qui ajoute le jeton de session via `httpRequest`. Le nom de la route dit si l'on lit ou si l'on écrit.
 
-| Action | Route du proxy | Corps |
-|---|---|---|
-| Lire la collection | `GET /api/v1/wifi-networks` | aucun (query string, §14) |
-| Ajouter | `POST /api/v1/wifi-network` | l'objet à créer |
-| Modifier | `PATCH /api/v1/wifi-network/[id]` | les champs modifiés (l'id est dans l'URL, pas dans le corps) |
-| Supprimer un ou plusieurs (**seule exception**) | `DELETE /api/v1/wifi-networks` | `{ "ids": ["…", "…"] }` |
+### Les routes
 
-- **Toute écriture est au singulier.** Seule la suppression reste au pluriel : **un seul appel pour un élément comme pour plusieurs**, qui reçoit toujours un tableau d'ids dans le corps, jamais dans l'URL. Supprimer un seul élément envoie un tableau d'un id : il n'y a pas de `DELETE /wifi-network/[id]`.
-- La règle concerne les routes **du proxy** et les URL appelées par le front (deux constantes dans `_services/<page>.api.ts` : la collection au pluriel, l'élément au singulier). Les chemins vers le backend, eux, restent ceux de l'API (`wifi-networks`) et vivent dans `endpoints.ts`.
-- Les routes d'une ressource sont rangées ensemble dans un groupe `app/api/v1/(wifi-networks)/` : `wifi-networks/route.ts` (lecture et suppression), `wifi-network/route.ts` (ajout), `wifi-network/[id]/route.ts` (modification), `endpoints.ts` (chemins de l'API backend) et `schema.ts` (schémas Zod des corps).
-- **Le proxy valide le corps avec Zod avant d'appeler l'API** : `readJsonBody` (400 si le corps n'est pas un objet JSON) puis `validateBody(schema, body)` (400 si un champ obligatoire manque ou a un mauvais type). On envoie à l'API les **données validées**, pas le corps brut : `validateBody` retire les clés inconnues. L'id d'une route `[id]` est validé de la même façon (`validateBody(z.uuid(), id)`) avant d'être recopié dans le chemin de l'API. Le proxy ne vérifie que la forme du contrat ; les longueurs et les formats restent validés par l'API, qui fait foi.
-- Un `POST` répond `201` avec la ressource créée, un `PATCH` `200` avec la ressource modifiée, un `DELETE` `204` sans corps. Les erreurs passent par `handleApiError` (§12).
+| Action | Route du proxy | Corps | Réponse |
+|---|---|---|---|
+| Lire la collection | `GET /api/v1/wifi-networks` | aucun (query string, §14) | `200` |
+| Ajouter | `POST /api/v1/wifi-network` | l'objet à créer | `201` + la ressource |
+| Modifier | `PATCH /api/v1/wifi-network/[id]` | les champs modifiés, **sans l'id** (il est dans l'URL) | `200` + la ressource |
+| Supprimer un ou plusieurs | `DELETE /api/v1/wifi-networks` | `{ "ids": ["…", "…"] }` | `204`, sans corps |
+
+- **Toute écriture est au singulier** (`/wifi-network`). **La suppression est la seule exception** : elle reste au pluriel (`/wifi-networks`) et reçoit toujours un tableau d'ids dans le corps, jamais dans l'URL.
+- **Un seul appel pour supprimer un élément comme plusieurs.** Supprimer un seul élément envoie un tableau d'un id : il n'y a pas de `DELETE /wifi-network/[id]`. L'API supprime en une requête et ignore les ids qui n'existent plus : une sélection périmée ne fait pas échouer l'appel.
+- Les erreurs passent par `handleApiError` (§12) : `400` si le corps ou l'id est invalide, `401` sans session, le statut de l'API sinon.
+
+### Organisation des fichiers
+
+Les routes d'une ressource sont rangées ensemble dans un groupe `app/api/v1/(<ressources>)/`. Un `route.ts` par chemin, une méthode HTTP par export (fonction fléchée async, §12).
+
+```
+app/api/v1/(wifi-networks)/
+├── schema.ts                    schémas Zod des corps et de l'id (voir ci-dessous)
+├── wifi-networks/               pluriel : la collection et la suppression
+│   ├── endpoints.ts               chemins de l'API backend (collections, create, item(id), removeMany)
+│   └── route.ts                   GET (lecture), DELETE (suppression d'un ou plusieurs)
+└── wifi-network/                singulier : un élément, les écritures
+    ├── route.ts                   POST (ajout)
+    └── [id]/
+        └── route.ts               PATCH (modification)
+```
+
+- `endpoints.ts` : les chemins **vers le backend**, qui restent ceux de l'API (`wifi-networks`, `wifi-networks/:id`). La règle singulier/pluriel concerne les routes du proxy et les URL appelées par le front, pas le backend. Clés : `collections`, `create`, `item(id)`, `removeMany`.
+- `schema.ts` : un schéma par écriture, nommé `create<Ressource>BodySchema`, `update<Ressource>BodySchema`, `delete<Ressources>BodySchema`, plus `<ressource>IdSchema` (`z.uuid()`).
+
+### Validation du corps
+
+**Le proxy valide le corps avec Zod avant d'appeler l'API** : `readJsonBody` (400 si le corps n'est pas un objet JSON) puis `validateBody(schema, body)` (400 si un champ obligatoire manque ou a un mauvais type). On envoie à l'API les **données validées**, pas le corps brut : `validateBody` retire les clés inconnues. L'id d'une route `[id]` est validé de la même façon (`validateBody(wifiNetworkIdSchema, id)`) avant d'être recopié dans le chemin de l'API. Le proxy ne vérifie que la forme du contrat ; les longueurs et les formats restent validés par l'API, qui fait foi.
+
+### Côté front
+
+`_services/<page>.api.ts` appelle le proxy avec deux constantes : la collection au pluriel, l'élément au singulier. Une fonction par écriture, et **une seule fonction de suppression**, qui prend toujours une liste.
+
+```ts
+// _services/wifi-networks.api.ts
+const COLLECTION_URL = "/api/v1/wifi-networks";
+const ITEM_URL = "/api/v1/wifi-network";
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
+export const createWifiNetworkApi = async (input: CreateWifiNetworkInput) => {
+  const response = await fetch(ITEM_URL, { method: "POST", headers: JSON_HEADERS, body: JSON.stringify(input) });
+  if (!response.ok) throw createHttpError(response.status);
+  return WifiNetworkDto.parse(await response.json());
+};
+
+// L'id est dans l'URL, le reste dans le corps.
+export const updateWifiNetworkApi = async ({ id, ...input }: UpdateWifiNetworkInput) => {
+  const response = await fetch(`${ITEM_URL}/${encodeURIComponent(id)}`, { method: "PATCH", headers: JSON_HEADERS, body: JSON.stringify(input) });
+  if (!response.ok) throw createHttpError(response.status);
+  return WifiNetworkDto.parse(await response.json());
+};
+
+// Un réseau comme plusieurs : un seul réseau envoie une liste d'un id. Réponse 204, pas de corps à lire.
+export const removeWifiNetworksApi = async (ids: string[]) => {
+  const response = await fetch(COLLECTION_URL, { method: "DELETE", headers: JSON_HEADERS, body: JSON.stringify({ ids }) });
+  if (!response.ok) throw createHttpError(response.status);
+};
+```
+
+Dans le hook de mutation (§5), `remove` appelle `removeWifiNetworksApi([id])` et `removeMany` appelle `removeWifiNetworksApi` avec la sélection.
+
+### Exemples côté proxy
 
 ```ts
 // app/api/v1/(wifi-networks)/wifi-network/route.ts
@@ -677,18 +739,6 @@ export const POST = async (request: NextRequest) => {
     return handleApiError(error);
   }
 };
-```
-
-```ts
-// app/api/v1/(wifi-networks)/schema.ts : les champs obligatoires du contrat de l'API
-export const createWifiNetworkBodySchema = z
-  .object({
-    name: z.string().min(1).optional(),
-    ssid: z.string().min(1),
-    security: z.enum(WIFI_SECURITY_KEYS),
-    password: z.string().min(1).optional(),
-  })
-  .refine(({ security, password }) => security === "NONE" || password !== undefined, { path: ["password"], message: "Required" });
 ```
 
 ```ts
@@ -718,4 +768,20 @@ export const DELETE = async (request: NextRequest) => {
     return handleApiError(error);
   }
 };
+```
+
+```ts
+// app/api/v1/(wifi-networks)/schema.ts : la forme du contrat de l'API
+export const createWifiNetworkBodySchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    ssid: z.string().min(1),
+    security: z.enum(WIFI_SECURITY_KEYS),
+    password: z.string().min(1).optional(),
+  })
+  // Un réseau ouvert n'a pas de mot de passe ; tous les autres en exigent un.
+  .refine(({ security, password }) => security === "NONE" || password !== undefined, { path: ["password"], message: "Required" });
+
+export const deleteWifiNetworksBodySchema = z.object({ ids: z.array(z.string().min(1)).min(1) });
+export const wifiNetworkIdSchema = z.uuid();
 ```
