@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/dialogs/AlertDialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/dialogs/Dialog";
 
 type ModalHeaderProps = {
   title: ReactNode;
@@ -9,9 +9,10 @@ type ModalHeaderProps = {
   icon?: LucideIcon;
 };
 
+// En-tête d'un `Dialog` (formulaire). La marge droite laisse la place à la croix de fermeture.
 export const ModalHeader = ({ title, description, icon: Icon }: ModalHeaderProps) => (
-  <AlertDialogHeader>
-    <div className="flex w-full items-center gap-3">
+  <DialogHeader>
+    <div className="flex w-full items-center gap-3 pr-8">
       {Icon && (
         <span
           aria-hidden="true"
@@ -20,8 +21,8 @@ export const ModalHeader = ({ title, description, icon: Icon }: ModalHeaderProps
           <Icon className="size-5" />
         </span>
       )}
-      <AlertDialogTitle>{title}</AlertDialogTitle>
+      <DialogTitle>{title}</DialogTitle>
     </div>
-    {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
-  </AlertDialogHeader>
+    {description && <DialogDescription>{description}</DialogDescription>}
+  </DialogHeader>
 );

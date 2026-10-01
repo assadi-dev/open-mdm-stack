@@ -1,5 +1,6 @@
 export const ACTION_LABELS = {
   cancel: "Annuler",
+  close: "Fermer",
   continueWithGoogle: "Continuer avec Google",
   login: "Se connecter",
   logout: "Déconnexion",

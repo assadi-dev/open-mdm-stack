@@ -84,8 +84,12 @@ export const WifiNetworkFormFields = ({ form, isEditing }: WifiNetworkFormFields
           autoComplete="new-password"
           disabled={isOpenNetwork}
           aria-invalid={!!errors.password}
+          aria-describedby={isEditing ? `${fieldId}-password-description` : undefined}
           {...register("password")}
         />
+        {isEditing && (
+          <FieldDescription id={`${fieldId}-password-description`}>{password.keepPlaceholder}</FieldDescription>
+        )}
         <FieldError errors={[errors.password]} />
       </Field>
     </FieldGroup>

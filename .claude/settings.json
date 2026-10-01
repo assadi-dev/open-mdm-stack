@@ -239,7 +239,10 @@
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/npm-cache npx --yes shadcn@latest add \"@diceui/compose-refs\")",
       "Bash(curl -s https://diceui.com/r/base-nova/action-bar-demo.json)",
       "Bash(node -e 'let s=\"\";process.stdin.on\\(\"data\",d=>s+=d\\).on\\(\"end\",\\(\\)=>{try{const j=JSON.parse\\(s\\);console.log\\(j.files.map\\(f=>f.content\\).join\\(\"\\\\n---\\\\n\"\\)\\)}catch\\(e\\){console.log\\(\"pas de démo :\",s.slice\\(0,150\\)\\)}}\\)')",
-      "Bash(grep -n \"modals/                        les boîtes\\\\|^- \\\\*\\\\*\\\\`modals/\\\\`\\\\*\\\\*\" ../../.claude/rules/frontend-conventions.md)"
+      "Bash(grep -n \"modals/                        les boîtes\\\\|^- \\\\*\\\\*\\\\`modals/\\\\`\\\\*\\\\*\" ../../.claude/rules/frontend-conventions.md)",
+      "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/npm-cache npx ctx7@latest docs /websites/base-ui_com \"AlertDialog vs Dialog difference, dismiss on outside click, close button\")",
+      "Bash(npx ctx7@latest library \"Base UI\" \"AlertDialog vs Dialog close button dismiss\")",
+      "Bash(npx ctx7@latest docs /websites/base-ui_react \"Alert Dialog: does not close when clicking outside, requires user response, differs from Dialog\")"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules"
