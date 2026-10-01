@@ -11,8 +11,8 @@ import {
 } from "@/components/dialogs/AlertDialog";
 import { ACTION_LABELS } from "@/constants/actions";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import { useWifiNetworkForm } from "../_hooks/useWifiNetworkForm";
-import type { WifiNetwork } from "../_types/wifi-network.types";
+import { useWifiNetworkForm } from "../../_hooks/useWifiNetworkForm";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
 import { WifiNetworkFormFields } from "./WifiNetworkFormFields";
 
 type WifiNetworkFormProps = {

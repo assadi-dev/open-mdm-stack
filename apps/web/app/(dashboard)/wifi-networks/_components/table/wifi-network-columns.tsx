@@ -3,8 +3,8 @@ import { Badge } from "@/components/badges/Badge";
 import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { formatDate } from "@/lib/format";
-import { toSecurityVariant } from "../_services/wifi-networks.utils";
-import type { WifiNetwork } from "../_types/wifi-network.types";
+import { toSecurityVariant } from "../../_services/wifi-networks.utils";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
 import { WifiNetworkRowActions } from "./WifiNetworkRowActions";
 import { WifiPasswordMask } from "./WifiPasswordMask";
 

@@ -22,6 +22,7 @@ export const useWifiNetworkForm = ({ network, onSuccess }: UseWifiNetworkFormOpt
   const form = useForm<WifiNetworkFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
+      name: network?.name ?? "",
       ssid: network?.ssid ?? "",
       security: network?.security ?? DEFAULT_SECURITY,
       password: "",

@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertDialog, AlertDialogContent } from "@/components/dialogs/AlertDialog";
-import type { WifiNetwork } from "../_types/wifi-network.types";
-import { WifiNetworkForm } from "./WifiNetworkForm";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
+import { WifiNetworkForm } from "../forms/WifiNetworkForm";
 
 type WifiNetworkFormDialogProps = {
   open: boolean;

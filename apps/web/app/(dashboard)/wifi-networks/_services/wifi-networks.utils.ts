@@ -45,13 +45,17 @@ export const toDeleteTitle = (ssid: string) => `${WIFI_NETWORK.dialog.delete.tit
 const toPassword = ({ security, password }: WifiNetworkFormValues) =>
   security !== "NONE" && password.length > 0 ? { password } : {};
 
+// Un nom vide n'est pas envoyé à l'ajout : l'API refuse une chaîne vide.
 export const toCreateInput = (values: WifiNetworkFormValues): CreateWifiNetworkInput => ({
+  ...(values.name ? { name: values.name } : {}),
   ssid: values.ssid,
   security: values.security,
   ...toPassword(values),
 });
 
+// À la modification, un nom vidé part en `null` : sans lui, l'API garderait l'ancien nom.
 export const toUpdateInput = (id: string, values: WifiNetworkFormValues): UpdateWifiNetworkInput => ({
   id,
   ...toCreateInput(values),
+  name: values.name || null,
 });

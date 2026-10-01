@@ -5,9 +5,9 @@ import { Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/menus/DropdownMenu";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import type { WifiNetwork } from "../_types/wifi-network.types";
-import { DeleteWifiNetworkDialog } from "./DeleteWifiNetworkDialog";
-import { WifiNetworkFormDialog } from "./WifiNetworkFormDialog";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
+import { DeleteWifiNetworkDialog } from "../modals/DeleteWifiNetworkDialog";
+import { WifiNetworkFormDialog } from "../modals/WifiNetworkFormDialog";
 
 type WifiNetworkRowActionsProps = {
   network: WifiNetwork;

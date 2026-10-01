@@ -9,8 +9,8 @@ import { DataTablePagination } from "@/components/data-table/DataTablePagination
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
-import { toResultsLabel } from "../_services/wifi-networks.utils";
-import type { WifiNetwork } from "../_types/wifi-network.types";
+import { toResultsLabel } from "../../_services/wifi-networks.utils";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
 import { wifiNetworkColumns } from "./wifi-network-columns";
 
 type WifiNetworksTableCardProps = {

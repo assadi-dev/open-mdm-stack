@@ -22,10 +22,10 @@ const findNetworkIndex = (id: string) => {
 };
 
 // Comme l'API, le mot de passe n'est jamais gardé ni relu.
-export const createWifiNetworkMock = ({ ssid, security }: CreateWifiNetworkInput): WifiNetwork => {
+export const createWifiNetworkMock = ({ name, ssid, security }: CreateWifiNetworkInput): WifiNetwork => {
   const network: WifiNetwork = {
     id: `wn-${crypto.randomUUID()}`,
-    name: null,
+    name: name ?? null,
     ssid,
     security,
     createdAt: new Date().toISOString(),
@@ -34,9 +34,9 @@ export const createWifiNetworkMock = ({ ssid, security }: CreateWifiNetworkInput
   return network;
 };
 
-export const updateWifiNetworkMock = ({ id, ssid, security }: UpdateWifiNetworkInput): WifiNetwork => {
+export const updateWifiNetworkMock = ({ id, name, ssid, security }: UpdateWifiNetworkInput): WifiNetwork => {
   const index = findNetworkIndex(id);
-  const updated: WifiNetwork = { ...(getNetworks()[index] as WifiNetwork), ssid, security };
+  const updated: WifiNetwork = { ...(getNetworks()[index] as WifiNetwork), name, ssid, security };
   networks = getNetworks().map((network, position) => (position === index ? updated : network));
   return updated;
 };

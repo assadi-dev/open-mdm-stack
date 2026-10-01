@@ -28,6 +28,8 @@ type WifiNetworkFormOptions = {
 export const buildWifiNetworkFormSchema = ({ passwordRequired }: WifiNetworkFormOptions) =>
   z
     .object({
+      // Facultatif : vide, le réseau s'affiche sous son SSID.
+      name: z.string().trim(),
       ssid: z
         .string()
         .trim()

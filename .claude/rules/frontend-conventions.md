@@ -38,6 +38,37 @@ app/dashboard/
 - `_dto/device.dto.ts` : les schémas Zod et un objet qui expose les méthodes de validation et de parsing.
 - `_mocks/dashboard.mock.ts` : données fictives typées, importées uniquement par `_services/dashboard.api.ts` (jamais par un composant ou un hook). Passer à l'API réelle ne touche que ce fichier et `dashboard.api.ts`.
 
+### Structure de `_components/`
+
+Les composants d'une page sont rangés par rôle. Seuls les composants de la page elle-même restent à la racine de `_components/`.
+
+```
+app/(dashboard)/wifi-networks/_components/
+├── WifiNetworksPageClient.tsx     racine : <NomPage>Client (§11) et les blocs de la page
+├── WifiNetworksHeader.tsx           (en-tête, encart, barre d'actions de section…)
+├── WifiNetworksActionsBar.tsx
+├── table/                         tout ce qui met en forme le tableau
+│   ├── WifiNetworksTableCard.tsx    la carte qui porte le tableau (useDataTable + DataTable)
+│   ├── wifi-network-columns.tsx     les colonnes (§10)
+│   ├── WifiPasswordMask.tsx         la vue d'une cellule
+│   └── WifiNetworkRowActions.tsx    les actions d'une ligne (menu modifier / supprimer)
+├── forms/                         les formulaires
+│   ├── WifiNetworkForm.tsx          le formulaire (en-tête, champs, boutons)
+│   ├── WifiNetworkFormFields.tsx    ses champs, branchés sur React Hook Form (§7)
+│   └── inputs/                      les champs propres à la page : select, checkbox, switch
+│       └── WifiSecuritySelect.tsx
+└── modals/                        les boîtes de dialogue et modales
+    ├── WifiNetworkFormDialog.tsx
+    └── DeleteWifiNetworkDialog.tsx
+```
+
+- **`table/`** : la carte du tableau, le fichier de colonnes, les composants de cellule (badge, masque, ligne principale + secondaire…) et les actions de ligne.
+- **`forms/`** : le formulaire et ses champs. Le lien avec React Hook Form (`register`, `Controller`) reste dans le composant de champs.
+- **`forms/inputs/`** : un champ de saisie propre à la page (select des types de sécurité, checkbox, switch…). Il reçoit `value`, `onValueChange`, `onBlur` et ne connaît pas React Hook Form. Un champ réutilisable entre pages va dans `components/inputs/`, `components/selects/`… (§3).
+- **`modals/`** : les boîtes de dialogue (`AlertDialog`, `Dialog`). Une modale qui contient un formulaire importe le composant de `forms/`, elle ne le redéclare pas.
+- Les sous-dossiers se créent quand la page en a besoin : une page sans formulaire n'a pas de `forms/`.
+- Imports relatifs : depuis un sous-dossier, les dossiers de la page sont à `../../_hooks`, `../../_services`… (`../../../` depuis `forms/inputs/`).
+
 ```ts
 // _dto/device.dto.ts
 import { z } from "zod";
@@ -279,13 +310,13 @@ Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest`
 - Le hook porte tout l'état : `search` / `setSearch`, `sorting`, `pagination` (`pageIndex`, `pageCount`, `totalRows`, `previous`, `next`, `goTo`, `setPageSize`…) et `selection` (`selectedRows`, `selectedCount`, `clear`). Avec `enableSelection: true`, il ajoute la colonne de cases à cocher. `selectedRows` ne contient que les lignes **visibles** (filtrées) : une action groupée ne touche jamais une ligne masquée par la recherche.
 - **Deux modes.** Sans option `server` (mode client), `data` contient toutes les lignes et le hook trie, cherche et pagine en mémoire : réservé aux petites listes déjà chargées (ex. les cartes du tableau de bord). Avec `server` (mode serveur), l'API trie, cherche, filtre et pagine, `data` n'est que la page courante : c'est le cas de toute collection venant de l'API (voir §14).
 - Le composant reçoit le résultat du hook : `<DataTable dataTable={dataTable} />`. La recherche, la pagination et la barre d'actions (`toolbarActions`, `selectionActions`) sont optionnelles. `DataTableSearch` et `DataTablePagination` s'utilisent aussi seuls (ex. recherche dans l'en-tête d'une Card).
-- Chaque page ne définit que ses colonnes, dans `_components/<entite>-columns.tsx`, avec `createDataTableColumnHelper<Entite>()`. Le tri est **actif par défaut** sur les colonnes à accesseur : mettre `enableSorting: false` sur celles où il n'a pas de sens (statut, actions). Les colonnes numériques et les dates démarrent en tri décroissant.
+- Chaque page ne définit que ses colonnes, dans `_components/table/<entite>-columns.tsx`, avec `createDataTableColumnHelper<Entite>()`. Le tri est **actif par défaut** sur les colonnes à accesseur : mettre `enableSorting: false` sur celles où il n'a pas de sens (statut, actions). Les colonnes numériques et les dates démarrent en tri décroissant.
 - La recherche et le tri portent sur la **valeur d'accesseur**. Pour chercher sur ce que l'utilisateur lit (ex. le libellé d'un statut), l'accesseur retourne le libellé et `cell` affiche le badge. Pour trier une date sur la date et non sur le texte, l'accesseur retourne le timestamp et `cell` le formate (`formatRelativeTime`). `enableGlobalFilter: false` exclut une colonne de la recherche.
 - Les libellés d'en-tête suivent la règle des constantes (§6) : pas de texte en dur dans un fichier de colonnes. Les textes du tableau lui-même (recherche, pagination, sélection) sont dans `constants/data-table.ts`.
 - Le composant rend le balisage avec le wrapper `components/tables/Table.tsx`, jamais avec `components/ui/table.tsx` (voir §4).
 
 ```tsx
-// app/devices/_components/device-columns.tsx
+// app/devices/_components/table/device-columns.tsx
 import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
 import { DEVICE } from "@/constants/device";
 import type { Device } from "../_types/device.types";
@@ -304,7 +335,7 @@ export const deviceColumns = [
 
 import { DataTable } from "@/components/data-table/DataTable";
 import { useDataTable } from "@/hooks/useDataTable";
-import { deviceColumns } from "./device-columns";
+import { deviceColumns } from "./table/device-columns";
 import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
 
 export const DevicesPageClient = () => {
@@ -458,7 +489,7 @@ export default DevicesPage;
 
 import { DataTable } from "@/components/data-table/DataTable";
 import { useDataTable } from "@/hooks/useDataTable";
-import { deviceColumns } from "./device-columns";
+import { deviceColumns } from "./table/device-columns";
 import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
 
 export const DevicesPageClient = () => {
@@ -598,7 +629,7 @@ export const WifiNetworksPageClient = () => {
 ```
 
 ```tsx
-// _components/WifiNetworksTableCard.tsx
+// _components/table/WifiNetworksTableCard.tsx
 export const WifiNetworksTableCard = ({ networks, server, ...queryState }: WifiNetworksTableCardProps) => {
   const dataTable = useDataTable({
     data: networks,

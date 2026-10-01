@@ -12,9 +12,9 @@ import {
 } from "@/components/dialogs/AlertDialog";
 import { ACTION_LABELS } from "@/constants/actions";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import { useWifiNetworkMutation } from "../_hooks/useWifiNetworkMutation";
-import { toDeleteTitle } from "../_services/wifi-networks.utils";
-import type { WifiNetwork } from "../_types/wifi-network.types";
+import { useWifiNetworkMutation } from "../../_hooks/useWifiNetworkMutation";
+import { toDeleteTitle } from "../../_services/wifi-networks.utils";
+import type { WifiNetwork } from "../../_types/wifi-network.types";
 
 type DeleteWifiNetworkDialogProps = {
   network: WifiNetwork;

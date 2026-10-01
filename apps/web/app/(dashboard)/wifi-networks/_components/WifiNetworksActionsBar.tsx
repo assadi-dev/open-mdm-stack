@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
-import { WifiNetworkFormDialog } from "./WifiNetworkFormDialog";
+import { WifiNetworkFormDialog } from "./modals/WifiNetworkFormDialog";
 
 export const WifiNetworksActionsBar = () => {
   const [isCreateOpen, setCreateOpen] = useState(false);

@@ -229,7 +229,13 @@
       "Bash(npx --yes ctx7@latest docs /47ng/nuqs \"debounced search state with client-side fetching TanStack Query: local state updates immediately, query key uses debounced value\")",
       "Bash(git -C /Users/assadi/Projects/turbo/open-mdm-stack log --oneline -3 -- apps/web/lib/api/dto)",
       "Bash(sed -i '' 's/waitForTimeout\\(2500\\)/waitForTimeout\\(9000\\)/' /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/wifi-error.cjs)",
-      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/wifi-error.cjs)"
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/wifi-error.cjs)",
+      "Bash(sed -n '/form: {/,/^  },/p' apps/web/constants/wifi-network.ts)",
+      "Bash(sed -n '/buildWifiNetworkFormSchema/,/^    }\\);/p' \"apps/web/app/\\(dashboard\\)/wifi-networks/_dto/wifi-network.dto.ts\")",
+      "Bash(sed -i '' 's#import { deviceColumns } from \"\\\\./device-columns\";#import { deviceColumns } from \"./table/device-columns\";#' .claude/rules/frontend-conventions.md && grep -n \"device-columns\" .claude/rules/frontend-conventions.md && sed -n 41,75p .claude/rules/frontend-conventions.md && git status --short)"
+    ],
+    "additionalDirectories": [
+      "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules"
     ]
   }
 }

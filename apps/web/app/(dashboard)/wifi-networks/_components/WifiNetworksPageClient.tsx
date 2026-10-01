@@ -5,7 +5,7 @@ import { useWifiNetworksTable } from "../_hooks/useWifiNetworksTable";
 import { WifiNetworksActionsBar } from "./WifiNetworksActionsBar";
 import { WifiNetworksHeader } from "./WifiNetworksHeader";
 import { WifiNetworksNotice } from "./WifiNetworksNotice";
-import { WifiNetworksTableCard } from "./WifiNetworksTableCard";
+import { WifiNetworksTableCard } from "./table/WifiNetworksTableCard";
 
 export const WifiNetworksPageClient = () => {
   const { networks, server, isPending, isError, refetch } = useWifiNetworksTable();
