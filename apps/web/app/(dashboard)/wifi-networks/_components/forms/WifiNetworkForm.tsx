@@ -1,14 +1,8 @@
 "use client";
 
 import { Wifi } from "lucide-react";
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/dialogs/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogFooter } from "@/components/dialogs/AlertDialog";
+import { ModalHeader } from "@/components/modals/ModalHeader";
 import { ACTION_LABELS } from "@/constants/actions";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
 import { useWifiNetworkForm } from "../../_hooks/useWifiNetworkForm";
@@ -26,18 +20,7 @@ export const WifiNetworkForm = ({ network, onClose }: WifiNetworkFormProps) => {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
-      <AlertDialogHeader>
-        <div className="flex w-full items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary"
-          >
-            <Wifi className="size-5" />
-          </span>
-          <AlertDialogTitle>{text.title}</AlertDialogTitle>
-        </div>
-        <AlertDialogDescription>{text.description}</AlertDialogDescription>
-      </AlertDialogHeader>
+      <ModalHeader icon={Wifi} title={text.title} description={text.description} />
       <WifiNetworkFormFields form={form} isEditing={!!network} />
       <AlertDialogFooter>
         <AlertDialogCancel>{ACTION_LABELS.cancel}</AlertDialogCancel>
