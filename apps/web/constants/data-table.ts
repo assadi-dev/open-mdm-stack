@@ -9,6 +9,10 @@ export const DATA_TABLE = {
     reset: "Réinitialiser",
     active: { one: "filtre actif", many: "filtres actifs" },
   },
+  columns: {
+    button: "Colonnes",
+    title: "Afficher les colonnes",
+  },
   empty: "Aucun résultat.",
   selection: {
     all: "Tout sélectionner",

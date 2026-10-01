@@ -265,7 +265,10 @@
       "Bash(sed -i '' 's#^const URL = #const PAGE_URL = #; s#page.goto\\(URL,#page.goto\\(PAGE_URL,#' verify2.cjs)",
       "Bash(node verify2.cjs)",
       "Bash(cd /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory *)",
-      "Bash(node verify3.cjs)"
+      "Bash(node verify3.cjs)",
+      "Bash(sed -i '' 's/import { Ellipsis, Pencil, Trash2 } from \"lucide-react\";/import { EllipsisVertical, Pencil, Trash2 } from \"lucide-react\";/; s#<Ellipsis />#<EllipsisVertical />#' \"app/\\(dashboard\\)/wifi-networks/_components/table/WifiNetworkRowActions.tsx\")",
+      "Bash(sed -i '' 's/import { Ellipsis, Eye } from \"lucide-react\";/import { EllipsisVertical, Eye } from \"lucide-react\";/; s#<Ellipsis />#<EllipsisVertical />#' components/devices/DeviceRowActions.tsx)",
+      "Bash(git diff *)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

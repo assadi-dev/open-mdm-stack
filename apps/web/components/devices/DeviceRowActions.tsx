@@ -1,4 +1,4 @@
-import { Ellipsis, Eye } from "lucide-react";
+import { EllipsisVertical, Eye } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/menus/DropdownMenu";
 import { DEVICE } from "@/constants/device";
@@ -11,7 +11,7 @@ export const DeviceRowActions = ({ deviceName }: DeviceRowActionsProps) => (
   <div className="flex justify-end">
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`${DEVICE.actionsFor} ${deviceName}`} />}>
-        <Ellipsis />
+        <EllipsisVertical />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem>

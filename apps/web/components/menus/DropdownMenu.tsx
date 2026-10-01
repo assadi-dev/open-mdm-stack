@@ -26,8 +26,12 @@ export const DropdownMenuItem = ({ className, ...props }: ComponentProps<typeof 
   <ShadcnDropdownMenuItem className={cn("rounded-sm px-2.5 py-2 focus:bg-primary-soft", className)} {...props} />
 );
 
+// La coche est à droite : on garde la marge droite du fichier généré et on aligne le reste sur `DropdownMenuItem`.
+export const DropdownMenuCheckboxItem = ({ className, ...props }: ComponentProps<typeof ShadcnDropdownMenuCheckboxItem>) => (
+  <ShadcnDropdownMenuCheckboxItem className={cn("rounded-sm py-2 pr-8 pl-2.5 focus:bg-primary-soft", className)} {...props} />
+);
+
 export const DropdownMenu = ShadcnDropdownMenu;
-export const DropdownMenuCheckboxItem = ShadcnDropdownMenuCheckboxItem;
 export const DropdownMenuGroup = ShadcnDropdownMenuGroup;
 export const DropdownMenuLabel = ShadcnDropdownMenuLabel;
 export const DropdownMenuPortal = ShadcnDropdownMenuPortal;

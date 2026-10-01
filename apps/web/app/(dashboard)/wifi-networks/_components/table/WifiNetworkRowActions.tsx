@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ellipsis, Pencil, Trash2 } from "lucide-react";
+import { EllipsisVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/menus/DropdownMenu";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
@@ -24,7 +24,7 @@ export const WifiNetworkRowActions = ({ network }: WifiNetworkRowActionsProps) =
         <DropdownMenuTrigger
           render={<Button variant="ghost" size="icon-sm" aria-label={`${WIFI_NETWORK.actionsFor} ${network.ssid}`} />}
         >
-          <Ellipsis />
+          <EllipsisVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>

@@ -14,11 +14,13 @@ const SECONDARY_LINE = "text-xs leading-4.5 text-muted-foreground";
 
 // L'API trie, cherche et filtre : chaque id de colonne triable est un champ qu'elle sait trier (name, security, createdAt).
 // Le mot de passe n'a pas de valeur (masque), il n'est ni trié ni cherché.
+// Le bouton « Colonnes » masque les colonnes de données ; le réseau (l'identité de la ligne) et les actions restent toujours affichés.
 export const wifiNetworkColumns = [
   // Le nom du réseau, et son SSID dessous. Sans nom, le SSID prend la première ligne.
   helper.accessor((network) => network.name ?? network.ssid, {
     id: "name",
     header: WIFI_NETWORK.table.network,
+    enableHiding: false,
     cell: ({ row }) => {
       const { name, ssid } = row.original;
 
@@ -60,5 +62,6 @@ export const wifiNetworkColumns = [
     id: "actions",
     header: () => <span className="sr-only">{WIFI_NETWORK.table.actions}</span>,
     cell: ({ row }) => <WifiNetworkRowActions network={row.original} />,
+    enableHiding: false,
   }),
 ];

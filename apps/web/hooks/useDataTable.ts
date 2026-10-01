@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   useTable,
   type ColumnFiltersState,
+  type ColumnVisibilityState,
   type OnChangeFn,
   type PaginationState,
   type RowData,
@@ -56,6 +57,7 @@ export const useDataTable = <TData extends RowData>({
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
   const [search, setSearch] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
 
   const tableColumns = useMemo(
     () => (enableSelection ? [createSelectionColumn<TData>(), ...columns] : columns),
@@ -76,14 +78,14 @@ export const useDataTable = <TData extends RowData>({
         manualSorting: true,
         manualFiltering: true,
         rowCount: server.rowCount,
-        state: { ...server.state, rowSelection },
+        state: { ...server.state, rowSelection, columnVisibility },
         onPaginationChange: clearingSelection(server.onPaginationChange),
         onSortingChange: clearingSelection(server.onSortingChange),
         onGlobalFilterChange: clearingSelection(server.onGlobalFilterChange),
         onColumnFiltersChange: clearingSelection(server.onColumnFiltersChange),
       }
     : {
-        state: { sorting, pagination, globalFilter: search, rowSelection },
+        state: { sorting, pagination, globalFilter: search, rowSelection, columnVisibility },
         onSortingChange: setSorting,
         onPaginationChange: setPagination,
         onGlobalFilterChange: setSearch,
@@ -97,6 +99,7 @@ export const useDataTable = <TData extends RowData>({
     enableRowSelection: enableSelection,
     globalFilterFn: "includesString",
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setColumnVisibility,
     ...stateOptions,
   });
 
@@ -133,6 +136,18 @@ export const useDataTable = <TData extends RowData>({
       setValue: (columnId: string, value: unknown[]) =>
         table.getColumn(columnId)?.setFilterValue(value.length > 0 ? value : undefined),
       reset: () => table.resetColumnFilters(true),
+    },
+    columnVisibility: {
+      // Les colonnes que l'utilisateur peut masquer : celles de données, pas la sélection ni les actions (`enableHiding: false`).
+      columns: table
+        .getAllLeafColumns()
+        .filter((column) => column.getCanHide())
+        .map((column) => ({
+          id: column.id,
+          label: typeof column.columnDef.header === "string" ? column.columnDef.header : column.id,
+          isVisible: column.getIsVisible(),
+          toggle: (visible: boolean) => column.toggleVisibility(visible),
+        })),
     },
     selection: {
       enabled: enableSelection,

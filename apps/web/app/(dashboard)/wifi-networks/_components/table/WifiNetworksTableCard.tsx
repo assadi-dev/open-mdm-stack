@@ -3,6 +3,7 @@
 import { Card } from "@/components/cards/Card";
 import { CardQueryState } from "@/components/cards/CardQueryState";
 import { DataTable } from "@/components/data-table/DataTable";
+import { DataTableColumnVisibility } from "@/components/data-table/DataTableColumnVisibility";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
@@ -43,7 +44,10 @@ export const WifiNetworksTableCard = ({ networks, server, isPending, isError, on
           />
 
         </div>
-        <WifiNetworksFilter dataTable={dataTable} />
+        <div className="flex items-center gap-2">
+          <WifiNetworksFilter dataTable={dataTable} />
+          <DataTableColumnVisibility dataTable={dataTable} />
+        </div>
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-56">
         <DataTable
