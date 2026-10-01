@@ -277,6 +277,7 @@ Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest`
 - **La v9 change l'API par rapport à la v8** (encore la version la plus répandue dans les exemples et tutoriels existants) : le hook s'appelle `useTable` (pas `useReactTable`), un objet `features` construit via `tableFeatures(...)` est obligatoire, et le rendu passe par la méthode `table.FlexRender` (pas d'import `flexRender` séparé). Le filtre global exige `columnFilteringFeature` avant `globalFilteringFeature`.
 - `components/data-table/data-table-features.ts` enregistre **une seule fois** les fonctionnalités : tri, pagination, filtre global (recherche) et sélection de lignes. Il exporte `dataTableFeatures`, le type `DataTableColumnDef<TData>` et `createDataTableColumnHelper<TData>()`.
 - Le hook porte tout l'état : `search` / `setSearch`, `sorting`, `pagination` (`pageIndex`, `pageCount`, `totalRows`, `previous`, `next`, `goTo`, `setPageSize`…) et `selection` (`selectedRows`, `selectedCount`, `clear`). Avec `enableSelection: true`, il ajoute la colonne de cases à cocher. `selectedRows` ne contient que les lignes **visibles** (filtrées) : une action groupée ne touche jamais une ligne masquée par la recherche.
+- **Deux modes.** Sans option `server` (mode client), `data` contient toutes les lignes et le hook trie, cherche et pagine en mémoire : réservé aux petites listes déjà chargées (ex. les cartes du tableau de bord). Avec `server` (mode serveur), l'API trie, cherche, filtre et pagine, `data` n'est que la page courante : c'est le cas de toute collection venant de l'API (voir §14).
 - Le composant reçoit le résultat du hook : `<DataTable dataTable={dataTable} />`. La recherche, la pagination et la barre d'actions (`toolbarActions`, `selectionActions`) sont optionnelles. `DataTableSearch` et `DataTablePagination` s'utilisent aussi seuls (ex. recherche dans l'en-tête d'une Card).
 - Chaque page ne définit que ses colonnes, dans `_components/<entite>-columns.tsx`, avec `createDataTableColumnHelper<Entite>()`. Le tri est **actif par défaut** sur les colonnes à accesseur : mettre `enableSorting: false` sur celles où il n'a pas de sens (statut, actions). Les colonnes numériques et les dates démarrent en tri décroissant.
 - La recherche et le tri portent sur la **valeur d'accesseur**. Pour chercher sur ce que l'utilisateur lit (ex. le libellé d'un statut), l'accesseur retourne le libellé et `cell` affiche le badge. Pour trier une date sur la date et non sur le texte, l'accesseur retourne le timestamp et `cell` le formate (`formatRelativeTime`). `enableGlobalFilter: false` exclut une colonne de la recherche.
@@ -469,3 +470,143 @@ export const DevicesPageClient = () => {
 ```
 
 Le découpage `page.tsx` / `DevicesPageClient` suit la règle du §11.
+
+## 14. Collections paginées côté serveur
+
+Un tableau dont les données viennent d'une collection de l'API ne charge jamais toute la liste : l'API pagine, trie, cherche et filtre (contrat dans `.claude/rules/backend-conventions.md` §1). L'état du tableau vit dans l'**URL**, au format même de l'API : un lien partagé, un rechargement ou le bouton retour rouvrent le tableau tel quel.
+
+```
+URL de la page  /wifi-networks?page=2&sort=name&search=bureau&security=WPA2,WPA3
+      │  nuqs
+use<Ressources>Table ─┬─ useDataTableSearchParams  →  server (état contrôlé + rowCount)  →  useDataTable({ server })
+                      │        │  query (recherche retardée)
+                      └─ useFetch<Ressource>Collection(query)  →  _services/<page>.api.ts  →  GET /api/v1/<ressource>?<query>
+                               │  proxy Next (route handler)
+API  GET /<ressource>?page=2&limit=8&search=bureau&sort=name&security=WPA2,WPA3
+```
+
+### Les briques
+
+| Brique | Rôle |
+|---|---|
+| `hooks/useDataTableSearchParams.ts` | Garde `page`, `limit`, `search`, `sort` et les filtres dans l'URL (nuqs). Renvoie `table` (état + handlers pour `useDataTable`) et `query` (la query string de l'API). |
+| `hooks/useDataTable.ts`, option `server` | Mode manuel : `data` est la page courante, `rowCount` le total de l'API. |
+| `hooks/useDebouncedValue.ts` | Retarde la recherche dans `query` (300 ms) : une requête par pause de frappe, pas une par touche. |
+| `components/data-table/data-table-search-params.ts` | Parser nuqs du tri (`-createdAt,ssid` ↔ `[{ id, desc }]`). |
+| `lib/api/dto/pagination.dto.ts` | `toPaginatedSchema(item)` : valide la réponse `{ data, metadata: { page, limit, total, totalPages } }`. |
+| `lib/api/api-handlers.ts`, `withSearchParams` | Le proxy relaie la query string telle quelle : c'est l'API qui la valide. |
+
+Le `NuqsAdapter` est monté une fois dans `app/layout.tsx`.
+
+### Règles
+
+- **Un id de colonne triable est un champ que l'API sait trier** (la liste `sortable` de son DTO). Sinon le clic sur l'en-tête envoie un `sort` refusé et l'API répond 400. Une colonne que l'API ne trie pas prend `enableSorting: false` ; une colonne `helper.display` n'est jamais triable.
+- **Un filtre porte le nom de la colonne et du paramètre de l'API.** Il est déclaré par un parser nuqs (`parseAsArrayOf(parseAsStringLiteral(KEYS))`) et se règle via la colonne : `table.getColumn("security")?.setFilterValue(["WPA2"])`.
+- **Les options de `useDataTableSearchParams` (`pageSize`, `defaultSorting`, `filters`) sont des constantes de module**, déclarées en haut du hook `use<Ressources>Table`.
+- `defaultSorting` reprend le tri par défaut de l'API : l'en-tête affiche la flèche dès l'arrivée. Les valeurs par défaut ne s'écrivent pas dans l'URL, mais `query` envoie toujours `page` et `limit` (la taille de page du front n'est pas celle de l'API), et `sort` dès qu'un tri est actif, tri par défaut compris.
+- Changer le tri, la recherche ou un filtre ramène en page 1. En mode serveur, changer de page, de tri ou de filtre vide aussi la sélection : `selectedRows` ne contient que des lignes de la page affichée.
+- **Un hook de tableau par page**, `_hooks/use<Ressources>Table.ts` (ex. `useWifiNetworksTable`), assemble `useDataTableSearchParams` et `useFetch<Ressource>Collection(query)`. Il renvoie les lignes de la page, `server` (à passer tel quel à `useDataTable({ server })`, `rowCount` compris), `isPending`, `isError` et `refetch`. `<Page>Client` l'appelle à la place des deux hooks.
+- **Lecture** : `useFetch<Ressource>Collection(query?)` ne connaît pas l'URL, il reste réutilisable hors du tableau (widget, autre page). Sans `query`, il appelle l'endpoint sans paramètre et reçoit les valeurs par défaut de l'API (page 1, 20 lignes, son tri par défaut). Il garde `placeholderData: keepPreviousData` : le tableau conserve ses lignes pendant le chargement de la page suivante au lieu de repasser en squelette.
+- **Clés** : `collection` est le préfixe de toutes les pages ; c'est lui qu'une mutation invalide (§5). Chaque page a sa clé `collectionPage(query)`.
+- **Total global** (ex. « 12 réseaux enregistrés » dans le sous-titre) : `metadata.total` compte les résultats **filtrés**. Un total qui ne doit pas bouger avec la recherche est une requête à part, `limit=1`, avec sa clé `count` sous le même préfixe.
+- **Appel API** : `fetch` vers le proxy `/api/v1/<ressource>?${query}` ; une réponse non `ok` lève `createHttpError(response.status)` (import depuis `@/lib/api/intefaces/http-errors`, jamais `api-handlers.ts` côté client : il importe `next/server`). La réponse passe par `<Ressource>Dto.parseCollection`, construit avec `toPaginatedSchema`.
+- **Proxy** : le route handler `GET` relaie `request.nextUrl.searchParams` via `withSearchParams` (dans `endpoints.ts`), sans filtrer ni renommer les paramètres.
+- `useDataTableSearchParams` lit l'URL via `useSearchParams` : une page **statique** qui l'utilise doit l'envelopper dans `<Suspense>`. Les pages du dashboard sont dynamiques (session), elles n'en ont pas besoin.
+
+### Exemple
+
+```ts
+// _services/wifi-networks.queries.ts
+const COLLECTION = ["wifi-networks", "collection"] as const;
+
+export const WIFI_NETWORKS = {
+  // Préfixe des pages du tableau et du total : l'invalider après une mutation les recharge toutes.
+  collection: COLLECTION,
+  collectionPage: (query: string) => [...COLLECTION, "page", query] as const,
+  count: [...COLLECTION, "count"] as const,
+} as const;
+```
+
+```ts
+// _dto/wifi-network.dto.ts
+const wifiNetworkCollectionSchema = toPaginatedSchema(wifiNetworkSchema);
+
+export const WifiNetworkDto = {
+  parse: (data: unknown) => wifiNetworkSchema.parse(data),
+  parseCollection: (data: unknown) => wifiNetworkCollectionSchema.parse(data),
+};
+```
+
+```ts
+// _services/wifi-networks.api.ts
+// Sans `query`, l'API applique ses valeurs par défaut.
+export const fetchWifiNetworkCollectionApi = async (query = "") => {
+  const response = await fetch(query ? `/api/v1/wifi-networks?${query}` : "/api/v1/wifi-networks");
+  if (!response.ok) throw createHttpError(response.status);
+  return WifiNetworkDto.parseCollection(await response.json());
+};
+```
+
+```ts
+// _hooks/useFetchWifiNetworkCollection.ts
+export const useFetchWifiNetworkCollection = (query = "") =>
+  useQuery({
+    queryKey: WIFI_NETWORKS.collectionPage(query),
+    queryFn: () => fetchWifiNetworkCollectionApi(query),
+    placeholderData: keepPreviousData,
+  });
+```
+
+```ts
+// _hooks/useWifiNetworksTable.ts
+const PAGE_SIZE = 8;
+const DEFAULT_SORTING: SortingState = [{ id: "createdAt", desc: true }];
+const FILTERS = { security: parseAsArrayOf(parseAsStringLiteral(WIFI_SECURITY_KEYS)) };
+const NO_NETWORKS: WifiNetwork[] = [];
+
+export const useWifiNetworksTable = () => {
+  const searchParams = useDataTableSearchParams({ pageSize: PAGE_SIZE, defaultSorting: DEFAULT_SORTING, filters: FILTERS });
+  const { data, isPending, isError, refetch } = useFetchWifiNetworkCollection(searchParams.query);
+
+  return {
+    networks: data?.data ?? NO_NETWORKS,
+    server: { ...searchParams.table, rowCount: data?.metadata.total ?? 0 },
+    isPending,
+    isError,
+    refetch,
+  };
+};
+```
+
+```tsx
+// _components/WifiNetworksPageClient.tsx
+"use client";
+
+export const WifiNetworksPageClient = () => {
+  const { networks, server, isPending, isError, refetch } = useWifiNetworksTable();
+
+  return (
+    <WifiNetworksTableCard
+      networks={networks}
+      server={server}
+      isPending={isPending}
+      isError={isError}
+      onRetry={() => refetch()}
+    />
+  );
+};
+```
+
+```tsx
+// _components/WifiNetworksTableCard.tsx
+export const WifiNetworksTableCard = ({ networks, server, ...queryState }: WifiNetworksTableCardProps) => {
+  const dataTable = useDataTable({
+    data: networks,
+    columns: wifiNetworkColumns,
+    enableSelection: true,
+    getRowId: (network) => network.id,
+    server,
+  });
+  // ...
+};
+```
