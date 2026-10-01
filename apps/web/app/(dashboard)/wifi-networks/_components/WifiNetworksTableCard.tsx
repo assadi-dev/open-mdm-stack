@@ -41,16 +41,14 @@ export const WifiNetworksTableCard = ({ networks, server, isPending, isError, on
             label={WIFI_NETWORK.filters.search.label}
             className="h-9 w-full sm:w-70"
           />
+
+        </div>
+        <div>
           <Button variant="secondary" size="sm">
             <ListFilter />
             {WIFI_NETWORK.button.filter}
           </Button>
         </div>
-        {!isPending && !isError && (
-          <span className="text-[0.8125rem] leading-4.5 text-muted-foreground tabular-nums">
-            {toResultsLabel(dataTable.pagination.totalRows)}
-          </span>
-        )}
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-56">
         <DataTable dataTable={dataTable} showSearch={false} showPagination={false} />

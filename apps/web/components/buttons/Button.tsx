@@ -37,7 +37,7 @@ export const Button = ({ variant = "default", size = "default", className, ...pr
   <ShadcnButton
     variant={isCustomVariant(variant) ? "default" : variant}
     size={size}
-    className={cn("rounded-md", VARIANT_CLASSES[variant], SIZE_CLASSES[size], className)}
+    className={cn("rounded-md cursor-pointer", VARIANT_CLASSES[variant], SIZE_CLASSES[size], className)}
     {...props}
   />
 );
