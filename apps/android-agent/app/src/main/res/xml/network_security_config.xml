@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Production default: no cleartext. All traffic must be HTTPS.
-  The debug build overlays src/debug/res/xml/network_security_config.xml,
-  which permits cleartext to any host so local dev servers work on any IP.
+  ⚠ TEMPORARY, pre-production state: cleartext HTTP is allowed for ALL hosts,
+  including in the release build — not just debug. This is because QR/NFC
+  provisioning requires a release build (debug is testOnly and gets rejected
+  by Managed Provisioning — see PROVISIONING.md), but the dev backend still
+  runs over plain HTTP on a DHCP-assigned LAN IP that changes across
+  networks, so a single-IP exception isn't practical during this phase.
+
+  MUST FIX BEFORE PRODUCTION: set cleartextTrafficPermitted="false" here
+  (or scope it to specific trusted domains) once the backend is served over
+  HTTPS. Shipping this permissive config to real devices is a genuine
+  security regression (MITM-able enrollment/heartbeat/inventory traffic).
 -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

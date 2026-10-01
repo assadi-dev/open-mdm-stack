@@ -11,9 +11,15 @@ export const generateQR = async (text: string) => {
             fs.mkdirSync(qrcodeDir, { recursive: true });
         }
         const fileName = `qrcode-${Date.now()}.png`;
-        await QRCode.toFile(path.join(qrcodeDir, fileName), text, { errorCorrectionLevel: 'H' })
+        await QRCode.toFile(path.join(qrcodeDir, fileName), text, { errorCorrectionLevel: "M" })
         return fileName;
     } catch (err) {
         console.error(err)
     }
 };
+
+
+export const generateQrSVG = async (payload: Record<string, unknown>) => {
+    const svg = await QRCode.toString(JSON.stringify(payload), { type: "svg", errorCorrectionLevel: "M", margin: 2 })
+    return svg
+}

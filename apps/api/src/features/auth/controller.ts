@@ -1,5 +1,5 @@
 import { AuthService } from "./services";
-import { validateLoginInput, validateRegisterInput } from "./validator";
+import { validateLoginInput, validateRegisterInput, validateSocialProvider } from "./validator";
 import { Request, Response } from "express";
 
 export class AuthController {
@@ -31,6 +31,24 @@ export class AuthController {
             const token = await this.authService.signJWT({ id: result.token });
             res.json({
                 token,
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    authProvider = async (req: Request, res: Response) => {
+        try {
+            const { provider } = (req.params)
+            const body = req.body;
+            const socialProvider = validateSocialProvider(provider)
+
+            const result = await this.authService.oAuthProvider(socialProvider, body);
+            result.headers.getSetCookie().forEach((cookie) => res.append("Set-Cookie", cookie));
+            return res.json({
+                socialProvider,
+                url: result.response.url,
+                redirect: result.response.redirect
             });
         } catch (error) {
             throw error;

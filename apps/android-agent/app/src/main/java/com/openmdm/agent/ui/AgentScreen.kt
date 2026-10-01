@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openmdm.agent.mqtt.MqttConnectionState
+import com.openmdm.agent.work.MdmWork
 import java.text.DateFormat
 import java.util.Date
 
@@ -56,7 +59,7 @@ fun AgentScreen(
         if (!state.isEnrolled) {
             ManualEnrollmentCard(
                 busy = state.busy,
-                onEnroll = viewModel::enrollManually,
+                onEnroll = viewModel::enroll,
             )
         }
 
@@ -68,8 +71,8 @@ fun AgentScreen(
                 OutlinedButton(onClick = viewModel::forceHeartbeat, enabled = !state.busy) {
                     Text("Heartbeat")
                 }
-                OutlinedButton(onClick = viewModel::sendInventory, enabled = !state.busy) {
-                    Text("Inventory")
+                OutlinedButton(onClick = viewModel::sendTelemetry, enabled = !state.busy) {
+                    Text("Telemetry")
                 }
             }
         }
@@ -78,6 +81,16 @@ fun AgentScreen(
             onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) },
         ) {
             Text("Paramètres")
+        }
+
+        if (state.isDeviceOwner) {
+            // Debug only: resets a test device without a full factory reset.
+            OutlinedButton(
+                onClick = viewModel::removeDeviceOwner,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) {
+                Text("Retirer Device Owner")
+            }
         }
 
         state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
@@ -95,6 +108,7 @@ private fun StatusCard(state: AgentUiState) {
             InfoRow("Admin active", if (state.isAdminActive) "yes" else "no")
             InfoRow("Enrolled", if (state.isEnrolled) "yes" else "no")
             InfoRow("Device id", state.deviceId ?: "—")
+            InfoRow("MQTT", formatMqttState(state.mqttState))
             InfoRow("Last heartbeat", formatTimestamp(state.lastHeartbeatAt))
             InfoRow("Model", state.deviceModel)
             InfoRow("OS", state.osVersion)
@@ -120,16 +134,15 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ManualEnrollmentCard(
     busy: Boolean,
-    onEnroll: (token: String, baseUrl: String) -> Unit,
+    onEnroll: (baseUrl: String, method: String) -> Unit,
 ) {
-    var code by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("") }
     var showAdvanced by remember { mutableStateOf(false) }
 
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         val contents = result.contents ?: return@rememberLauncherForActivityResult
         EnrollmentQrParser.parse(contents)?.let { parsed ->
-            onEnroll(parsed.tokenOrCode, parsed.baseUrl ?: baseUrl)
+            onEnroll(parsed.baseUrl ?: baseUrl, MdmWork.METHOD_QR)
         }
     }
 
@@ -140,15 +153,8 @@ private fun ManualEnrollmentCard(
         ) {
             Text("Enrôlement", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Saisis le code d'enrôlement, ou scanne le QR.",
+                "Aucun code requis : appuie sur Enrôler, ou scanne le QR du serveur.",
                 style = MaterialTheme.typography.bodySmall,
-            )
-            OutlinedTextField(
-                value = code,
-                onValueChange = { code = it.uppercase() },
-                label = { Text("Code d'enrôlement") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
             )
 
             if (showAdvanced) {
@@ -163,8 +169,8 @@ private fun ManualEnrollmentCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { onEnroll(code, baseUrl) },
-                    enabled = !busy && code.isNotBlank(),
+                    onClick = { onEnroll(baseUrl, MdmWork.METHOD_MANUAL) },
+                    enabled = !busy,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(if (busy) "Enrôlement…" else "Enrôler")
@@ -193,3 +199,9 @@ private fun ManualEnrollmentCard(
 
 private fun formatTimestamp(ts: Long): String =
     if (ts <= 0L) "never" else DateFormat.getDateTimeInstance().format(Date(ts))
+
+private fun formatMqttState(state: MqttConnectionState): String = when (state) {
+    MqttConnectionState.CONNECTED -> "connecté"
+    MqttConnectionState.CONNECTING -> "connexion…"
+    MqttConnectionState.DISCONNECTED -> "déconnecté"
+}

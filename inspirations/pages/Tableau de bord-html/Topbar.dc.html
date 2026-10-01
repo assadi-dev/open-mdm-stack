@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Composant — Barre supérieure</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.mdm-header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:24px;padding:16px 16px 16px 24px;background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-2xl);backdrop-filter:blur(6px)}
+.mdm-header__titles{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.mdm-header__tools{display:flex;align-items:center;gap:12px}
+.mdm-user{height:48px;padding:0 14px 0 6px;gap:10px;border-radius:var(--radius-full)}
+.mdm-user__txt{display:flex;flex-direction:column;align-items:flex-start}
+</style>
+</helmet>
+<header class="mdm-header" style="width: 1088px; box-sizing: border-box">
+<div class="mdm-header__titles">
+<sc-if value="{{hasCrumbs}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="OpenMDM.Breadcrumb">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbList">
+<sc-for list="{{crumbItems}}" as="c" hint-placeholder-count="2">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbItem">
+<sc-if value="{{c.last}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbPage">{{c.label}}</x-import>
+</sc-if>
+<sc-if value="{{c.notLast}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbLink" href="#">{{c.label}}</x-import>
+</sc-if>
+</x-import>
+<sc-if value="{{c.notLast}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbSeparator"></x-import>
+</sc-if>
+</sc-for>
+</x-import>
+</x-import>
+</sc-if>
+<h1 class="page-title" style="margin: 0">{{title}}</h1>
+<p class="caption" style="margin: 0; color: var(--muted-foreground)">{{subtitle}}</p>
+</div>
+<div class="mdm-header__tools">
+<x-import component-from-global-scope="OpenMDM.InputGroup" style="width: 300px">
+<x-import component-from-global-scope="OpenMDM.InputGroupInput" type="search" placeholder="Rechercher un appareil, un IMEI…" aria-label="Rechercher"></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroupAddon" align="inline-end">
+<x-import component-from-global-scope="OpenMDM.Icon" name="search"></x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="icon" aria-label="Notifications, 3 non lues">
+<x-import component-from-global-scope="OpenMDM.Icon" name="bell"></x-import>
+<span class="om-notif-dot"></span>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" class="mdm-user" aria-label="Compte de Assadi, administrateur du parc">
+<x-import component-from-global-scope="OpenMDM.Avatar">
+<x-import component-from-global-scope="OpenMDM.AvatarFallback">AS</x-import>
+</x-import>
+<span class="mdm-user__txt">
+<span class="body-medium">Assadi</span>
+<span class="meta" style="color: var(--muted-foreground)">Admin du parc</span>
+</span>
+<x-import component-from-global-scope="OpenMDM.Icon" name="chevron-down"></x-import>
+</x-import>
+</div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Appareils"},"subtitle":{"editor":"text","default":"1 248 appareils enrôlés · 1 106 en ligne"},"crumbs":{"editor":null,"default":[]},"$preview":{"width":1088,"height":86}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var crumbs = this.props.crumbs || [];
+    var items = crumbs.map(function (label, i) {
+      var last = i === crumbs.length - 1;
+      return { label: label, last: last, notLast: !last };
+    });
+    return {
+      title: this.props.title ?? 'Appareils',
+      subtitle: this.props.subtitle ?? '',
+      hasCrumbs: crumbs.length > 0,
+      crumbItems: items
+    };
+  }
+}
+</script>
+</body>
+</html>

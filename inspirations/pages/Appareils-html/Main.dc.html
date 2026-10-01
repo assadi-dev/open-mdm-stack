@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Appareils</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--gradient-ambient);background-attachment:fixed}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grid{display:grid;gap:20px}
+.muted{color:var(--muted-foreground)}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1024px; box-sizing: border-box; display: flex">
+<dc-import name="Sidebar" active="devices" hint-size="304px,1024px"></dc-import>
+<div style="flex-grow: 1; min-width: 0; height: 1024px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+<dc-import name="Topbar" hint-size="1088px,64px"></dc-import>
+<dc-import name="PageHeader" title="Appareils" subtitle="1 248 appareils enrôlés · 1 106 en ligne" hint-size="1088px,60px"></dc-import>
+<div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 20px">
+
+<div class="between">
+<x-import component-from-global-scope="OpenMDM.Tabs" default-value="all">
+<x-import component-from-global-scope="OpenMDM.TabsList">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+<x-import component-from-global-scope="OpenMDM.TabsTrigger" value="{{t.id}}">{{t.label}}<x-import component-from-global-scope="OpenMDM.Badge" variant="secondary">{{t.count}}</x-import></x-import>
+</sc-for>
+</x-import>
+</x-import>
+<div class="om-row" style="display: flex; gap: 8px">
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="icon" aria-label="Exporter en CSV">
+<x-import component-from-global-scope="OpenMDM.Icon" name="download"></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" href="EnrollmentD.dc.html">
+<x-import component-from-global-scope="OpenMDM.Icon" name="plus"></x-import>Enrôler un appareil</x-import>
+</div>
+</div>
+
+<x-import component-from-global-scope="OpenMDM.Card" style="padding: 0; gap: 0; overflow: hidden">
+<div class="between" style="padding: 16px 24px">
+<div class="om-row" style="display: flex; gap: 10px">
+<x-import component-from-global-scope="OpenMDM.InputGroup" style="width: 280px; height: 36px">
+<x-import component-from-global-scope="OpenMDM.InputGroupInput" type="search" placeholder="IMEI, modèle, utilisateur…" aria-label="Rechercher un appareil"></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroupAddon" align="inline-end"><x-import component-from-global-scope="OpenMDM.Icon" name="search"></x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="sm">
+<x-import component-from-global-scope="OpenMDM.Icon" name="list-filter"></x-import>Filtrer</x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="all">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" size="sm" aria-label="Groupe"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="all">Groupe : tous</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="lyon">Terrain Lyon</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="nord">Entrepôt Nord</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="all">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" size="sm" aria-label="Version Android"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="all">Android : toutes</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="14">Android 14</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="13">Android 13</x-import>
+</x-import>
+</x-import>
+</div>
+<span class="caption muted">1 248 résultats</span>
+</div>
+
+<x-import component-from-global-scope="OpenMDM.Table">
+<x-import component-from-global-scope="OpenMDM.TableHeader">
+<x-import component-from-global-scope="OpenMDM.TableRow">
+<x-import component-from-global-scope="OpenMDM.TableHead" style="padding-left: 24px"><x-import component-from-global-scope="OpenMDM.Checkbox" aria-label="Tout sélectionner"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Appareil</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Utilisateur</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Groupe</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Statut</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Batterie</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Dernier contact</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead"><span class="om-sr">Actions</span></x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableBody">
+<sc-for list="{{rows}}" as="d" hint-placeholder-count="8">
+<x-import component-from-global-scope="OpenMDM.TableRow">
+<x-import component-from-global-scope="OpenMDM.TableCell" style="padding-left: 24px"><x-import component-from-global-scope="OpenMDM.Checkbox" aria-label="{{d.selLabel}}"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<div style="display: flex; flex-direction: column">
+<a href="DeviceDetail.dc.html" class="body-medium" style="text-decoration: none; color: var(--foreground)">{{d.name}}</a>
+<span class="meta muted">N° {{d.serial}}</span>
+</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">{{d.user}}</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<div style="display: flex; flex-direction: column">
+<span>{{d.group}}</span>
+<span class="meta muted">{{d.policy}}</span>
+</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<x-import component-from-global-scope="OpenMDM.Badge" variant="{{d.status}}"><x-import component-from-global-scope="OpenMDM.Icon" name="{{d.statusIcon}}"></x-import>{{d.statusLabel}}</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<sc-if value="{{d.hasBatt}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 10px">
+<x-import component-from-global-scope="OpenMDM.Progress" value="{{d.batt}}" style="width: 64px" aria-label="Batterie"></x-import>
+<span class="om-num">{{d.battLabel}}</span>
+</div>
+</sc-if>
+<sc-if value="{{d.noBatt}}" hint-placeholder-val="{{false}}"><span class="muted">—</span></sc-if>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell" class="muted">{{d.seen}}</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell" style="text-align: right; padding-right: 24px">
+<x-import component-from-global-scope="OpenMDM.DropdownMenu">
+<x-import component-from-global-scope="OpenMDM.DropdownMenuTrigger">
+<x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="icon-sm" aria-label="{{d.actionsLabel}}"><x-import component-from-global-scope="OpenMDM.Icon" name="ellipsis"></x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.DropdownMenuContent">
+<x-import component-from-global-scope="OpenMDM.DropdownMenuItem"><x-import component-from-global-scope="OpenMDM.Icon" name="chevron-right"></x-import>Voir le détail</x-import>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+</sc-for>
+</x-import>
+</x-import>
+
+<div class="between" style="padding: 12px 24px; border-top: 1px solid var(--border)">
+<span class="caption muted">1–8 sur 1 248 appareils</span>
+<x-import component-from-global-scope="OpenMDM.Pagination" style="justify-content: flex-end">
+<x-import component-from-global-scope="OpenMDM.PaginationContent">
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationPrevious"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationLink" is-active="{{yes}}">1</x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationLink">2</x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationLink">3</x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationEllipsis"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationLink">156</x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.PaginationItem"><x-import component-from-global-scope="OpenMDM.PaginationNext"></x-import></x-import>
+</x-import>
+</x-import>
+</div>
+</x-import>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1024}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var ICO = { success: 'circle-check', info: 'info', danger: 'circle-alert', warning: 'hourglass' };
+    var r = function (name, serial, user, group, policy, status, label, batt, seen) {
+      return { name: name, serial: serial, user: user, group: group, policy: policy,
+        status: status, statusIcon: ICO[status], statusLabel: label,
+        hasBatt: batt != null, noBatt: batt == null, batt: batt, battLabel: batt + ' %',
+        seen: seen, selLabel: 'Sélectionner ' + name, actionsLabel: 'Actions pour ' + name };
+    };
+    return {
+      yes: true,
+      tabs: [
+        { id: 'all', label: 'Tous', count: '1 248' },
+        { id: 'on', label: 'En ligne', count: '1 106' },
+        { id: 'off', label: 'Hors ligne', count: '142' },
+        { id: 'nc', label: 'Non conformes', count: '37' },
+        { id: 'wait', label: 'En attente', count: '12' }
+      ],
+      rows: [
+        r('Pixel 8 · #A12F', '3A1B-7K2P', 'Bianca Seals', 'Terrain Lyon', 'Terrain — standard', 'success', 'Conforme', 72, 'il y a 3 min'),
+        r('Galaxy A54 · #7C09', 'R58N-91XC', 'Dimitri Tech', 'Terrain Lyon', 'Terrain — standard', 'danger', 'Hors ligne', 12, 'il y a 2 j'),
+        r('Pixel 7a · #B204', '2C9D-44LQ', 'Inès Moreau', 'Entrepôt Nord', 'Kiosque — entrepôt', 'success', 'Conforme', 88, 'il y a 1 min'),
+        r('Moto G54 · #33D1', 'ZY22-H7T1', 'Paul Girard', 'Livraison', 'Terrain — standard', 'info', 'Commande en cours', 54, 'il y a 6 min'),
+        r('Galaxy XCover 7 · #9E10', 'R52W-0PA3', 'Léa Fontaine', 'Entrepôt Nord', 'Kiosque — entrepôt', 'danger', 'Non conforme', 63, 'il y a 18 min'),
+        r('Pixel 8a · #C7F3', '4H1K-2ZZ8', 'Hugo Petit', 'Siège', 'Bureau — BYOD', 'success', 'Conforme', 91, 'il y a 2 min'),
+        r('Zebra TC58 · #0A77', '21-3309-88', 'Kiosque partagé', 'Entrepôt Nord', 'Kiosque — entrepôt', 'success', 'Conforme', 100, 'il y a 1 min'),
+        r('Galaxy Tab A9 · #5B2E', 'R9TW-66KD', 'Nadia Benali', 'Siège', 'Bureau — BYOD', 'warning', 'En attente', null, 'il y a 12 min')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

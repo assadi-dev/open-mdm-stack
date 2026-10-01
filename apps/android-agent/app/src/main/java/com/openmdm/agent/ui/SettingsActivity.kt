@@ -181,6 +181,15 @@ private val LOCATION_PERMISSIONS = listOf(
 )
 private val PHONE_PERMISSIONS = listOf(Manifest.permission.READ_PHONE_STATE)
 
+// Only a runtime permission from Android 13+; before that, notifications need
+// no grant, so there's nothing to request (see isNotificationGranted below).
+private val NOTIFICATION_PERMISSIONS =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        listOf(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+        emptyList()
+    }
+
 private fun storagePermissions(): List<String> =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         listOf(
@@ -197,6 +206,9 @@ private fun isGranted(context: Context, permissions: List<String>): Boolean =
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 
+private fun isNotificationGranted(context: Context): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || isGranted(context, NOTIFICATION_PERMISSIONS)
+
 private fun canInstallUnknownApps(context: Context): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
         context.packageManager.canRequestPackageInstalls()
@@ -204,6 +216,13 @@ private fun canInstallUnknownApps(context: Context): Boolean =
 private fun buildPermissionItems(context: Context): List<PermissionUiItem> {
     val storage = storagePermissions()
     return listOf(
+        PermissionUiItem(
+            title = "Notifications",
+            subtitle = "Alertes de l'agent (statut, commandes)",
+            granted = isNotificationGranted(context),
+            kind = PermKind.RUNTIME,
+            permissions = NOTIFICATION_PERMISSIONS,
+        ),
         PermissionUiItem(
             title = "Localisation",
             subtitle = "Position de l'appareil (Wi-Fi/GPS)",

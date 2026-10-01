@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Réseaux Wi-Fi</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--gradient-ambient);background-attachment:fixed}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grid{display:grid;gap:20px}
+.muted{color:var(--muted-foreground)}
+.stack{display:flex;flex-direction:column}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1024px; box-sizing: border-box; display: flex">
+<dc-import name="Sidebar" active="wifi" hint-size="304px,1024px"></dc-import>
+<div style="flex-grow: 1; min-width: 0; height: 1024px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+<dc-import name="Topbar" hint-size="1088px,64px"></dc-import>
+<dc-import name="PageHeader" title="Réseaux Wi-Fi" subtitle="4 réseaux enregistrés · 1 040 appareils connectés" hint-size="1088px,60px"></dc-import>
+<div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 20px">
+
+<div class="between">
+<span class="section-title">Réseaux enregistrés</span>
+<div style="margin-left: auto; flex: none; display: flex; width: 261px">
+<x-import component-from-global-scope="OpenMDM.AlertDialog">
+<x-import component-from-global-scope="OpenMDM.AlertDialogTrigger">
+<x-import component-from-global-scope="OpenMDM.Button"><x-import component-from-global-scope="OpenMDM.Icon" name="plus"></x-import>Ajouter une connexion wifi</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.AlertDialogContent" style="width: 440px">
+<x-import component-from-global-scope="OpenMDM.AlertDialogHeader">
+<div style="display: flex; flex-direction: column; gap: 8px; width: 100%">
+<div style="display: flex; flex-direction: row; align-items: center; gap: 12px; width: 100%">
+<span style="flex: none; display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary)"><x-import component-from-global-scope="OpenMDM.Icon" name="wifi"></x-import></span>
+<x-import component-from-global-scope="OpenMDM.AlertDialogTitle" style="margin: 0">Ajouter une connexion wifi</x-import>
+</div>
+<x-import component-from-global-scope="OpenMDM.AlertDialogDescription" class="muted" style="margin: 0">Ce réseau sera proposé lors de l’enrôlement et poussé aux appareils déjà enrôlés.</x-import>
+</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.FieldGroup" style="margin-top: 8px">
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Nom du réseau (SSID)</x-import>
+<x-import component-from-global-scope="OpenMDM.Input" placeholder="ex. Terrain-Lyon" aria-label="Nom du réseau"></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Type de sécurité</x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="wpa2">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" aria-label="Type de sécurité"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="none">Aucune</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="wep">WEP</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="wpa">WPA</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="wpa2">WPA2</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="wpa3">WPA3</x-import>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Mot de passe</x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroup">
+<x-import component-from-global-scope="OpenMDM.InputGroupInput" type="password" placeholder="8 caractères minimum" aria-label="Mot de passe"></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroupAddon" align="inline-end">
+<x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="icon-sm" aria-label="Afficher le mot de passe"><x-import component-from-global-scope="OpenMDM.Icon" name="eye"></x-import></x-import>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.AlertDialogFooter">
+<x-import component-from-global-scope="OpenMDM.AlertDialogCancel">Annuler</x-import>
+<x-import component-from-global-scope="OpenMDM.AlertDialogAction">Ajouter le réseau</x-import>
+</x-import>
+</x-import>
+</x-import>
+</div>
+</div>
+
+<div role="note" style="width: 100%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--info-soft); color: var(--foreground)">
+<span style="flex: none; display: flex; padding-top: 2px; color: var(--info-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="info"></x-import></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-weight: 600">Distribution automatique</span>
+<div class="caption" style="display: flex; flex-direction: column; gap: 4px">Ces réseaux sont proposés lors de l’enrôlement et poussés aux appareils déjà enrôlés via leur politique.</div>
+</div>
+</div>
+
+<x-import component-from-global-scope="OpenMDM.Card" style="padding: 0; gap: 0; overflow: hidden">
+<div class="between" style="padding: 16px 24px">
+<div class="om-row" style="display: flex; gap: 10px">
+<x-import component-from-global-scope="OpenMDM.InputGroup" style="width: 280px; height: 36px">
+<x-import component-from-global-scope="OpenMDM.InputGroupInput" type="search" placeholder="Rechercher un réseau" aria-label="Rechercher un réseau"></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroupAddon" align="inline-end"><x-import component-from-global-scope="OpenMDM.Icon" name="search"></x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="sm">
+<x-import component-from-global-scope="OpenMDM.Icon" name="list-filter"></x-import>Filtrer</x-import>
+</div>
+<span class="caption muted">4 résultats</span>
+</div>
+<x-import component-from-global-scope="OpenMDM.Table">
+<x-import component-from-global-scope="OpenMDM.TableHeader">
+<x-import component-from-global-scope="OpenMDM.TableRow">
+<x-import component-from-global-scope="OpenMDM.TableHead" style="padding-left: 24px"><x-import component-from-global-scope="OpenMDM.Checkbox" aria-label="Tout sélectionner"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Réseau</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Sécurité</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Mot de passe</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead">Créé le</x-import>
+<x-import component-from-global-scope="OpenMDM.TableHead"><span class="om-sr">Actions</span></x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableBody">
+<sc-for list="{{nets}}" as="n" hint-placeholder-count="4">
+<x-import component-from-global-scope="OpenMDM.TableRow">
+<x-import component-from-global-scope="OpenMDM.TableCell" style="padding-left: 24px"><x-import component-from-global-scope="OpenMDM.Checkbox" aria-label="Sélectionner {{n.ssid}}"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex: none; display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: var(--radius-md); background: var(--card-strong); color: var(--muted-foreground)"><x-import component-from-global-scope="OpenMDM.Icon" name="wifi"></x-import></span>
+<div style="display: flex; flex-direction: column">
+<span class="body-medium">{{n.ssid}}</span>
+<span class="meta muted">{{n.band}}</span>
+</div>
+</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell">
+<x-import component-from-global-scope="OpenMDM.Badge" variant="{{n.secVariant}}">{{n.security}}</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell" style="position: relative; width: 186px; height: 66px">
+<div style="position: absolute; top: 50%; left: 16px; transform: translateY(-50%); display: flex; align-items: center; gap: 4px; justify-content: center; flex-direction: row">
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground)"></span>
+</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell" class="muted om-num">{{n.createdAt}}</x-import>
+<x-import component-from-global-scope="OpenMDM.TableCell" style="text-align: right; padding-right: 24px">
+<x-import component-from-global-scope="OpenMDM.DropdownMenu">
+<x-import component-from-global-scope="OpenMDM.DropdownMenuTrigger">
+<x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="icon-sm" aria-label="Actions pour {{n.ssid}}"><x-import component-from-global-scope="OpenMDM.Icon" name="ellipsis"></x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.DropdownMenuContent">
+<x-import component-from-global-scope="OpenMDM.DropdownMenuItem"><x-import component-from-global-scope="OpenMDM.Icon" name="pencil"></x-import>Modifier</x-import>
+<x-import component-from-global-scope="OpenMDM.DropdownMenuItem" style="color: var(--danger-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="trash-2"></x-import>Supprimer</x-import>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+</sc-for>
+</x-import>
+</x-import>
+</x-import>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1024}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var n = function (ssid, band, security, secVariant, createdAt) {
+      return { ssid: ssid, band: band, security: security, secVariant: secVariant, createdAt: createdAt };
+    };
+    return {
+      nets: [
+        n('Entrepôt-Nord-5G', '5 GHz · caché', 'WPA2', 'secondary', '03/02/2026'),
+        n('Terrain-Lyon', '2,4 GHz', 'WPA2', 'secondary', '18/11/2025'),
+        n('Siège-Corp', '5 GHz', 'WPA3', 'secondary', '07/06/2026'),
+        n('Kiosque-Entrepôt', '2,4 GHz · hérité', 'WEP', 'warning', '22/09/2023')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { ENV } from "@config/env"
 import { jwt } from "better-auth/plugins"
 import { db } from "src/drizzle/instance";
-import * as schema from "@schemas/auth-schema";
+import * as schema from "@repo/db/schemas/auth-schema";
 
 
 export const auth = betterAuth({
@@ -11,8 +11,16 @@ export const auth = betterAuth({
         provider: "pg",
         schema,
     }),
+    trustedOrigins: [ENV.APP_CLIENT_URL],
     emailAndPassword: {
         enabled: true,
+    },
+    socialProviders: {
+        google: {
+            clientId: ENV.GOOGLE_CLIENT_ID,
+            clientSecret: ENV.GOOGLE_CLIENT_SECRET,
+        },
+
     },
     plugins: [jwt()],
     user: {

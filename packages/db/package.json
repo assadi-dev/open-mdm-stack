@@ -1,0 +1,30 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.1",
+  "private": true,
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2",
+    "@types/pg": "^8.20.0"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "dotenv": "^17.2.3",
+    "pg": "^8.23.0",
+    "zod": "^4.1.13"
+  }
+}

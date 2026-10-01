@@ -1,20 +1,29 @@
 package com.openmdm.agent.data.remote
 
+import com.openmdm.agent.data.remote.dto.ChallengeResponse
 import com.openmdm.agent.data.remote.dto.EnrollRequest
 import com.openmdm.agent.data.remote.dto.EnrollResponse
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.data.remote.dto.InventoryRequest
 import com.openmdm.agent.data.remote.dto.SimpleOkResponse
+import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
 /**
- * Retrofit surface for the MDM backend. The [EnrollRequest] call is the only
- * unauthenticated endpoint; the others are authenticated with the device JWT
- * obtained at enrollment (injected by [AuthInterceptor]).
+ * Retrofit surface for the MDM backend. [challenge] and [enroll] are the only
+ * unauthenticated endpoints (the single-use challenge from the former IS the
+ * enrollment authorization, see [EnrollRequest]); the others are
+ * authenticated with the device JWT obtained at enrollment (injected by
+ * [AuthInterceptor]).
  */
 interface DeviceApi {
+
+    @GET("api/v1/enrollment/challenge")
+    suspend fun challenge(): ChallengeResponse
 
     @POST("api/v1/devices/enroll")
     suspend fun enroll(@Body body: EnrollRequest): EnrollResponse
@@ -25,9 +34,18 @@ interface DeviceApi {
         @Body body: HeartbeatRequest,
     ): SimpleOkResponse
 
+    // Not yet called by the agent — full software/hardware inventory (apps
+    // list included) is a later chantier. See [telemetry] for the current
+    // hardware-facts report.
     @POST("api/v1/devices/{deviceId}/inventory")
     suspend fun inventory(
         @Path("deviceId") deviceId: String,
         @Body body: InventoryRequest,
+    ): SimpleOkResponse
+
+    @PATCH("api/v1/devices/{deviceId}/telemetry")
+    suspend fun telemetry(
+        @Path("deviceId") deviceId: String,
+        @Body body: TelemetryRequest,
     ): SimpleOkResponse
 }

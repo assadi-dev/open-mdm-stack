@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Composant — Sidebar</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 304px; height: {{hpx}}; box-sizing: border-box">
+<x-import component-from-global-scope="OpenMDM.Sidebar" variant="floating" style="height: {{hpx}}">
+<x-import component-from-global-scope="OpenMDM.SidebarHeader">
+<div class="section-title" style="padding: 2px 6px">Open MDM</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarContent">
+<x-import component-from-global-scope="OpenMDM.SidebarGroup">
+<x-import component-from-global-scope="OpenMDM.SidebarGroupLabel">Parc</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarGroupContent">
+<x-import component-from-global-scope="OpenMDM.SidebarMenu">
+<sc-for list="{{main}}" as="item" hint-placeholder-count="6">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuItem">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuButton" href="{{item.href}}" is-active="{{item.on}}">
+<x-import component-from-global-scope="OpenMDM.Icon" name="{{item.icon}}"></x-import>
+<span>{{item.label}}</span>
+</x-import>
+<sc-if value="{{item.badge}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuBadge" aria-label="{{item.badgeLabel}}">{{item.badge}}</x-import>
+</sc-if>
+</x-import>
+</sc-for>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarGroup">
+<x-import component-from-global-scope="OpenMDM.SidebarGroupLabel">Administration</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarGroupContent">
+<x-import component-from-global-scope="OpenMDM.SidebarMenu">
+<sc-for list="{{admin}}" as="item" hint-placeholder-count="4">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuItem">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuButton" href="{{item.href}}" is-active="{{item.on}}">
+<x-import component-from-global-scope="OpenMDM.Icon" name="{{item.icon}}"></x-import>
+<span>{{item.label}}</span>
+</x-import>
+</x-import>
+</sc-for>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarFooter">
+<x-import component-from-global-scope="OpenMDM.Item" variant="muted" size="sm">
+<x-import component-from-global-scope="OpenMDM.ItemContent">
+<x-import component-from-global-scope="OpenMDM.ItemTitle">Broker MQTT</x-import>
+<x-import component-from-global-scope="OpenMDM.ItemDescription">1 106 appareils connectés</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.ItemActions">
+<x-import component-from-global-scope="OpenMDM.Badge" variant="success"><span class="om-badge__dot" aria-hidden="true"></span>En ligne</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.SidebarMenu">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuItem">
+<x-import component-from-global-scope="OpenMDM.SidebarMenuButton" href="#" style="color: var(--danger-text)">
+<x-import component-from-global-scope="OpenMDM.Icon" name="log-out"></x-import>
+<span>Déconnexion</span>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["dashboard","devices","policies","enroll","apps","commands","groups","wifi","audit","settings"],"default":"devices"},"height":{"editor":null,"default":1024},"$preview":{"width":304,"height":1024}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var active = this.props.active ?? 'devices';
+    var it = function (id, icon, label, href, badge) {
+      var on = id === active;
+      return { icon: icon, label: label, href: href || '#', on: on, badge: badge || false, badgeLabel: badge ? badge + ' alertes' : '' };
+    };
+    return {
+      hpx: (this.props.height ?? 1024) + 'px',
+      main: [
+        it('dashboard', 'layout-dashboard', 'Tableau de bord', 'Dashboard.dc.html'),
+        it('devices', 'smartphone', 'Appareils', 'Main.dc.html', '3'),
+        it('policies', 'shield-check', 'Politiques', 'Policies.dc.html'),
+        it('enroll', 'qr-code', 'Enrôlement', 'EnrollmentD.dc.html'),
+        it('apps', 'package', 'Applications', '#'),
+        it('commands', 'send', 'Commandes', '#')
+      ],
+      admin: [
+        it('groups', 'layers', 'Groupes', '#'),
+        it('wifi', 'wifi', 'Réseaux Wi-Fi', 'WifiNetworks.dc.html'),
+        it('audit', 'scroll-text', "Journal d'audit", '#'),
+        it('settings', 'settings', 'Paramètres', '#')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

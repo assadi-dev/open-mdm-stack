@@ -15,18 +15,18 @@ android {
     defaultConfig {
         applicationId = "com.openmdm.agent"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 38
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Default MDM server base URL. 10.0.2.2 is the host loopback from the
         // Android emulator; the API listens on 5573. Override per build type.
-        buildConfigField("String", "MDM_BASE_URL", "\"http://10.192.2.9:5573/\"")
+        buildConfigField("String", "MDM_SERVER_URL", "\"http://10.192.2.120:5573/\"")
         // When true, the network layer is backed by a local stub instead of the
         // (not-yet-implemented) real backend. See di/NetworkModule.
         buildConfigField("boolean", "USE_MOCK", "false")
+        buildConfigField("String", "ENVIRONMENT", "\"dev\"")
     }
 
     // Stable signing identity shared across the team so the QR-provisioning
@@ -44,6 +44,19 @@ android {
         debug {
             signingConfig = signingConfigs.getByName("mdmDev")
         }
+        // Same as debug (debuggable, mdmDev-signed) but additionally marked
+        // android:testOnly="true" (see src/buildTestOnly/AndroidManifest.xml)
+        // so a provisioned Device Owner can be removed with
+        // `adb shell dpm remove-active-admin` — impossible for a non-test
+        // owner. Kept separate from plain `debug` so a regular debug build
+        // stays install-only-via-testOnly-free, matching what QR/NFC
+        // provisioning would need if debug were ever used for that (it isn't
+        // — see PROVISIONING.md).
+        create("buildTestOnly") {
+            initWith(getByName("debug"))
+            isDebuggable = true
+            isJniDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("mdmDev")
@@ -60,6 +73,22 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    // The HiveMQ MQTT client pulls in Netty, whose jars each ship the same
+    // META-INF housekeeping files (versions.properties, INDEX.LIST, license
+    // headers) — harmless duplicates for packaging, so they're dropped
+    // instead of merged.
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
+            )
+        }
     }
 }
 
@@ -86,6 +115,9 @@ dependencies {
 
     // QR scanning (optional enrollment channel)
     implementation(libs.zxing.android.embedded)
+
+    // MQTT (remote commands + presence)
+    implementation(libs.hivemq.mqtt.client)
 
     // Networking
     implementation(libs.retrofit)

@@ -5,8 +5,99 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1782430633133,
-      "tag": "0000_cute_prima",
+      "when": 1789683585238,
+      "tag": "0000_huge_lilandra",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789696233371,
+      "tag": "0001_living_misty_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790145700668,
+      "tag": "0002_melted_gorgon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790158382352,
+      "tag": "0003_gorgeous_matthew_murdock",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790163801329,
+      "tag": "0004_robust_blacklash",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790166420847,
+      "tag": "0005_dark_mysterio",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790167617937,
+      "tag": "0006_noisy_expediter",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790167632983,
+      "tag": "0007_mute_jack_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790174601189,
+      "tag": "0008_past_gideon",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790175275708,
+      "tag": "0009_pretty_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790176889106,
+      "tag": "0010_rename_is_screen_locked",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790180517431,
+      "tag": "0011_daily_leader",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790497617041,
+      "tag": "0012_add_wifi_networks",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790502256075,
+      "tag": "0013_bent_drax",
       "breakpoints": true
     }
   ]

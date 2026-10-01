@@ -1,6 +1,11 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "DATABASE_URL",
+    "BETTER_AUTH_URL",
+    "BETTER_AUTH_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [
@@ -26,7 +31,19 @@
         "^check-types"
       ]
     },
+    "test:e2e": {
+      "cache": false,
+      "passThroughEnv": [
+        "CI",
+        "E2E_USER_EMAIL",
+        "E2E_USER_PASSWORD",
+        "PLAYWRIGHT_BASE_URL"
+      ]
+    },
     "dev": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     }

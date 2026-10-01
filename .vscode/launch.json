@@ -1,0 +1,50 @@
+{
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "MDM project dev",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "web",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev",
+                "--workspace=apps/web"
+            ],
+            "port": 3000
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "api",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev",
+                "--workspace=apps/api"
+            ],
+            "port": 5573
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Drizzle studio",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "db:studio",
+                "--workspace=apps/api"
+            ]
+        },
+    ]
+}

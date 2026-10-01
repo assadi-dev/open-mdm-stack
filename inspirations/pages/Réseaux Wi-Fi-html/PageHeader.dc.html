@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Composant — En-tête de page</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.mdm-page-header{display:flex;flex-direction:column;gap:4px;padding:4px 4px 0}
+</style>
+</helmet>
+<div class="mdm-page-header" style="width: 1088px; box-sizing: border-box">
+<sc-if value="{{hasCrumbs}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="OpenMDM.Breadcrumb">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbList">
+<sc-for list="{{crumbItems}}" as="c" hint-placeholder-count="2">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbItem">
+<sc-if value="{{c.last}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbPage">{{c.label}}</x-import>
+</sc-if>
+<sc-if value="{{c.notLast}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbLink" href="#">{{c.label}}</x-import>
+</sc-if>
+</x-import>
+<sc-if value="{{c.notLast}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.BreadcrumbSeparator"></x-import>
+</sc-if>
+</sc-for>
+</x-import>
+</x-import>
+</sc-if>
+<h1 class="page-title" style="margin: 0">{{title}}</h1>
+<p class="caption" style="margin: 0; color: var(--muted-foreground)">{{subtitle}}</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Appareils"},"subtitle":{"editor":"text","default":"1 248 appareils enrôlés · 1 106 en ligne"},"crumbs":{"editor":null,"default":[]},"$preview":{"width":1088,"height":60}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var crumbs = this.props.crumbs || [];
+    var items = crumbs.map(function (label, i) {
+      var last = i === crumbs.length - 1;
+      return { label: label, last: last, notLast: !last };
+    });
+    return {
+      title: this.props.title ?? 'Appareils',
+      subtitle: this.props.subtitle ?? '',
+      hasCrumbs: crumbs.length > 0,
+      crumbItems: items
+    };
+  }
+}
+</script>
+</body>
+</html>

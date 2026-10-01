@@ -2,6 +2,7 @@ package com.openmdm.agent.di
 
 import android.content.Context
 import com.openmdm.agent.BuildConfig
+import com.openmdm.agent.data.local.DeviceKeyStore
 import com.openmdm.agent.data.local.SecureDeviceStore
 import com.openmdm.agent.data.remote.AuthInterceptor
 import com.openmdm.agent.data.remote.DeviceApi
@@ -9,6 +10,8 @@ import com.openmdm.agent.data.remote.MockDeviceApi
 import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.device.DeviceOwnerManager
 import com.openmdm.agent.inventory.InventoryCollector
+import com.openmdm.agent.mqtt.CommandExecutor
+import com.openmdm.agent.mqtt.DeviceMqttGateway
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -27,19 +30,29 @@ class AppContainer(private val appContext: Context) {
 
     val secureStore: SecureDeviceStore by lazy { SecureDeviceStore(appContext) }
 
+    val deviceKeyStore: DeviceKeyStore by lazy { DeviceKeyStore() }
+
     val deviceOwnerManager: DeviceOwnerManager by lazy { DeviceOwnerManager(appContext) }
+
+    val mqttGateway: DeviceMqttGateway by lazy { DeviceMqttGateway(secureStore) }
+
+    val commandExecutor: CommandExecutor by lazy { CommandExecutor(deviceOwnerManager) }
 
     val inventoryCollector: InventoryCollector by lazy { InventoryCollector(appContext) }
 
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+        // Optional device-info fields must be OMITTED, not sent as explicit
+        // `null`, when absent: the server validates the enroll payload with
+        // zod's `.optional()`, which accepts `undefined` but rejects `null`.
+        explicitNulls = false
     }
 
     private val deviceApi: DeviceApi by lazy { buildDeviceApi() }
 
     val deviceRepository: DeviceRepository by lazy {
-        DeviceRepository(deviceApi, secureStore, inventoryCollector)
+        DeviceRepository(deviceApi, secureStore, inventoryCollector, deviceKeyStore)
     }
 
     private fun buildDeviceApi(): DeviceApi {
@@ -60,7 +73,7 @@ class AppContainer(private val appContext: Context) {
         // A device-provided base URL (from the QR provisioning extras) takes
         // precedence over the compile-time default.
         val baseUrl = secureStore.serverBaseUrl?.takeIf { it.isNotBlank() }
-            ?: BuildConfig.MDM_BASE_URL
+            ?: BuildConfig.MDM_SERVER_URL
 
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()

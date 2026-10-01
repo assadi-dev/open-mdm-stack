@@ -2,7 +2,7 @@
 import { relations } from "drizzle-orm";
 import { uuid } from "drizzle-orm/pg-core";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema";
+import { user } from "@repo/db/schemas/auth-schema";
 import { updatedAndCreatedAt, deletedAt } from "../timestampable";
 
 export const tenants = pgTable("tenants", {

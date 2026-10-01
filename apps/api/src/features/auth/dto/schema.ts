@@ -17,4 +17,8 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 export const authDecoder = {
     register: (data: unknown) => registerInputSchema.safeParse(data),
     login: (data: unknown) => loginInputSchema.safeParse(data),
+    socialProvider: (data: unknown) => socialProviderSchema.safeParse(data),
 }
+
+export const socialProviderSchema = z.enum(["google", "github", "apple"])
+export type SocialProvider = z.infer<typeof socialProviderSchema>;

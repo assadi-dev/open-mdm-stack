@@ -1,5 +1,5 @@
 import { auth } from "@lib/auth";
-import { LoginInput, RegisterInput } from "./dto/schema";
+import { LoginInput, RegisterInput, SocialProvider } from "./dto/schema";
 import { AuthResponse } from "./type";
 import { JWTPayload } from "better-auth";
 import { ENV } from "@config/env";
@@ -33,6 +33,19 @@ export class AuthService {
             }
         })
         return response;
+    }
+
+    async oAuthProvider(provider: SocialProvider, inputs: any) {
+
+        const res = await auth.api.signInSocial({
+            returnHeaders: true,
+            body: {
+                provider,
+                callbackURL: `${ENV.APP_CLIENT_URL}`,
+                errorCallbackURL: `${ENV.APP_CLIENT_FALLBACK_URL}`,
+            }
+        })
+        return res;
     }
 
     async logout(jwtToken: string): Promise<void> {

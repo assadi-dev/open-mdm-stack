@@ -10,12 +10,26 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
+    <!-- Lets EnrollWorker promote itself via setForeground() so enrollment
+         survives MainActivity losing focus right after provisioning (Doze/
+         standby otherwise kills the WorkManager job when nothing keeps the
+         process at foreground priority — see EnrollWorker). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+    <!-- Persistent MQTT connection (remote commands + presence), see
+         mqtt.MqttConnectionService. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Serial number read (granted silently to a Device Owner). -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- Status notifications (e.g. enrollment success). Runtime permission on
+         Android 13+; silently granted to ourselves as Device Owner via
+         DevicePolicyManager.setPermissionGrantState (see
+         MdmDeviceAdminReceiver), no user prompt needed. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Storage (runtime). Legacy permission up to Android 12, granular media
          permissions on Android 13+. -->
@@ -76,6 +90,17 @@
             android:label="@string/settings_title"
             android:theme="@style/Theme.Mdmandroidagent" />
 
+        <!-- Invisible: only asks the system to dismiss the keyguard (see
+             mqtt.UnlockActivity / DeviceOwnerManager.requestUnlock). -->
+        <activity
+            android:name=".mqtt.UnlockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:turnScreenOn="true" />
+
         <!-- Device Owner / device-admin receiver. -->
         <receiver
             android:name=".device.MdmDeviceAdminReceiver"
@@ -92,6 +117,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- Persistent MQTT connection: remote commands + presence. -->
+        <service
+            android:name=".mqtt.MqttConnectionService"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging" />
+
         <!-- Re-arm the heartbeat after reboot. -->
         <receiver
             android:name=".work.BootReceiver"
@@ -101,6 +132,17 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- WorkManager's own SystemForegroundService declares no
+             foregroundServiceType by default; on API 34+ the type passed to
+             ForegroundInfo (shortService, see EnrollWorker) must be a subset
+             of what's declared here, or startForeground() throws
+             IllegalArgumentException at runtime (crash observed without
+             this override — every setForeground() call failed). -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="shortService"
+            tools:node="merge" />
 
         <!-- Disable WorkManager's default initializer: MdmAgentApp provides an
              on-demand Configuration with the custom WorkerFactory. -->

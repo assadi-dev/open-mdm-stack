@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.openmdm.agent.MdmAgentApp
 import com.openmdm.agent.di.AppContainer
+import com.openmdm.agent.mqtt.MqttConnectionState
 import com.openmdm.agent.work.MdmWork
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,6 +28,7 @@ data class AgentUiState(
     val serial: String = "",
     val busy: Boolean = false,
     val message: String? = null,
+    val mqttState: MqttConnectionState = MqttConnectionState.DISCONNECTED,
 )
 
 class AgentViewModel(
@@ -40,6 +44,9 @@ class AgentViewModel(
 
     init {
         refresh()
+        container.mqttGateway.connectionState
+            .onEach { mqttState -> _state.update { it.copy(mqttState = mqttState) } }
+            .launchIn(viewModelScope)
     }
 
     fun refresh() {
@@ -53,20 +60,21 @@ class AgentViewModel(
                 lastHeartbeatAt = repository.lastHeartbeatAt,
                 deviceModel = "${info.manufacturer} ${info.model}",
                 osVersion = info.osVersion,
-                serial = info.serial,
+                serial = info.serial.orEmpty(),
             )
         }
     }
 
-    /** Dev fallback enrollment (when provisioned via ADB rather than QR). */
-    fun enrollManually(token: String, baseUrl: String) {
-        if (token.isBlank()) {
-            _state.update { it.copy(message = "Enrollment token is required") }
-            return
-        }
+    /**
+     * Self-service enrollment: no token/code required, only an optional
+     * server base URL override. Used both from the manual UI fallback and
+     * after scanning a QR (see [EnrollmentQrParser], which only extracts a
+     * `serverBaseUrl`).
+     */
+    fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.enroll(token.trim(), baseUrl.trim().ifBlank { null })
+            val result = repository.enroll(baseUrl.trim().ifBlank { null }, method)
             result.onSuccess {
                 MdmWork.schedulePeriodicHeartbeat(getApplication())
             }
@@ -80,31 +88,53 @@ class AgentViewModel(
         }
     }
 
+    /**
+     * Sends both the heartbeat and the telemetry snapshot — two independent
+     * calls (see [DeviceRepository.sendHeartbeat]/[DeviceRepository.sendTelemetry]),
+     * each with its own outcome reflected in [AgentUiState.message] rather
+     * than one masking the other.
+     */
     fun forceHeartbeat() {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.sendHeartbeat()
+            val heartbeat = repository.sendHeartbeat()
+            val telemetry = repository.sendTelemetry()
             _state.update {
                 it.copy(
                     busy = false,
-                    message = if (result.isSuccess) "Heartbeat sent" else "Heartbeat failed",
+                    message = "Heartbeat ${if (heartbeat.isSuccess) "sent" else "failed"}, " +
+                        "telemetry ${if (telemetry.isSuccess) "sent" else "failed"}",
                 )
             }
             refresh()
         }
     }
 
-    fun sendInventory() {
+    fun sendTelemetry() {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.sendInventory()
+            val result = repository.sendTelemetry()
             _state.update {
                 it.copy(
                     busy = false,
-                    message = if (result.isSuccess) "Inventory sent" else "Inventory failed",
+                    message = if (result.isSuccess) "Telemetry sent" else "Telemetry failed",
                 )
             }
         }
+    }
+
+    /**
+     * Debug convenience: relinquishes Device Owner locally, for resetting a
+     * test device without a full factory reset (`adb shell dpm
+     * remove-active-admin` refuses on a non-test admin — only the owner app
+     * itself can step down, see [com.openmdm.agent.device.DeviceOwnerManager.clearDeviceOwner]).
+     */
+    fun removeDeviceOwner() {
+        val success = owner.clearDeviceOwner()
+        _state.update {
+            it.copy(message = if (success) "Device owner retiré" else "Échec du retrait")
+        }
+        refresh()
     }
 
     companion object {
