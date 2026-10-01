@@ -11,8 +11,9 @@ const REGISTERED_COUNT_QUERY = "limit=1";
 // L'ajout, la modification et la suppression restent sur `_mocks/` : le proxy n'expose pas encore POST, PATCH ni DELETE.
 // Passer à l'API réelle : remplacer chaque mock par un `fetch` (POST /wifi-networks, PATCH et DELETE /wifi-networks/:id).
 
-export const fetchWifiNetworkCollectionApi = async (query: string) => {
-  const response = await fetch(`${COLLECTION_URL}?${query}`);
+// Sans `query`, l'API applique ses valeurs par défaut : page 1, 20 lignes, les plus récentes d'abord.
+export const fetchWifiNetworkCollectionApi = async (query = "") => {
+  const response = await fetch(query ? `${COLLECTION_URL}?${query}` : COLLECTION_URL);
   if (!response.ok) throw createHttpError(response.status);
   return WifiNetworkDto.parseCollection(await response.json());
 };
