@@ -1,27 +1,67 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/popovers/Popover";
-import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/sheets/Sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/sheets/Sheet";
 import { DATA_TABLE } from "@/constants/data-table";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type DataTableFilterProps = {
   // Libellé du bouton déclencheur (« Filtrer »).
   label: string;
-  // Nombre de valeurs cochées (`dataTable.filters.activeCount`) : le badge du bouton, seul indice que le tableau est filtré.
+  // Nombre de valeurs appliquées (`dataTable.filters.activeCount`) : le badge du bouton, seul indice que le tableau est filtré.
   activeCount: number;
+  // La page garde un brouillon : « Appliquer » le transmet au tableau, « Réinitialiser » le vide et l'applique.
+  onApply: () => void;
   onReset: () => void;
-  // Les champs de filtre de la page. Ils s'appliquent en direct : l'état est dans l'URL, pas de bouton « Appliquer ».
+  // Appelé à chaque ouverture : la page y recopie les filtres appliqués dans son brouillon.
+  onOpen?: () => void;
+  // Faux quand il n'y a rien à réinitialiser (ni filtre appliqué, ni valeur cochée).
+  canReset: boolean;
+  // Les champs de filtre de la page, liés à son brouillon.
   children: ReactNode;
 };
 
+type FilterActionsProps = {
+  size: "default" | "sm";
+  canReset: boolean;
+  onApply: () => void;
+  onReset: () => void;
+};
+
+// Appliquer au-dessus, Réinitialiser dessous, chacun sur toute la largeur.
+const FilterActions = ({ size, canReset, onApply, onReset }: FilterActionsProps) => (
+  <>
+    <Button size={size} className="w-full" onClick={onApply}>
+      {DATA_TABLE.filter.apply}
+    </Button>
+    <Button variant="outline" size={size} className="w-full" disabled={!canReset} onClick={onReset}>
+      {DATA_TABLE.filter.reset}
+    </Button>
+  </>
+);
+
 // Le bouton « Filtrer » d'un tableau : un popover ancré au bouton sur desktop, un panneau qui monte du bas sur mobile.
-// Le contenu est le même des deux côtés ; seule la coquille change.
-export const DataTableFilter = ({ label, activeCount, onReset, children }: DataTableFilterProps) => {
+// Le contenu est le même des deux côtés ; seule la coquille change. Les actions sont toujours en bas de la carte :
+// colonne flex, contenu en haut, boutons en bas.
+export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, canReset, children }: DataTableFilterProps) => {
   const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  const handleOpenChange = (next: boolean) => {
+    if (next) onOpen?.();
+    setOpen(next);
+  };
+  const handleApply = () => {
+    onApply();
+    setOpen(false);
+  };
+  const handleReset = () => {
+    onReset();
+    setOpen(false);
+  };
 
   const trigger = (
     <Button variant="secondary" size="sm">
@@ -36,24 +76,19 @@ export const DataTableFilter = ({ label, activeCount, onReset, children }: DataT
     </Button>
   );
 
-  const resetButton = (
-    <Button variant="ghost" size="sm" disabled={activeCount === 0} onClick={onReset}>
-      {DATA_TABLE.filter.reset}
-    </Button>
-  );
-
   if (isMobile) {
     return (
-      <Sheet>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger render={trigger} />
-        <SheetContent side="bottom">
-          <SheetHeader className="p-5 pr-14">
-            <SheetTitle>{DATA_TABLE.filter.title}</SheetTitle>
-          </SheetHeader>
-          <div className="overflow-y-auto px-5 pb-5">{children}</div>
-          <SheetFooter className="flex-row justify-between border-t border-border p-4">
-            {resetButton}
-            <SheetClose variant="default">{DATA_TABLE.filter.done}</SheetClose>
+        <SheetContent side="bottom" className="justify-between">
+          <div className="flex min-h-0 flex-col">
+            <SheetHeader className="p-5 pr-14">
+              <SheetTitle>{DATA_TABLE.filter.title}</SheetTitle>
+            </SheetHeader>
+            <div className="overflow-y-auto px-5 pb-5">{children}</div>
+          </div>
+          <SheetFooter className="border-t border-border p-4">
+            <FilterActions size="default" canReset={canReset} onApply={handleApply} onReset={handleReset} />
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -61,14 +96,18 @@ export const DataTableFilter = ({ label, activeCount, onReset, children }: DataT
   }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger render={trigger} />
-      <PopoverContent>
-        <PopoverHeader>
-          <PopoverTitle>{DATA_TABLE.filter.title}</PopoverTitle>
-        </PopoverHeader>
-        {children}
-        <div className="-mb-1 flex justify-end">{resetButton}</div>
+      <PopoverContent className="justify-between">
+        <div className="flex flex-col gap-3">
+          <PopoverHeader>
+            <PopoverTitle>{DATA_TABLE.filter.title}</PopoverTitle>
+          </PopoverHeader>
+          {children}
+        </div>
+        <div className="flex flex-col gap-2">
+          <FilterActions size="sm" canReset={canReset} onApply={handleApply} onReset={handleReset} />
+        </div>
       </PopoverContent>
     </Popover>
   );

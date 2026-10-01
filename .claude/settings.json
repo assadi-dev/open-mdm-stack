@@ -261,7 +261,10 @@
       "Bash(npx --yes ctx7@latest docs /websites/base-ui_react \"Combobox multiple selection with chips: Combobox.Root multiple, Chips, Chip, ChipRemove, anchor ref, value/onValueChange, items grouped\")",
       "Bash(sed -i '' 's#page.getByLabel\\(\"WPA2\", { exact: true }\\)#page.getByRole\\(\"checkbox\", { name: \"WPA2\" }\\)#; s#page.getByLabel\\(\"WPA3\", { exact: true }\\)#page.getByRole\\(\"checkbox\", { name: \"WPA3\" }\\)#' verify.cjs)",
       "Bash(sed -i '' 's#const trigger = page.getByRole\\(\"button\", { name: /^Filtrer/ }\\);#const trigger = page.locator\\(\"button\", { hasText: \"Filtrer\" }\\);#' verify.cjs)",
-      "Bash(md5 -q desktop-light-checked.png desktop-dark-checked.png mobile-light-checked.png mobile-dark-checked.png)"
+      "Bash(md5 -q desktop-light-checked.png desktop-dark-checked.png mobile-light-checked.png mobile-dark-checked.png)",
+      "Bash(sed -i '' 's#^const URL = #const PAGE_URL = #; s#page.goto\\(URL,#page.goto\\(PAGE_URL,#' verify2.cjs)",
+      "Bash(node verify2.cjs)",
+      "Bash(cd /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory *)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

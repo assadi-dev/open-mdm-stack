@@ -5,8 +5,8 @@ export const DATA_TABLE = {
   },
   filter: {
     title: "Filtres",
+    apply: "Appliquer les filtres",
     reset: "Réinitialiser",
-    done: "Terminé",
     active: "filtres actifs",
   },
   empty: "Aucun résultat.",

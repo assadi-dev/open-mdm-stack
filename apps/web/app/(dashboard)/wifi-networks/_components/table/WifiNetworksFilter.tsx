@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Checkbox } from "@/components/checkboxes/Checkbox";
 import { DataTableFilter } from "@/components/data-table/DataTableFilter";
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/fields/Field";
@@ -17,19 +18,31 @@ type WifiNetworksFilterProps = {
 };
 
 // Le seul filtre de l'API : un ou plusieurs types de sécurité (`security=WPA2,WPA3`).
+// Les cases modifient un brouillon ; le tableau (donc l'URL) ne change qu'à « Appliquer ».
 export const WifiNetworksFilter = ({ dataTable }: WifiNetworksFilterProps) => {
   const { filters } = dataTable;
-  const selected = filters.getValue<WifiSecurity[]>(SECURITY_FILTER) ?? NO_SECURITY;
+  const applied = filters.getValue<WifiSecurity[]>(SECURITY_FILTER) ?? NO_SECURITY;
+  const [draft, setDraft] = useState<WifiSecurity[]>(applied);
 
-  // Rebâtie dans l'ordre de la liste : l'URL ne dépend pas de l'ordre des clics.
+  // Rebâti dans l'ordre de la liste : l'URL ne dépend pas de l'ordre des clics.
   const toggle = (security: WifiSecurity, checked: boolean) =>
-    filters.setValue(
-      SECURITY_FILTER,
-      WIFI_SECURITY_KEYS.filter((key) => (key === security ? checked : selected.includes(key))),
-    );
+    setDraft(WIFI_SECURITY_KEYS.filter((key) => (key === security ? checked : draft.includes(key))));
+
+  const reset = () => {
+    setDraft(NO_SECURITY);
+    filters.reset();
+  };
 
   return (
-    <DataTableFilter label={WIFI_NETWORK.button.filter} activeCount={filters.activeCount} onReset={filters.reset}>
+    <DataTableFilter
+      label={WIFI_NETWORK.button.filter}
+      activeCount={filters.activeCount}
+      canReset={filters.activeCount > 0 || draft.length > 0}
+      // L'URL a pu changer pendant que le panneau était fermé (retour arrière, lien) : on repart de ce qui est appliqué.
+      onOpen={() => setDraft(applied)}
+      onApply={() => filters.setValue(SECURITY_FILTER, draft)}
+      onReset={reset}
+    >
       <FieldSet>
         <FieldLegend variant="label">{WIFI_NETWORK.filters.security.label}</FieldLegend>
         <FieldGroup className="gap-0">
@@ -37,7 +50,7 @@ export const WifiNetworksFilter = ({ dataTable }: WifiNetworksFilterProps) => {
             <Field key={security} orientation="horizontal">
               <Checkbox
                 id={`wifi-security-${security}`}
-                checked={selected.includes(security)}
+                checked={draft.includes(security)}
                 onCheckedChange={(checked) => toggle(security, checked)}
               />
               <FieldLabel htmlFor={`wifi-security-${security}`} className="w-full cursor-pointer py-2">
