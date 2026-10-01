@@ -53,7 +53,7 @@ export const WIFI_NETWORK = {
   results: { one: "résultat", many: "résultats" },
   pagination: { items: "réseaux" },
   form: {
-    name: { label: "Nom du réseau", optional: "(optionnel)", description: "Nom personnalisé du réseau" },
+    name: { label: "Nom", optional: "(optionnel)", description: "Nom personnalisé du réseau" },
     ssid: { label: "Nom du réseau (SSID)", placeholder: "ex. Terrain-Lyon" },
     security: { label: "Type de sécurité" },
     password: {

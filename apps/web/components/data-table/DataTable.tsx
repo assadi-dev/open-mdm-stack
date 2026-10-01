@@ -3,13 +3,13 @@
 import type { ReactNode } from "react";
 import type { RowData } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { SelectionActionBar } from "@/components/action-bars/SelectionActionBar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/tables/Table";
 import { DATA_TABLE } from "@/constants/data-table";
 import type { DataTableController } from "@/hooks/useDataTable";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./DataTablePagination";
 import { DataTableSearch } from "./DataTableSearch";
-import { DataTableSelectionBar } from "./DataTableSelectionBar";
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
 
@@ -19,7 +19,8 @@ type DataTableProps<TData extends RowData> = {
   showSearch?: boolean;
   showPagination?: boolean;
   toolbarActions?: ReactNode;
-  selectionActions?: (selectedRows: TData[]) => ReactNode;
+  // Les actions de la barre de sélection, une par élément du tableau (des `ActionBarItem`), calculées à partir des lignes cochées.
+  selectionActions?: (selectedRows: TData[]) => ReactNode[];
   className?: string;
 };
 
@@ -32,7 +33,7 @@ export const DataTable = <TData extends RowData>({
   selectionActions,
   className,
 }: DataTableProps<TData>) => {
-  const { table } = dataTable;
+  const { table, selection } = dataTable;
   const rows = table.getRowModel().rows;
 
   return (
@@ -43,7 +44,14 @@ export const DataTable = <TData extends RowData>({
           {toolbarActions && <div className="ml-auto flex items-center gap-2">{toolbarActions}</div>}
         </div>
       )}
-      <DataTableSelectionBar dataTable={dataTable} actions={selectionActions} />
+      {selection.enabled && (
+        <SelectionActionBar
+          selectedCount={selection.selectedCount}
+          onClear={selection.clear}
+          actions={selectionActions?.(selection.selectedRows)}
+          labels={DATA_TABLE.selection}
+        />
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

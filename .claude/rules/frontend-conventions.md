@@ -115,6 +115,8 @@ Nos composants sont en PascalCase (`ButtonWithIcon.tsx`). Les fichiers shadcn ga
 
 Aucun fichier de `components/ui/` n'est modifié (pas de prop ajoutée, pas de classe changée). Pour personnaliser, on crée un wrapper dans le dossier du contexte, qui importe le composant shadcn et applique nos modifications. Dès qu'un wrapper existe, les pages et composants importent le wrapper, plus le composant shadcn.
 
+Seule exception : un fichier généré qui ne compile pas dans ce projet reçoit la correction **de type** minimale, sans changer son comportement. C'est le cas de `components/ui/action-bar.tsx` (DiceUI) : ses handlers sont typés `NonNullable<…["onClick"]>` pour passer `noImplicitAny`. Réinstaller le composant avec `--overwrite` efface cette correction, il faut la refaire. Son registre oublie aussi la dépendance `@diceui/compose-refs` (`lib/compose-refs.ts`), à ajouter à la main.
+
 ```tsx
 // components/buttons/Button.tsx
 import type { ComponentProps } from "react";
@@ -310,6 +312,7 @@ Tout tableau de données utilise `@tanstack/react-table` en v9 (version `latest`
 - Le hook porte tout l'état : `search` / `setSearch`, `sorting`, `pagination` (`pageIndex`, `pageCount`, `totalRows`, `previous`, `next`, `goTo`, `setPageSize`…) et `selection` (`selectedRows`, `selectedCount`, `clear`). Avec `enableSelection: true`, il ajoute la colonne de cases à cocher. `selectedRows` ne contient que les lignes **visibles** (filtrées) : une action groupée ne touche jamais une ligne masquée par la recherche.
 - **Deux modes.** Sans option `server` (mode client), `data` contient toutes les lignes et le hook trie, cherche et pagine en mémoire : réservé aux petites listes déjà chargées (ex. les cartes du tableau de bord). Avec `server` (mode serveur), l'API trie, cherche, filtre et pagine, `data` n'est que la page courante : c'est le cas de toute collection venant de l'API (voir §14).
 - Le composant reçoit le résultat du hook : `<DataTable dataTable={dataTable} />`. La recherche, la pagination et la barre d'actions (`toolbarActions`, `selectionActions`) sont optionnelles. `DataTableSearch` et `DataTablePagination` s'utilisent aussi seuls (ex. recherche dans l'en-tête d'une Card).
+- **Sélection multiple** : avec `enableSelection`, cocher une ligne ouvre `SelectionActionBar` (`components/action-bars/`), une barre flottante en bas de l'écran (DiceUI `action-bar`) qui affiche le nombre de lignes et une croix pour tout désélectionner. `selectionActions` reçoit les lignes cochées et renvoie un **tableau** d'actions, chacune un `ActionBarItem` importé de `@/components/action-bars/ActionBar`. Après le clic sur une action, la barre se ferme et la sélection est vidée ; une action qui doit garder la barre ouverte (ex. une confirmation) appelle `event.preventDefault()` dans `onSelect`. `SelectionActionBar` s'utilise aussi hors d'un tableau (`selectedCount`, `onClear`, `actions`, `labels`).
 - Chaque page ne définit que ses colonnes, dans `_components/table/<entite>-columns.tsx`, avec `createDataTableColumnHelper<Entite>()`. Le tri est **actif par défaut** sur les colonnes à accesseur : mettre `enableSorting: false` sur celles où il n'a pas de sens (statut, actions). Les colonnes numériques et les dates démarrent en tri décroissant.
 - La recherche et le tri portent sur la **valeur d'accesseur**. Pour chercher sur ce que l'utilisateur lit (ex. le libellé d'un statut), l'accesseur retourne le libellé et `cell` affiche le badge. Pour trier une date sur la date et non sur le texte, l'accesseur retourne le timestamp et `cell` le formate (`formatRelativeTime`). `enableGlobalFilter: false` exclut une colonne de la recherche.
 - Les libellés d'en-tête suivent la règle des constantes (§6) : pas de texte en dur dans un fichier de colonnes. Les textes du tableau lui-même (recherche, pagination, sélection) sont dans `constants/data-table.ts`.
@@ -350,7 +353,7 @@ export const DevicesPageClient = () => {
   return (
     <DataTable
       dataTable={dataTable}
-      selectionActions={(devices) => <RemoveDevicesButton devices={devices} />}
+      selectionActions={(devices) => [<RemoveDevicesAction key="remove" devices={devices} />]}
     />
   );
 };
