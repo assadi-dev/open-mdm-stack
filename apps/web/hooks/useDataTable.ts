@@ -1,15 +1,41 @@
 import { useMemo, useState } from "react";
-import { useTable, type PaginationState, type RowData, type RowSelectionState, type SortingState } from "@tanstack/react-table";
+import {
+  useTable,
+  type ColumnFiltersState,
+  type OnChangeFn,
+  type PaginationState,
+  type RowData,
+  type RowSelectionState,
+  type SortingState,
+} from "@tanstack/react-table";
 import { dataTableFeatures, type DataTableColumnDef } from "@/components/data-table/data-table-features";
 import { createSelectionColumn } from "@/components/data-table/selection-column";
+
+// Mode serveur : l'état vient de l'URL (`useDataTableSearchParams().table`) et `data` n'est que la page courante,
+// déjà triée, filtrée et paginée par l'API. `rowCount` est le total de lignes côté API.
+export type DataTableServerOptions = {
+  rowCount: number;
+  state: {
+    pagination: PaginationState;
+    sorting: SortingState;
+    globalFilter: string;
+    columnFilters: ColumnFiltersState;
+  };
+  onPaginationChange: OnChangeFn<PaginationState>;
+  onSortingChange: OnChangeFn<SortingState>;
+  onGlobalFilterChange: OnChangeFn<string>;
+  onColumnFiltersChange: OnChangeFn<ColumnFiltersState>;
+};
 
 type UseDataTableOptions<TData extends RowData> = {
   data: TData[];
   columns: DataTableColumnDef<TData>[];
+  // `pageSize` et `initialSorting` ne servent qu'en mode client : en mode serveur, ils viennent de `server.state`.
   pageSize?: number;
   enableSelection?: boolean;
   initialSorting?: SortingState;
   getRowId?: (row: TData, index: number) => string;
+  server?: DataTableServerOptions;
 };
 
 export const useDataTable = <TData extends RowData>({
@@ -19,6 +45,7 @@ export const useDataTable = <TData extends RowData>({
   enableSelection = false,
   initialSorting = [],
   getRowId,
+  server,
 }: UseDataTableOptions<TData>) => {
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
@@ -30,6 +57,33 @@ export const useDataTable = <TData extends RowData>({
     [enableSelection, columns],
   );
 
+  // En mode serveur, chaque changement charge d'autres lignes : la sélection précédente ne désigne plus rien d'affiché.
+  const clearingSelection =
+    <TState>(onChange: OnChangeFn<TState>): OnChangeFn<TState> =>
+    (updater) => {
+      setRowSelection({});
+      onChange(updater);
+    };
+
+  const stateOptions = server
+    ? {
+        manualPagination: true,
+        manualSorting: true,
+        manualFiltering: true,
+        rowCount: server.rowCount,
+        state: { ...server.state, rowSelection },
+        onPaginationChange: clearingSelection(server.onPaginationChange),
+        onSortingChange: clearingSelection(server.onSortingChange),
+        onGlobalFilterChange: clearingSelection(server.onGlobalFilterChange),
+        onColumnFiltersChange: clearingSelection(server.onColumnFiltersChange),
+      }
+    : {
+        state: { sorting, pagination, globalFilter: search, rowSelection },
+        onSortingChange: setSorting,
+        onPaginationChange: setPagination,
+        onGlobalFilterChange: setSearch,
+      };
+
   const table = useTable({
     features: dataTableFeatures,
     columns: tableColumns,
@@ -37,27 +91,25 @@ export const useDataTable = <TData extends RowData>({
     getRowId,
     enableRowSelection: enableSelection,
     globalFilterFn: "includesString",
-    state: { sorting, pagination, globalFilter: search, rowSelection },
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    onGlobalFilterChange: setSearch,
     onRowSelectionChange: setRowSelection,
+    ...stateOptions,
   });
 
+  const { state } = stateOptions;
   // Seules les lignes visibles comptent : une action groupée ne doit jamais toucher une ligne masquée par la recherche.
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
-  const totalRows = table.getFilteredRowModel().rows.length;
 
   return {
     table,
-    search,
-    setSearch,
-    sorting,
+    search: state.globalFilter,
+    setSearch: (value: string) => table.setGlobalFilter(value),
+    sorting: state.sorting,
     pagination: {
-      pageIndex: pagination.pageIndex,
-      pageSize: pagination.pageSize,
+      pageIndex: state.pagination.pageIndex,
+      pageSize: state.pagination.pageSize,
       pageCount: table.getPageCount(),
-      totalRows,
+      // Côté client, les lignes après recherche ; côté serveur, le total renvoyé par l'API.
+      totalRows: table.getRowCount(),
       canPrevious: table.getCanPreviousPage(),
       canNext: table.getCanNextPage(),
       previous: () => table.previousPage(),

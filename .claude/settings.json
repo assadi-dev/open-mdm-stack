@@ -222,7 +222,11 @@
       "Bash(node -e 'const m=require\\(\"http\"\\).METHODS.map\\(x=>x.toLowerCase\\(\\)\\); const r=require\\(\"router\"\\); console.log\\(\"router has .query:\", typeof r.Route.prototype.query\\)')",
       "Bash(grep -E '^\\(tsx|ts-node\\)$')",
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/npm-cache npm i -D vite -w apps/api)",
-      "Bash(tee /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/proxy-paths.txt)"
+      "Bash(tee /private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/proxy-paths.txt)",
+      "Bash(export npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/npm-cache)",
+      "Bash(npx --yes ctx7@latest library \"nuqs\" \"useQueryStates parsers debounce URL updates createSerializer Next.js app router adapter\")",
+      "Bash(npx --yes ctx7@latest docs /47ng/nuqs \"useQueryStates with parseAsInteger parseAsArrayOf withDefault and limitUrlUpdates debounce for a search input, clearOnDefault\")",
+      "Bash(npx --yes ctx7@latest docs /47ng/nuqs \"debounced search state with client-side fetching TanStack Query: local state updates immediately, query key uses debounced value\")"
     ]
   }
 }

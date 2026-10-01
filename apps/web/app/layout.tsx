@@ -5,6 +5,7 @@ import "./globals.css";
 import { generateTitleMetadata } from "@/lib/page-metadata";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +23,9 @@ const RootLayout = async ({
   return (
     <html lang="fr" className={cn("font-sans", inter.variable)}>
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <NuqsAdapter>
+          <QueryProvider>{children}</QueryProvider>
+        </NuqsAdapter>
         <Toaster />
       </body>
     </html>
