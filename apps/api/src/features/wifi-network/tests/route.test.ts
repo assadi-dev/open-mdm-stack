@@ -85,6 +85,33 @@ describe("wifi-network routes", () => {
             expect(repoMock.create).not.toHaveBeenCalled();
         });
 
+        it("rejects a protected network sent without a password", async () => {
+            authenticate();
+
+            await request(app)
+                .post("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ssid: "office-ssid", security: "WPA2" })
+                .expect(400);
+
+            expect(repoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("creates an open network (security NONE) without a password, storing none", async () => {
+            authenticate();
+            repoMock.create.mockResolvedValue(wifiNetworkRow({ security: "NONE", password: null }));
+
+            const res = await request(app)
+                .post("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ssid: "guest-ssid", security: "NONE" })
+                .expect(201);
+
+            expect(repoMock.create).toHaveBeenCalledTimes(1);
+            expect(repoMock.create.mock.calls[0][0]).toMatchObject({ ssid: "guest-ssid", security: "NONE", password: null });
+            expect(res.body).not.toHaveProperty("password");
+        });
+
         it("creates a wifi network, storing the password encrypted and never echoing it back", async () => {
             authenticate();
             repoMock.create.mockResolvedValue(wifiNetworkRow({ name: undefined }));

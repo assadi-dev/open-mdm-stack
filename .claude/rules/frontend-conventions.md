@@ -647,3 +647,47 @@ export const WifiNetworksTableCard = ({ networks, server, ...queryState }: WifiN
   // ...
 };
 ```
+
+## 15. Routes proxy : lectures au pluriel, écritures au singulier
+
+Le dashboard n'appelle jamais l'API backend directement : chaque requête passe par un route handler de `app/api/v1/` (le proxy, §12), qui ajoute le jeton de session via `httpRequest`. Le nom de la route dit si l'on lit ou si l'on écrit.
+
+| Action | Route du proxy | Corps |
+|---|---|---|
+| Lire la collection | `GET /api/v1/wifi-networks` | aucun (query string, §14) |
+| Ajouter | `POST /api/v1/wifi-network` | l'objet à créer |
+| Modifier | `PATCH /api/v1/wifi-network/[id]` | les champs modifiés |
+| Supprimer un élément | `DELETE /api/v1/wifi-network/[id]` | aucun |
+| Supprimer plusieurs (**seule exception**) | `DELETE /api/v1/wifi-networks` | `{ "ids": ["…", "…"] }` |
+
+- **Toute écriture est au singulier.** Seule la suppression groupée reste au pluriel : elle porte sur plusieurs éléments et reçoit le tableau des ids dans le corps, jamais dans l'URL.
+- La règle concerne les routes **du proxy** et les URL appelées par le front (deux constantes dans `_services/<page>.api.ts` : la collection au pluriel, l'élément au singulier). Les chemins vers le backend, eux, restent ceux de l'API (`wifi-networks`) et vivent dans `endpoints.ts`.
+- Les routes d'une ressource sont rangées ensemble dans un groupe `app/api/v1/(wifi-networks)/` : `wifi-networks/route.ts` (lecture et suppression groupée), `wifi-network/route.ts` (ajout), `wifi-network/[id]/route.ts` (modification, suppression), `endpoints.ts` (chemins de l'API backend) et `schema.ts` (schémas Zod des corps).
+- **Le proxy valide le corps avec Zod avant d'appeler l'API** : `readJsonBody` (400 si le corps n'est pas un objet JSON) puis `validateBody(schema, body)` (400 si un champ obligatoire manque ou a un mauvais type). On envoie à l'API les **données validées**, pas le corps brut : `validateBody` retire les clés inconnues. Le proxy ne vérifie que la forme du contrat ; les longueurs et les formats restent validés par l'API, qui fait foi.
+- Un `POST` répond `201` avec la ressource créée. Les erreurs passent par `handleApiError` (§12).
+
+```ts
+// app/api/v1/(wifi-networks)/wifi-network/route.ts
+// POST /api/v1/wifi-network  { name?, ssid, security, password? }
+export const POST = async (request: NextRequest) => {
+  try {
+    const input = validateBody(createWifiNetworkBodySchema, await readJsonBody(request));
+    const wifiNetwork = await httpRequest.post(WIFI_NETWORKS_ENDPOINTS.create, input);
+    return NextResponse.json(wifiNetwork, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+```
+
+```ts
+// app/api/v1/(wifi-networks)/schema.ts : les champs obligatoires du contrat de l'API
+export const createWifiNetworkBodySchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    ssid: z.string().min(1),
+    security: z.enum(WIFI_SECURITY_KEYS),
+    password: z.string().min(1).optional(),
+  })
+  .refine(({ security, password }) => security === "NONE" || password !== undefined, { path: ["password"], message: "Required" });
+```

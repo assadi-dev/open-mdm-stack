@@ -1,4 +1,4 @@
-import type { CreateWifiNetworkInput, UpdateWifiNetworkInput, WifiNetwork } from "../_types/wifi-network.types";
+import type { UpdateWifiNetworkInput, WifiNetwork } from "../_types/wifi-network.types";
 
 // Les quatre réseaux de la maquette, dans le même ordre.
 // Les dates sont à midi UTC : le jour affiché ne bouge dans aucun fuseau.
@@ -19,19 +19,6 @@ const findNetworkIndex = (id: string) => {
   const index = getNetworks().findIndex((network) => network.id === id);
   if (index === -1) throw new Error(`Réseau Wi-Fi introuvable : ${id}`);
   return index;
-};
-
-// Comme l'API, le mot de passe n'est jamais gardé ni relu.
-export const createWifiNetworkMock = ({ name, ssid, security }: CreateWifiNetworkInput): WifiNetwork => {
-  const network: WifiNetwork = {
-    id: `wn-${crypto.randomUUID()}`,
-    name: name ?? null,
-    ssid,
-    security,
-    createdAt: new Date().toISOString(),
-  };
-  networks = [network, ...getNetworks()];
-  return network;
 };
 
 export const updateWifiNetworkMock = ({ id, name, ssid, security }: UpdateWifiNetworkInput): WifiNetwork => {

@@ -2,12 +2,17 @@ import z from "zod";
 import { wifiSecurityType } from "@drizzle/schemas/wifi-network-schema";
 import { createCollectionQuerySchema } from "@features/paginations/dto/schema";
 
+// Admin -> API on POST /wifi-networks. An open network (security NONE) has no password;
+// every other security type requires one.
 export const createWifiNetworkSchema = z.object({
     name: z.string().min(1).optional(),
     ssid: z.string().min(1, "ssid is required"),
-    password: z.string().min(1, "password is required"),
+    password: z.string().min(1, "password is required").optional(),
     security: z.enum(wifiSecurityType),
-});
+}).refine(
+    ({ security, password }) => security === "NONE" || password !== undefined,
+    { message: "password is required", path: ["password"] },
+);
 
 // Admin -> API on PATCH /wifi-networks/:id. `name` accepts `null` to clear it
 // explicitly, unlike the other fields which are simply left untouched when omitted.
