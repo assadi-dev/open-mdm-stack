@@ -3,6 +3,12 @@ export const DATA_TABLE = {
     placeholder: "Rechercher…",
     label: "Rechercher",
   },
+  filter: {
+    title: "Filtres",
+    reset: "Réinitialiser",
+    done: "Terminé",
+    active: "filtres actifs",
+  },
   empty: "Aucun résultat.",
   selection: {
     all: "Tout sélectionner",

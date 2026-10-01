@@ -38,6 +38,11 @@ type UseDataTableOptions<TData extends RowData> = {
   server?: DataTableServerOptions;
 };
 
+const NO_FILTERS: ColumnFiltersState = [];
+
+// Un filtre à choix multiple compte une unité par valeur cochée (WPA2 + WPA3 = 2).
+const countFilterValues = (value: unknown) => (Array.isArray(value) ? value.length : 1);
+
 export const useDataTable = <TData extends RowData>({
   data,
   columns,
@@ -96,6 +101,8 @@ export const useDataTable = <TData extends RowData>({
   });
 
   const { state } = stateOptions;
+  // Les filtres de colonne n'existent qu'en mode serveur : leur état vient de l'URL.
+  const columnFilters = server?.state.columnFilters ?? NO_FILTERS;
   // Seules les lignes visibles comptent : une action groupée ne doit jamais toucher une ligne masquée par la recherche.
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
 
@@ -116,6 +123,16 @@ export const useDataTable = <TData extends RowData>({
       next: () => table.nextPage(),
       goTo: (pageIndex: number) => table.setPageIndex(pageIndex),
       setPageSize: (size: number) => table.setPageSize(size),
+    },
+    filters: {
+      activeCount: columnFilters.reduce((count, filter) => count + countFilterValues(filter.value), 0),
+      // Le type de la valeur est celui du parser nuqs déclaré par la page pour cette colonne.
+      getValue: <TValue>(columnId: string) =>
+        columnFilters.find((filter) => filter.id === columnId)?.value as TValue | undefined,
+      // Une valeur vide retire le filtre : l'URL ne garde pas de paramètre vide.
+      setValue: (columnId: string, value: unknown[]) =>
+        table.getColumn(columnId)?.setFilterValue(value.length > 0 ? value : undefined),
+      reset: () => table.resetColumnFilters(true),
     },
     selection: {
       enabled: enableSelection,

@@ -52,6 +52,9 @@ export const WIFI_NETWORK = {
       placeholder: "Rechercher un réseau",
       label: "Rechercher un réseau",
     },
+    security: {
+      label: "Sécurité",
+    },
   },
   results: { one: "résultat", many: "résultats" },
   pagination: { items: "réseaux" },

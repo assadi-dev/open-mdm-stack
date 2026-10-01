@@ -242,10 +242,31 @@
       "Bash(grep -n \"modals/                        les boîtes\\\\|^- \\\\*\\\\*\\\\`modals/\\\\`\\\\*\\\\*\" ../../.claude/rules/frontend-conventions.md)",
       "Bash(npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-turbo-open-mdm-stack/701651f9-b54a-4961-92c0-fdc9a78dcfa3/scratchpad/npm-cache npx ctx7@latest docs /websites/base-ui_com \"AlertDialog vs Dialog difference, dismiss on outside click, close button\")",
       "Bash(npx ctx7@latest library \"Base UI\" \"AlertDialog vs Dialog close button dismiss\")",
-      "Bash(npx ctx7@latest docs /websites/base-ui_react \"Alert Dialog: does not close when clicking outside, requires user response, differs from Dialog\")"
+      "Bash(npx ctx7@latest docs /websites/base-ui_react \"Alert Dialog: does not close when clicking outside, requires user response, differs from Dialog\")",
+      "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/web && ls components/ui 2>/dev/null; echo ---; find \"app/\\(dashboard\\)/wifi-networks\" -type f | head -50; echo ---; cat /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/devices_page_deferred_features.md /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/wifi_networks_page_decisions.md /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/dialog_vs_alert_dialog.md)",
+      "Bash(git -C /Users/assadi/Projects/Turbo/open-mdm-stack status --short)",
+      "Bash(npx shadcn@latest add popover)",
+      "Bash(git -C .. status --short)",
+      "Bash(cat /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/ui_verification_without_auth.md /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/user_machine_dark_mode_verify_both_schemes.md; cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/web && ls; ls e2e 2>/dev/null; cat \"app/\\(dashboard\\)/wifi-networks/page.tsx\"; ls app app/\\\\\\(dashboard\\\\\\); lsof -i :3000 -i :3100 2>/dev/null | head)",
+      "Bash(cat app/layout.tsx | head -50; grep -n \"export\" \"app/\\(dashboard\\)/wifi-networks/_mocks/wifi-networks.mock.ts\"; cat \"app/\\(dashboard\\)/layout.tsx\" | head -40; ls ../../node_modules/@playwright 2>/dev/null; ls ~/Library/Caches/ms-playwright 2>/dev/null)",
+      "Read(//Users/assadi/Library/Caches/ms-playwright/**)",
+      "Bash(sort -k6,7)",
+      "Bash(curl -s -o /dev/null -m 90 -w \"%{http_code} %{time_total}s\\\\n\" \"http://127.0.0.1:3000/filter-preview\")",
+      "Bash(node verify.cjs)",
+      "Bash(grep -rn \"multi-select\\\\|MultiSelect\" --include=*.ts --include=*.tsx --include=*.css . --exclude-dir=node_modules --exclude-dir=.next -l; echo ---; cat components/ui/popover.tsx; echo ---; head -60 components/ui/command.tsx; echo ---; cat components/popovers/Popover.tsx; echo ---; cat \"/Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/ctx7_npm_cache_workaround.md\")",
+      "Bash(grep -rln \"multi-select\\\\|MultiSelect\" . --include='*.ts' --include='*.tsx' --include='*.css' --exclude-dir=node_modules --exclude-dir=.next; echo \"--- ui/popover\"; cat components/ui/popover.tsx; echo \"--- ui/command \\(head\\)\"; head -40 components/ui/command.tsx; echo \"--- popovers/Popover\"; cat components/popovers/Popover.tsx; echo \"--- memory\"; cat /Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory/ctx7_npm_cache_workaround.md; ls components components/buttons components/checkboxes components/fields 2>/dev/null; ls ../../node_modules/@base-ui/react/combobox | tr '\\\\n' ' '; grep '\"version\"' ../../node_modules/@base-ui/react/package.json)",
+      "Bash(mkdir -p /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/1093aa0e-8cba-421c-a21b-16d252b21bf1/scratchpad/npm-cache)",
+      "Bash(export npm_config_cache=/private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/1093aa0e-8cba-421c-a21b-16d252b21bf1/scratchpad/npm-cache)",
+      "Bash(npx --yes ctx7@latest library \"Base UI\" \"Combobox multiple selection with chips\")",
+      "Bash(npx --yes ctx7@latest docs /websites/base-ui_react \"Combobox multiple selection with chips: Combobox.Root multiple, Chips, Chip, ChipRemove, anchor ref, value/onValueChange, items grouped\")",
+      "Bash(sed -i '' 's#page.getByLabel\\(\"WPA2\", { exact: true }\\)#page.getByRole\\(\"checkbox\", { name: \"WPA2\" }\\)#; s#page.getByLabel\\(\"WPA3\", { exact: true }\\)#page.getByRole\\(\"checkbox\", { name: \"WPA3\" }\\)#' verify.cjs)",
+      "Bash(sed -i '' 's#const trigger = page.getByRole\\(\"button\", { name: /^Filtrer/ }\\);#const trigger = page.locator\\(\"button\", { hasText: \"Filtrer\" }\\);#' verify.cjs)",
+      "Bash(md5 -q desktop-light-checked.png desktop-dark-checked.png mobile-light-checked.png mobile-dark-checked.png)"
     ],
     "additionalDirectories": [
-      "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules"
+      "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",
+      "/Users/assadi/.claude/projects/-Users-assadi-Projects-Turbo-open-mdm-stack/memory",
+      "/Users/assadi/.claude/projects/-Users-assadi-Projects-turbo-open-mdm-stack/memory"
     ]
   }
 }
