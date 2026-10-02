@@ -99,6 +99,13 @@
       "when": 1790502256075,
       "tag": "0013_bent_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790956462516,
+      "tag": "0014_add_device_overview_view",
+      "breakpoints": true
     }
   ]
 }
