@@ -51,7 +51,7 @@ export const deviceRepositoryFactory = {
             },
             defaultSort: [{ id: "createdAt", desc: true }],
             tieBreaker: view.id,
-            searchable: [view.displayName, view.model, view.serial, view.brand, view.assignedToName],
+            searchable: [view.displayName, view.model, view.serial, view.androidId, view.brand, view.assignedToName],
             filters: {
                 status: (values) => inArray(view.status, values),
                 sdkVersion: (values) => inArray(view.sdkVersion, values),
