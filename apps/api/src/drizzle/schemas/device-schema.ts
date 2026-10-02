@@ -41,6 +41,9 @@ export const devices = pgTable("devices", {
     // `publicKey` against what's already pinned for a given `androidId`
     // (see DeviceRepository.findByAndroidId/reEnrollDevice).
     enrollmentIdentity: text("enrollment_identity").notNull(),
+    // Label given by an admin (e.g. "Tablette entrepôt 3"); NULL until one is set.
+    // The devices list falls back to the model (see device_overview.display_name).
+    name: text("name"),
     serial: text("serial"),
     androidId: text("android_id").unique(),
     brand: text("brand"),

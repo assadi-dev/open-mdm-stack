@@ -5,6 +5,7 @@ export const DEVICE = {
   },
   table: {
     device: "Appareil",
+    model: "Modèle",
     user: "Utilisateur",
     // Plus affiché sur la page Appareils (aucun groupe côté API) ; la carte « Appareils récents » du tableau de bord l'utilise encore.
     group: "Groupe",
@@ -20,8 +21,10 @@ export const DEVICE = {
   },
   actionsFor: "Actions pour",
   serialPrefix: "N°",
-  // Le modèle est facultatif côté API : un appareil sans modèle reste listé.
-  unknownModel: "Appareil inconnu",
+  // Ni nom ni modèle côté API : l'appareil reste listé.
+  unknownDevice: "Appareil inconnu",
+  // La colonne « Modèle » : le modèle est facultatif côté API.
+  noModel: "—",
   // Aucun porteur n'est associé à l'appareil.
   unassigned: "—",
   lastContact: {

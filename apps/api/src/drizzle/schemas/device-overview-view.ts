@@ -23,6 +23,9 @@ export type DeviceOverviewStatus = (typeof deviceOverviewStatus)[number];
  * status and the battery level are written once, here.
  *
  * - Only pending and enrolled devices (revoked / unenrolled are not listed).
+ * - `displayName` is the admin-given name, or the model when there is none
+ *   (a blank name counts as none). It is the first line of the "Appareil" cell,
+ *   and what that column sorts and searches on.
  * - `battery` is NULL when never reported: telemetry defaults to level 0,
  *   and a phone at 0 % is off anyway.
  * - `lastHeartbeatAt` and `presenceChangedAt` are both exposed as-is; both
@@ -34,8 +37,10 @@ export const deviceOverview = pgView("device_overview").as((qb) =>
         .select({
             id: devices.id,
             serial: devices.serial,
+            androidId: devices.androidId,
             model: devices.model,
             brand: devices.brand,
+            displayName: sql<string | null>`coalesce(nullif(btrim(${devices.name}), ''), ${devices.model})`.as("display_name"),
             release: devices.release,
             sdkVersion: devices.sdkVersion,
             assignedToUserId: devices.assignedToUserId,

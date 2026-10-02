@@ -95,6 +95,20 @@ describe("devices list routes", () => {
             expect(repoMock.collection).not.toHaveBeenCalled();
         });
 
+        it("accepts a sort on the displayed name (the name, or the model when there is none)", async () => {
+            authenticate();
+            repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
+
+            await request(app)
+                .get("/api/v1/devices?sort=displayName")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(200);
+
+            expect(repoMock.collection).toHaveBeenCalledWith(
+                expect.objectContaining({ sort: [{ id: "displayName", desc: false }] }),
+            );
+        });
+
         it("hands the parsed query string to the repository and returns its page as is", async () => {
             authenticate();
             const page = { data: [{ id: "device-1", status: "online" }], metadata: { page: 2, limit: 50, total: 51, totalPages: 2 } };

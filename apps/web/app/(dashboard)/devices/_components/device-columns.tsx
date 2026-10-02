@@ -11,16 +11,28 @@ const helper = createDataTableColumnHelper<Device>();
 const SECONDARY_LINE = "text-xs leading-4.5 text-muted-foreground";
 
 // L'API trie, cherche et filtre : chaque id de colonne triable est un champ qu'elle sait trier
-// (`model`, `assignedToName`, `battery`, `lastHeartbeatAt`). Le statut ne se trie pas ; il se filtre par les onglets.
+// (`displayName`, `model`, `assignedToName`, `battery`, `lastHeartbeatAt`). Le statut ne se trie pas ; il se filtre par les onglets.
 // La colonne « Dernier contact » trie aussi sur `presenceChangedAt` (voir `useDevicesTable`).
 export const deviceColumns = [
+  // Le nom de l'appareil (sinon son modèle), et son n° de série dessous.
   helper.accessor((device) => toDeviceName(device), {
-    id: "model",
+    id: "displayName",
     header: DEVICE.table.device,
     cell: ({ row }) => (
       <div className="flex flex-col">
         <span className="font-medium">{toDeviceName(row.original)}</span>
-        {row.original.serial && <span className={SECONDARY_LINE}>{`${DEVICE.serialPrefix} ${row.original.serial}`}</span>}
+        {row.original.displayName && <span className={SECONDARY_LINE}>{`Android ID : ${row.original.androidId}`}</span>}
+      </div>
+    ),
+  }),
+  // Le modèle, et sa marque dessous.
+  helper.accessor((device) => device.model ?? "", {
+    id: "model",
+    header: DEVICE.table.model,
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span>{row.original.model ?? DEVICE.noModel}</span>
+        {row.original.brand && <span className={SECONDARY_LINE}>{row.original.brand}</span>}
       </div>
     ),
   }),

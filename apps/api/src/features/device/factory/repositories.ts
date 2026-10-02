@@ -14,7 +14,9 @@ export const deviceRepositoryFactory = {
     ) => {
         return {
             id: view.id,
+            displayName: view.displayName,
             serial: view.serial,
+            androidId: view.androidId,
             model: view.model,
             brand: view.brand,
             androidVersion: view.release,
@@ -37,6 +39,7 @@ export const deviceRepositoryFactory = {
     ): CollectionConfig<DeviceCollectionQuery> => {
         return {
             sortable: {
+                displayName: view.displayName,
                 model: view.model,
                 serial: view.serial,
                 assignedToName: view.assignedToName,
@@ -48,7 +51,7 @@ export const deviceRepositoryFactory = {
             },
             defaultSort: [{ id: "createdAt", desc: true }],
             tieBreaker: view.id,
-            searchable: [view.model, view.serial, view.brand, view.assignedToName],
+            searchable: [view.displayName, view.model, view.serial, view.brand, view.assignedToName],
             filters: {
                 status: (values) => inArray(view.status, values),
                 sdkVersion: (values) => inArray(view.sdkVersion, values),

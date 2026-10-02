@@ -1,5 +1,5 @@
 import { DEVICE } from "@/constants/device";
-import { formatDeviceName, formatNumber, formatRelativeTime } from "@/lib/format";
+import { formatNumber, formatRelativeTime } from "@/lib/format";
 import type { Device, DeviceStatus, DeviceSummary, DeviceTab, DeviceTabCounts, FilterOption } from "../_types/device.types";
 
 export const ALL_FILTER = "all";
@@ -49,10 +49,8 @@ export const toDevicesSubtitle = ({ all, online }: DeviceTabCounts) =>
 export const toResultsLabel = (count: number) =>
   `${formatNumber(count)} ${count > 1 ? DEVICE.results.many : DEVICE.results.one}`;
 
-export const toDeviceName = ({ model, serial }: Pick<Device, "model" | "serial">) => {
-  const name = model ?? DEVICE.unknownModel;
-  return serial ? formatDeviceName(name, serial) : name;
-};
+// Le nom donné à l'appareil, sinon son modèle (l'API le résout dans `displayName`).
+export const toDeviceName = ({ displayName }: Pick<Device, "displayName">) => displayName ?? DEVICE.unknownDevice;
 
 // La date la plus récente entre le dernier heartbeat et le dernier changement de présence, `null` si l'appareil n'a jamais été vu.
 export const toLastSeenTime = ({ lastHeartbeatAt, presenceChangedAt }: Pick<Device, "lastHeartbeatAt" | "presenceChangedAt">) => {

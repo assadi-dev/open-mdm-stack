@@ -125,6 +125,7 @@ export const telemetryPatchSchema = z.object({
 // Sort and filter names are the API field names (see DeviceRepository.collection).
 export const deviceCollectionQuerySchema = createCollectionQuerySchema({
     sortable: [
+        "displayName",
         "model",
         "serial",
         "assignedToName",

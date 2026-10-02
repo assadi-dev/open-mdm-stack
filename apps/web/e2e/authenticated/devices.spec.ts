@@ -3,7 +3,7 @@ import { DATA_TABLE } from "@/constants/data-table";
 import { DEVICE } from "@/constants/device";
 import { STATUS } from "@/constants/status";
 
-// Colonnes du tableau : 1 sélection · 2 appareil · 3 utilisateur · 4 statut · 5 batterie · 6 contact · 7 actions.
+// Colonnes du tableau : 1 sélection · 2 appareil · 3 modèle · 4 utilisateur · 5 statut · 6 batterie · 7 contact · 8 actions.
 const columnTexts = (page: Page, column: number) => page.locator(`tbody tr td:nth-child(${column})`).allInnerTexts();
 const rowCount = (page: Page) => page.locator("tbody tr").count();
 // L'URL garde le tri au format de l'API (`sort=-lastHeartbeatAt,-presenceChangedAt`), la virgule peut y être encodée.
@@ -48,7 +48,7 @@ test.describe("appareils", () => {
     await page.getByRole("tab", { name: new RegExp(`^${DEVICE.tabs.offline}`) }).click();
 
     await expect(page).toHaveURL(/status=offline/);
-    await allRowsMatch(page, 4, STATUS.offline.label);
+    await allRowsMatch(page, 5, STATUS.offline.label);
   });
 
   test("filtre par version d'Android", async ({ page }) => {
@@ -98,13 +98,13 @@ test.describe("appareils", () => {
 
     await sortButton.click();
     await expect(header).toHaveAttribute("aria-sort", "ascending");
-    await expect(page).toHaveURL(/sort=model(&|$)/);
+    await expect(page).toHaveURL(/sort=displayName(&|$)/);
     // Le tri est celui de l'API : on attend que les lignes changent avant de comparer.
     const ascendingFirst = await firstDevice();
 
     await sortButton.click();
     await expect(header).toHaveAttribute("aria-sort", "descending");
-    await expect(page).toHaveURL(/sort=-model(&|$)/);
+    await expect(page).toHaveURL(/sort=-displayName(&|$)/);
     await expect.poll(firstDevice).not.toBe(ascendingFirst);
 
     expect(ascendingFirst.localeCompare(await firstDevice(), "fr")).toBeLessThan(0);

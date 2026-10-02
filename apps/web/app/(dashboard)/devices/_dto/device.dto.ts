@@ -4,11 +4,14 @@ import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 // Les statuts que `device_overview` produit. Pas de « conforme » ni « non conforme » : aucune politique n'est évaluée.
 export const DEVICE_STATUS_KEYS = ["pending", "offline", "commandRunning", "online"] as const;
 
-// Ce que `GET /devices` renvoie pour chaque appareil. Le modèle, le n° de série, la version d'Android et le porteur sont
+// Ce que `GET /devices` renvoie pour chaque appareil. Le nom, le modèle, le n° de série, la version d'Android et le porteur sont
 // facultatifs côté API ; la batterie est `null` tant qu'elle n'a jamais été remontée, les deux dates quand l'appareil n'a jamais été vu.
 export const deviceSchema = z.object({
   id: z.string(),
+  // Le nom donné par un administrateur, sinon le modèle : la première ligne de la cellule « Appareil ».
+  displayName: z.string().nullable(),
   serial: z.string().nullable(),
+  androidId: z.string().nullable(),
   model: z.string().nullable(),
   brand: z.string().nullable(),
   androidVersion: z.string().nullable(),

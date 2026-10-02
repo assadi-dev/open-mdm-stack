@@ -106,6 +106,20 @@
       "when": 1790956462516,
       "tag": "0014_add_device_overview_view",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790982142699,
+      "tag": "0015_add_device_name_and_display_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790984364083,
+      "tag": "0016_add_android_id_to_device_overview",
+      "breakpoints": true
     }
   ]
 }
