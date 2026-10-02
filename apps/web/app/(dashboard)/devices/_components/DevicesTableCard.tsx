@@ -9,28 +9,28 @@ import { DataTable } from "@/components/data-table/DataTable";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { DEVICE } from "@/constants/device";
-import { useDataTable } from "@/hooks/useDataTable";
+import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
 import { toResultsLabel } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
 import { deviceColumns } from "./device-columns";
 
-const PAGE_SIZE = 8;
-
 type DevicesTableCardProps = {
+  // La page courante seulement : l'API trie, filtre et pagine.
   devices: Device[];
+  server: DataTableServerOptions;
   isPending: boolean;
   isError: boolean;
   onRetry: () => void;
   filters: ReactNode;
 };
 
-export const DevicesTableCard = ({ devices, isPending, isError, onRetry, filters }: DevicesTableCardProps) => {
+export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry, filters }: DevicesTableCardProps) => {
   const dataTable = useDataTable({
     data: devices,
     columns: deviceColumns,
-    pageSize: PAGE_SIZE,
     enableSelection: true,
     getRowId: (device) => device.id,
+    server,
   });
 
   return (

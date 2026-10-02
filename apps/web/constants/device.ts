@@ -6,6 +6,7 @@ export const DEVICE = {
   table: {
     device: "Appareil",
     user: "Utilisateur",
+    // Plus affiché sur la page Appareils (aucun groupe côté API) ; la carte « Appareils récents » du tableau de bord l'utilise encore.
     group: "Groupe",
     status: "Statut",
     battery: "Batterie",
@@ -19,6 +20,16 @@ export const DEVICE = {
   },
   actionsFor: "Actions pour",
   serialPrefix: "N°",
+  // Le modèle est facultatif côté API : un appareil sans modèle reste listé.
+  unknownModel: "Appareil inconnu",
+  // Aucun porteur n'est associé à l'appareil.
+  unassigned: "—",
+  lastContact: {
+    // Un appareil connecté est joignable à l'instant même, quelle que soit la date de son dernier heartbeat.
+    now: "À l'instant",
+    // Ni heartbeat ni connexion : l'appareil n'a jamais été vu.
+    never: "—",
+  },
   page: {
     title: "Appareils",
     subtitle: {
@@ -31,7 +42,6 @@ export const DEVICE = {
     all: "Tous",
     online: "En ligne",
     offline: "Hors ligne",
-    nonCompliant: "Non conformes",
     pending: "En attente",
   },
   filters: {
@@ -40,7 +50,6 @@ export const DEVICE = {
       placeholder: "N° de série, modèle, utilisateur…",
       label: "Rechercher un appareil",
     },
-    group: { label: "Groupe", all: "Groupe : tous" },
     android: { label: "Version Android", all: "Android : toutes", version: "Android" },
   },
   results: { one: "résultat", many: "résultats" },

@@ -3,9 +3,22 @@ import { DATA_TABLE } from "@/constants/data-table";
 import { DEVICE } from "@/constants/device";
 import { STATUS } from "@/constants/status";
 
-// Colonnes du tableau : 1 sélection · 2 appareil · 3 utilisateur · 4 groupe · 5 statut · 6 batterie · 7 contact · 8 actions.
+// Colonnes du tableau : 1 sélection · 2 appareil · 3 utilisateur · 4 statut · 5 batterie · 6 contact · 7 actions.
 const columnTexts = (page: Page, column: number) => page.locator(`tbody tr td:nth-child(${column})`).allInnerTexts();
 const rowCount = (page: Page) => page.locator("tbody tr").count();
+// L'URL garde le tri au format de l'API (`sort=-lastHeartbeatAt,-presenceChangedAt`), la virgule peut y être encodée.
+const currentUrl = (page: Page) => decodeURIComponent(page.url());
+const pageButton = (page: Page, number: number) =>
+  page.getByRole("button", { name: `${DATA_TABLE.pagination.page} ${number}`, exact: true });
+
+// Le tri, la recherche et les filtres sont ceux de l'API : le tableau garde ses lignes le temps de la réponse, on attend donc le résultat.
+const allRowsMatch = (page: Page, column: number, text: string) =>
+  expect
+    .poll(async () => {
+      const texts = await columnTexts(page, column);
+      return texts.length > 0 && texts.every((cell) => cell.includes(text));
+    })
+    .toBe(true);
 
 test.describe("appareils", () => {
   test.beforeEach(async ({ page }) => {
@@ -14,8 +27,10 @@ test.describe("appareils", () => {
   });
 
   test("affiche le titre et le nombre d'appareils enrôlés", async ({ page }) => {
+    const { one, many } = DEVICE.page.subtitle.enrolled;
+
     await expect(page.getByRole("heading", { level: 1, name: DEVICE.page.title })).toBeVisible();
-    await expect(page.getByText(DEVICE.page.subtitle.enrolled.many)).toBeVisible();
+    await expect(page.getByText(new RegExp(`^\\d.* (${one}|${many}) · \\d.* ${DEVICE.page.subtitle.online}$`))).toBeVisible();
   });
 
   test("propose un onglet par statut avec son compteur", async ({ page }) => {
@@ -24,28 +39,16 @@ test.describe("appareils", () => {
     }
   });
 
-  test("liste huit appareils par page avec la pagination", async ({ page }) => {
-    await expect(page.locator("tbody tr")).toHaveCount(8);
-    await expect(page.getByRole("navigation", { name: DATA_TABLE.pagination.label })).toBeVisible();
-    await expect(page.getByText(new RegExp(`${DATA_TABLE.pagination.range} .* ${DEVICE.pagination.items}$`))).toBeVisible();
+  test("liste au plus huit appareils par page", async ({ page }) => {
+    expect(await rowCount(page)).toBeGreaterThan(0);
+    expect(await rowCount(page)).toBeLessThanOrEqual(8);
   });
 
   test("filtre le tableau avec les onglets", async ({ page }) => {
     await page.getByRole("tab", { name: new RegExp(`^${DEVICE.tabs.offline}`) }).click();
 
-    const statuses = await columnTexts(page, 5);
-    expect(statuses.length).toBeGreaterThan(0);
-    for (const status of statuses) expect(status).toContain(STATUS.offline.label);
-  });
-
-  test("filtre par groupe", async ({ page }) => {
-    await page.getByRole("combobox", { name: DEVICE.filters.group.label }).click();
-    const group = (await page.getByRole("option").nth(1).innerText()).trim();
-    await page.getByRole("option", { name: group }).click();
-
-    const groups = await columnTexts(page, 4);
-    expect(groups.length).toBeGreaterThan(0);
-    for (const cell of groups) expect(cell).toContain(group);
+    await expect(page).toHaveURL(/status=offline/);
+    await allRowsMatch(page, 4, STATUS.offline.label);
   });
 
   test("filtre par version d'Android", async ({ page }) => {
@@ -55,6 +58,7 @@ test.describe("appareils", () => {
     await page.getByRole("combobox", { name: DEVICE.filters.android.label }).click();
     await page.getByRole("option").nth(1).click();
 
+    await expect(page).toHaveURL(/sdkVersion=\d+/);
     await expect(results).not.toHaveText(before);
   });
 
@@ -77,15 +81,14 @@ test.describe("appareils", () => {
   });
 
   test("revient à la première page quand un filtre change", async ({ page }) => {
-    const pageButton = (number: number) =>
-      page.getByRole("button", { name: `${DATA_TABLE.pagination.page} ${number}`, exact: true });
+    test.skip((await pageButton(page, 2).count()) === 0, "Il faut plus d'une page d'appareils.");
 
-    await pageButton(2).click();
-    await expect(pageButton(2)).toHaveAttribute("aria-current", "page");
+    await pageButton(page, 2).click();
+    await expect(pageButton(page, 2)).toHaveAttribute("aria-current", "page");
 
     await page.getByRole("tab", { name: new RegExp(`^${DEVICE.tabs.online}`) }).click();
 
-    await expect(pageButton(1)).toHaveAttribute("aria-current", "page");
+    await expect(pageButton(page, 1)).toHaveAttribute("aria-current", "page");
   });
 
   test("trie par appareil dans les deux sens", async ({ page }) => {
@@ -95,13 +98,26 @@ test.describe("appareils", () => {
 
     await sortButton.click();
     await expect(header).toHaveAttribute("aria-sort", "ascending");
-    const ascending = await firstDevice();
+    await expect(page).toHaveURL(/sort=model(&|$)/);
+    // Le tri est celui de l'API : on attend que les lignes changent avant de comparer.
+    const ascendingFirst = await firstDevice();
 
     await sortButton.click();
     await expect(header).toHaveAttribute("aria-sort", "descending");
-    const descending = await firstDevice();
+    await expect(page).toHaveURL(/sort=-model(&|$)/);
+    await expect.poll(firstDevice).not.toBe(ascendingFirst);
 
-    expect(ascending.localeCompare(descending, "fr")).toBeLessThan(0);
+    expect(ascendingFirst.localeCompare(await firstDevice(), "fr")).toBeLessThan(0);
+  });
+
+  test("trie par dernier contact sur le heartbeat puis sur la présence", async ({ page }) => {
+    const sortButton = page.getByRole("button", { name: DEVICE.table.lastContact, exact: true });
+
+    await sortButton.click();
+    await expect.poll(() => currentUrl(page)).toContain("sort=-lastHeartbeatAt,-presenceChangedAt");
+
+    await sortButton.click();
+    await expect.poll(() => currentUrl(page)).toContain("sort=lastHeartbeatAt,presenceChangedAt");
   });
 
   test("sélectionne des lignes et affiche leur nombre", async ({ page }) => {
