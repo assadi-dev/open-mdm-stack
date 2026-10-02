@@ -10,7 +10,14 @@ import {
 } from "@core/exception";
 
 import { DeviceRepository } from "./repository";
-import { EnrollDeviceInput, HeartbeatInput, InventoryInput, TelemetryPatchInput } from "./dto/schema";
+import { deviceOverviewStatus, type DeviceOverviewStatus } from "@drizzle/schemas/device-overview-view";
+import {
+    DeviceCollectionQuery,
+    EnrollDeviceInput,
+    HeartbeatInput,
+    InventoryInput,
+    TelemetryPatchInput,
+} from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
 import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
@@ -206,5 +213,25 @@ export class DeviceService {
 
     async patchTelemetry(deviceId: string, patch: TelemetryPatchInput) {
         await this.repository.patchTelemetry(deviceId, patch);
+    }
+
+    async collection(query: DeviceCollectionQuery) {
+        return this.repository.collection(query);
+    }
+
+    /**
+     * Counts behind the list's tabs, subtitle and Android filter. Every status
+     * is present (0 when no device has it), so the front never has to guess.
+     */
+    async summary() {
+        const { byStatus, androidVersions } = await this.repository.summary();
+
+        const counts = Object.fromEntries(deviceOverviewStatus.map((status) => [status, 0])) as Record<DeviceOverviewStatus, number>;
+        for (const row of byStatus) {
+            counts[row.status] = row.count;
+        }
+        const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+
+        return { total, byStatus: counts, androidVersions };
     }
 }

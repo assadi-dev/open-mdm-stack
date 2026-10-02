@@ -32,16 +32,20 @@ export type CollectionQuery<TSortable extends string = string, TFilters extends 
 }
 
 
+// A table column, or a computed column of a view (`sql<…>\`…\`.as("name")`), which Drizzle types as `SQL.Aliased`.
+export type CollectionColumn = AnyColumn | SQL.Aliased;
+
+
 // What a repository declares once so its table can serve a `CollectionQuery`.
 export type CollectionConfig<TQuery extends CollectionQuery<string, Record<string, unknown>>> = {
     /** One column per sortable id of the query schema. */
-    sortable: Record<TQuery["sort"][number]["id"], AnyColumn>;
+    sortable: Record<TQuery["sort"][number]["id"], CollectionColumn>;
     /** Used when the client asks for no sort. */
     defaultSort: TQuery["sort"];
     /** A unique column, sorted last so a row never shows up on two pages. */
     tieBreaker: AnyColumn;
     /** Text columns matched by `search` (ILIKE, OR-ed). Not enums: Postgres has no ILIKE on them. */
-    searchable: AnyColumn[];
+    searchable: CollectionColumn[];
     /** The SQL condition of each filter, given the requested values. */
     filters: { [TColumn in keyof TQuery["filters"]]-?: (values: NonNullable<TQuery["filters"][TColumn]>) => SQL };
 }

@@ -1,4 +1,6 @@
+import { deviceOverviewStatus } from "@drizzle/schemas/device-overview-view";
 import { enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
+import { createCollectionQuerySchema } from "@features/paginations/dto/schema";
 import z from "zod";
 
 
@@ -119,10 +121,30 @@ export const telemetryPatchSchema = z.object({
     { message: "At least one of network, memory, storage, battery, location is required" },
 );
 
+// Admin -> API on GET /devices?page=1&limit=20&search=pixel&sort=-createdAt,model&status=offline,pending&sdkVersion=34,33
+// Sort and filter names are the API field names (see DeviceRepository.collection).
+export const deviceCollectionQuerySchema = createCollectionQuerySchema({
+    sortable: [
+        "model",
+        "serial",
+        "assignedToName",
+        "sdkVersion",
+        "battery",
+        "lastHeartbeatAt",
+        "presenceChangedAt",
+        "createdAt",
+    ],
+    filters: {
+        status: z.enum(deviceOverviewStatus),
+        sdkVersion: z.coerce.number<string>().int(),
+    },
+});
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
 export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
+export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
 
 
 export const deviceDecoder = {
@@ -130,4 +152,5 @@ export const deviceDecoder = {
     heartbeat: (data: unknown) => heartbeatSchema.safeParse(data),
     inventory: (data: unknown) => inventorySchema.safeParse(data),
     telemetryPatch: (data: unknown) => telemetryPatchSchema.safeParse(data),
+    collection: (data: unknown) => deviceCollectionQuerySchema.safeParse(data),
 };

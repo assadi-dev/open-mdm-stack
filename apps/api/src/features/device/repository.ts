@@ -1,4 +1,5 @@
 import { db as defaultDb } from "@drizzle/instance";
+import { deviceOverview } from "@drizzle/schemas/device-overview-view";
 import { devices, enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
 import {
     deviceTelemetry,
@@ -12,8 +13,11 @@ import {
     DEFAULT_BATTERY_TELEMETRY,
     DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
-import { eq } from "drizzle-orm";
+import { count, desc, eq, isNotNull, max } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
+import type { DeviceCollectionQuery } from "./dto/schema";
+import { deviceRepositoryFactory } from "./factory/repositories";
 
 export class DeviceRepository {
 
@@ -219,5 +223,42 @@ export class DeviceRepository {
                 updatedAt: new Date(),
             })
             .where(eq(deviceTelemetry.deviceId, deviceId));
+    }
+
+    /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */
+    async collection(collectionQuery: DeviceCollectionQuery) {
+        const selection = deviceRepositoryFactory.toSelectCollection(deviceOverview);
+        const config = deviceRepositoryFactory.toCollectionConfig(deviceOverview);
+        const { where, orderBy, limit, offset } = toCollectionClauses(collectionQuery, config);
+
+        const [data, total] = await Promise.all([
+            this.db.select(selection).from(deviceOverview).where(where).orderBy(...orderBy).limit(limit).offset(offset),
+            this.db.$count(deviceOverview, where),
+        ]);
+        return buildPaginatedData(data, { page: collectionQuery.page, limit, total });
+    }
+
+    /**
+     * Counts over the whole listed fleet, never narrowed by search or filters:
+     * how many devices per status, and per Android version (newest first).
+     */
+    async summary() {
+        const [byStatus, androidVersions] = await Promise.all([
+            this.db
+                .select({ status: deviceOverview.status, count: count() })
+                .from(deviceOverview)
+                .groupBy(deviceOverview.status),
+            this.db
+                .select({
+                    sdkVersion: deviceOverview.sdkVersion,
+                    androidVersion: max(deviceOverview.release),
+                    count: count(),
+                })
+                .from(deviceOverview)
+                .where(isNotNull(deviceOverview.sdkVersion))
+                .groupBy(deviceOverview.sdkVersion)
+                .orderBy(desc(deviceOverview.sdkVersion)),
+        ]);
+        return { byStatus, androidVersions };
     }
 }

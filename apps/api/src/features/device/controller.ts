@@ -4,6 +4,7 @@ import { API_BASE_URL } from "@config/cors";
 import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
+    validateDeviceCollectionQuery,
     validateEnrollDeviceInput,
     validateHeartbeatInput,
     validateInventoryInput,
@@ -45,5 +46,18 @@ export class DeviceController {
         const input = validateTelemetryPatchInput(req.body);
         await this.deviceService.patchTelemetry(req.deviceId as string, input);
         return res.json({ ok: true });
+    };
+
+    // GET /devices?page&limit&search&sort&status&sdkVersion  (admin)
+    collections = async (req: Request, res: Response) => {
+        const query = validateDeviceCollectionQuery(req.query);
+        const result = await this.deviceService.collection(query);
+        return res.json(result);
+    };
+
+    // GET /devices/summary  (admin)
+    summary = async (_req: Request, res: Response) => {
+        const result = await this.deviceService.summary();
+        return res.json(result);
     };
 }

@@ -1,6 +1,7 @@
 import {
 
     deviceDecoder,
+    DeviceCollectionQuery,
     EnrollDeviceInput,
     HeartbeatInput,
     InventoryInput,
@@ -35,6 +36,14 @@ export const validateInventoryInput = (body: unknown): InventoryInput => {
 
 export const validateTelemetryPatchInput = (body: unknown): TelemetryPatchInput => {
     const result = deviceDecoder.telemetryPatch(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateDeviceCollectionQuery = (query: unknown): DeviceCollectionQuery => {
+    const result = deviceDecoder.collection(query);
     if (!result.success) {
         throw result.error;
     }
