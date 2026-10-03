@@ -49,6 +49,7 @@ const heartbeatBody = {
     ts: Date.now(),
     screenOn: true,
     sdkVersion: 34,
+    release: "14",
     ipAddress: "192.168.1.10",
     agentVersionName: "1.2.0",
     agentVersionCode: 12,
@@ -108,11 +109,28 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
         expect(repoMock.recordHeartbeat).toHaveBeenCalledWith("device-1", {
             isScreenOn: true,
             sdkVersion: 34,
+            release: "14",
             ipAddress: "192.168.1.10",
             agentVersionName: "1.2.0",
             agentVersionCode: 12,
             agentPackage: "com.openmdm.agent",
         });
+    });
+
+    it.each([
+        ["blank", { ...heartbeatBody, release: "   " }],
+        ["missing (an agent that doesn't report it yet)", (({ release: _release, ...rest }) => rest)(heartbeatBody)],
+    ])("leaves the stored Android version alone when `release` is %s, without rejecting the heartbeat", async (_label, body) => {
+        verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });
+
+        await request(app)
+            .post("/api/v1/devices/device-1/heartbeat")
+            .set("Authorization", "Bearer valid-jwt")
+            .send(body)
+            .expect(200);
+
+        expect(repoMock.recordHeartbeat.mock.calls[0][1].release).toBeUndefined();
     });
 });
 

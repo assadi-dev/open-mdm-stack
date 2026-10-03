@@ -52,6 +52,10 @@ export const heartbeatSchema = z.object({
     // real-time report on mdm/devices/{id}/screen (see ScreenStateReporter.kt).
     screenOn: z.boolean(),
     sdkVersion: z.number().int().optional(),
+    // Android version name (`Build.VERSION.RELEASE`, e.g. "14"), so a refresh keeps the list's "Android" column
+    // right. Lenient on purpose: a blank value is "not reported" (it never clears the stored one, and it must not
+    // make the whole heartbeat fail).
+    release: z.string().transform((value) => value.trim() || undefined).optional(),
     ipAddress: z.string().optional(),
     agentVersionName: z.string().optional(),
     agentVersionCode: z.number().optional(),

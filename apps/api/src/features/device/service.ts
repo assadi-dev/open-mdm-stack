@@ -195,6 +195,7 @@ export class DeviceService {
         await this.repository.recordHeartbeat(deviceId, {
             isScreenOn: input.screenOn,
             sdkVersion: input.sdkVersion,
+            release: input.release,
             ipAddress: input.ipAddress,
             agentVersionName: input.agentVersionName,
             agentVersionCode: input.agentVersionCode,

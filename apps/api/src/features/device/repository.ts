@@ -135,7 +135,7 @@ export class DeviceRepository {
 
     /**
      * Refreshes the facts carried on every heartbeat — screen state, IP,
-     * SDK/agent version — alongside the last-seen timestamp. The optional
+     * Android/SDK/agent version — alongside the last-seen timestamp. The optional
      * fields are omitted by Drizzle when `undefined` (left unchanged), not
      * set to NULL, so a heartbeat that couldn't determine e.g. `ipAddress`
      * doesn't wipe out the last known value.
@@ -143,6 +143,7 @@ export class DeviceRepository {
     async recordHeartbeat(id: string, data: {
         isScreenOn: boolean;
         sdkVersion?: number;
+        release?: string;
         ipAddress?: string;
         agentVersionName?: string;
         agentVersionCode?: number;
@@ -153,6 +154,7 @@ export class DeviceRepository {
             .set({
                 isScreenOn: data.isScreenOn,
                 sdkVersion: data.sdkVersion,
+                release: data.release,
                 ipAddress: data.ipAddress,
                 agentVersionName: data.agentVersionName,
                 agentVersionCode: data.agentVersionCode,
