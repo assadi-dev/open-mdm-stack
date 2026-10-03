@@ -15,7 +15,6 @@ export type UpdateDeviceInput = {
   name: string | null;
   androidVersion: string | null;
   sdkVersion: number | null;
-  androidId: string | null;
 };
 
 export type FilterOption = {

@@ -13,7 +13,7 @@ import {
     DEFAULT_BATTERY_TELEMETRY,
     DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
-import { count, desc, eq, isNotNull, max } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, max } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
 import type { DeviceCollectionQuery } from "./dto/schema";
@@ -243,6 +243,14 @@ export class DeviceRepository {
         androidId?: string | null;
     }) {
         await this.db.update(devices).set(patch).where(eq(devices.id, id));
+    }
+
+    /** Marks the listed (pending or enrolled) devices among `ids` as unenrolled. Any other id is left alone. */
+    async unenroll(ids: string[]) {
+        await this.db
+            .update(devices)
+            .set({ enrollmentStatus: "unenrolled" })
+            .where(and(inArray(devices.id, ids), inArray(devices.enrollmentStatus, ["pending", "enrolled"])));
     }
 
     /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */

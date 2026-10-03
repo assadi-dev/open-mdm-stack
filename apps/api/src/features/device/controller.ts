@@ -4,6 +4,7 @@ import { API_BASE_URL } from "@config/cors";
 import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
+    validateDeleteDevicesInput,
     validateDeviceCollectionQuery,
     validateDeviceIdParam,
     validateEnrollDeviceInput,
@@ -69,5 +70,12 @@ export class DeviceController {
         const input = validateUpdateDeviceInput(req.body);
         const device = await this.deviceService.update(id, input);
         return res.json(device);
+    };
+
+    // DELETE /devices  { ids: [...] }  (admin) — unenrolls the devices; one id unenrolls a single device
+    removeMany = async (req: Request, res: Response) => {
+        const { ids } = validateDeleteDevicesInput(req.body);
+        await this.deviceService.unenroll(ids);
+        return res.status(204).send();
     };
 }

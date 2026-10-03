@@ -287,7 +287,11 @@
       "Bash(file _dto/device.dto.ts _types/device.types.ts _services/*.ts _hooks/*.ts _components/*.tsx ../../../constants/device.ts)",
       "Bash(awk -F: '{print $1\": \"$2}')",
       "Bash(timeout 240 node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-devices.cjs)",
-      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-devices.cjs)"
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-devices.cjs)",
+      "Bash(git -C /Users/assadi/Projects/Turbo/open-mdm-stack log -3 --format='%h %s')",
+      "Bash(awk -F: '{print $2}')",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-edit.cjs)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-delete.cjs)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

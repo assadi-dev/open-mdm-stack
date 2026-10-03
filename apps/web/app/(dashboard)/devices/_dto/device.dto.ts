@@ -8,7 +8,6 @@ export const DEVICE_STATUS_KEYS = ["pending", "offline", "commandRunning", "onli
 // Les limites de l'API (`updateDeviceSchema`).
 const NAME_MAX_LENGTH = 100;
 const ANDROID_VERSION_MAX_LENGTH = 32;
-const ANDROID_ID_MAX_LENGTH = 64;
 const SDK_VERSION_MAX = 99;
 
 // Ce que `GET /devices` renvoie pour chaque appareil. Le nom, le modèle, le n° de série, la version d'Android et le porteur sont
@@ -59,7 +58,6 @@ export const deviceFormSchema = z.object({
   name: z.string().trim().max(NAME_MAX_LENGTH, DEVICE.validation.nameTooLong),
   androidVersion: z.string().trim().max(ANDROID_VERSION_MAX_LENGTH, DEVICE.validation.androidVersionTooLong),
   sdkVersion: z.string().trim().refine(isSdkVersion, DEVICE.validation.sdkVersionInvalid),
-  androidId: z.string().trim().max(ANDROID_ID_MAX_LENGTH, DEVICE.validation.androidIdTooLong),
 });
 
 export const DeviceDto = {

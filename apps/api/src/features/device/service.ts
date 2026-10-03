@@ -225,6 +225,16 @@ export class DeviceService {
     }
 
     /**
+     * "Deleting" devices from the list unenrolls them: they leave the list, `requireDeviceAuth` and the command
+     * service turn them away (they only serve `enrolled` devices), and a re-enrollment with the pinned key brings
+     * them back (see `create`). Idempotent: ids that don't exist or are already unenrolled are ignored, so a stale
+     * selection can't make the request fail.
+     */
+    async unenroll(ids: string[]) {
+        await this.repository.unenroll(ids);
+    }
+
+    /**
      * Admin edit from the devices list: the label and the facts a device reports. Answers with the updated
      * list row. Only listed devices can be edited (see `device_overview`). Note that a heartbeat or a
      * re-enrollment re-reports `sdkVersion` / `release`, and overwrites what an admin typed.

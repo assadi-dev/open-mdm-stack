@@ -1,5 +1,6 @@
 import { deviceOverviewStatus } from "@drizzle/schemas/device-overview-view";
 import { enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
+import { MAX_LIMIT } from "@features/paginations/domain/paginations";
 import { createCollectionQuerySchema } from "@features/paginations/dto/schema";
 import z from "zod";
 
@@ -162,12 +163,19 @@ export const updateDeviceSchema = z.object({
     { message: "At least one of name, androidVersion, sdkVersion, androidId is required" },
 );
 
+// Admin -> API on DELETE /devices. Unenrolling one device is a list of one id: single and bulk unenrollment share
+// this endpoint. Duplicated ids are collapsed.
+export const deleteDevicesSchema = z.object({
+    ids: z.array(z.uuid()).min(1, "at least one id is required").max(MAX_LIMIT).transform((ids) => [...new Set(ids)]),
+});
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
 export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
 export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
 export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
+export type DeleteDevicesInput = z.infer<typeof deleteDevicesSchema>;
 
 
 export const deviceDecoder = {
@@ -177,4 +185,5 @@ export const deviceDecoder = {
     telemetryPatch: (data: unknown) => telemetryPatchSchema.safeParse(data),
     collection: (data: unknown) => deviceCollectionQuerySchema.safeParse(data),
     update: (data: unknown) => updateDeviceSchema.safeParse(data),
+    deleteMany: (data: unknown) => deleteDevicesSchema.safeParse(data),
 };

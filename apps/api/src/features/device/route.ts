@@ -15,6 +15,7 @@ const controller = new DeviceController();
 deviceRouter.get("/", requireAuth, controller.collections);
 deviceRouter.get("/summary", requireAuth, controller.summary);
 deviceRouter.patch("/:id", requireAuth, controller.update);
+deviceRouter.delete("/", requireAuth, controller.removeMany);
 
 deviceRouter.post("/enroll", controller.enroll);
 deviceRouter.post("/:deviceId/heartbeat", requireDeviceAuth, controller.heartbeat);

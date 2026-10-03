@@ -1,11 +1,13 @@
 export const DEVICE = {
   success: {
     update: "Appareil mis à jour.",
+    delete: "Appareil supprimé.",
+    deleteMany: "Appareils supprimés.",
   },
   error: {
     update: "Impossible de mettre à jour l'appareil. Réessayez.",
-    // Le seul échec que l'administrateur peut corriger : un autre appareil porte déjà cet Android ID.
-    updateConflict: "Cet Android ID est déjà utilisé par un autre appareil.",
+    delete: "Impossible de supprimer l'appareil. Réessayez.",
+    deleteMany: "Impossible de supprimer les appareils. Réessayez.",
   },
   battery: {
     label: "Batterie",
@@ -77,6 +79,20 @@ export const DEVICE = {
       submit: "Enregistrer",
       submitting: "Enregistrement…",
     },
+    // « Supprimer » désenrôle : l'appareil quitte la liste, le serveur le refuse, et un réenrôlement le ramène.
+    delete: {
+      title: "Supprimer l'appareil",
+      description:
+        "Cet appareil sera désenrôlé : il disparaîtra de la liste et ne pourra plus joindre le serveur tant qu'il ne s'est pas réenrôlé.",
+      submit: "Supprimer",
+    },
+    deleteMany: {
+      title: "Supprimer",
+      items: "appareils",
+      description:
+        "Ces appareils seront désenrôlés : ils disparaîtront de la liste et ne pourront plus joindre le serveur tant qu'ils ne se seront pas réenrôlés.",
+      submit: "Supprimer",
+    },
   },
   form: {
     name: {
@@ -87,16 +103,10 @@ export const DEVICE = {
     },
     androidVersion: { label: "Version d'Android", placeholder: "ex. 14" },
     sdkVersion: { label: "Version du SDK", placeholder: "ex. 34" },
-    androidId: {
-      label: "Android ID",
-      placeholder: "ex. 934739b4e33ada2c",
-      description: "L'appareil se reconnaît à cet identifiant quand il se réenrôle : ne le modifiez qu'en cas d'erreur.",
-    },
   },
   validation: {
     nameTooLong: "Le nom ne peut pas dépasser 100 caractères.",
     androidVersionTooLong: "La version d'Android ne peut pas dépasser 32 caractères.",
     sdkVersionInvalid: "La version du SDK est un nombre entier entre 1 et 99.",
-    androidIdTooLong: "L'Android ID ne peut pas dépasser 64 caractères.",
   },
 } as const;

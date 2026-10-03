@@ -5,4 +5,5 @@ export const DEVICES_ENDPOINTS = {
     collections: (searchParams?: URLSearchParams) => withSearchParams("devices", searchParams),
     summary: "devices/summary",
     item: (id: string) => `devices/${id}`,
+    removeMany: "devices",
 }

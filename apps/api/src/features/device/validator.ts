@@ -3,6 +3,7 @@ import { HTTPNotFoundException } from "@core/exception";
 import {
 
     deviceDecoder,
+    DeleteDevicesInput,
     DeviceCollectionQuery,
     EnrollDeviceInput,
     HeartbeatInput,
@@ -55,6 +56,14 @@ export const validateDeviceCollectionQuery = (query: unknown): DeviceCollectionQ
 
 export const validateUpdateDeviceInput = (body: unknown): UpdateDeviceInput => {
     const result = deviceDecoder.update(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateDeleteDevicesInput = (body: unknown): DeleteDevicesInput => {
+    const result = deviceDecoder.deleteMany(body);
     if (!result.success) {
         throw result.error;
     }

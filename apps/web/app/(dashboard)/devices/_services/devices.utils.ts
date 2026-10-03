@@ -79,7 +79,6 @@ export const toDeviceFormValues = (device: Device): DeviceFormValues => ({
   name: device.name ?? "",
   androidVersion: device.androidVersion ?? "",
   sdkVersion: device.sdkVersion === null ? "" : String(device.sdkVersion),
-  androidId: device.androidId ?? "",
 });
 
 // Les valeurs du formulaire sont déjà rognées par le schéma : un champ vide efface la valeur (`null`).
@@ -88,5 +87,13 @@ export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDevic
   name: values.name || null,
   androidVersion: values.androidVersion || null,
   sdkVersion: values.sdkVersion === "" ? null : Number(values.sdkVersion),
-  androidId: values.androidId || null,
 });
+
+// « Supprimer l'appareil « Pixel 8 » ? »
+export const toDeleteTitle = (name: string) => `${DEVICE.dialog.delete.title} « ${name} » ?`;
+
+// « Supprimer 3 appareils ? »
+export const toDeleteManyTitle = (count: number) => {
+  const { title, items } = DEVICE.dialog.deleteMany;
+  return `${title} ${formatNumber(count)} ${items} ?`;
+};

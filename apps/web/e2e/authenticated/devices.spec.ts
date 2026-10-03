@@ -153,12 +153,13 @@ test.describe("appareils", () => {
     return dialog;
   };
 
-  test("ouvre le formulaire de modification avec les quatre champs", async ({ page }) => {
+  test("ouvre le formulaire de modification avec ses trois champs", async ({ page }) => {
     const dialog = await openUpdateDialog(page);
 
-    for (const { label } of [DEVICE.form.name, DEVICE.form.androidVersion, DEVICE.form.sdkVersion, DEVICE.form.androidId]) {
+    for (const { label } of [DEVICE.form.name, DEVICE.form.androidVersion, DEVICE.form.sdkVersion]) {
       await expect(dialog.getByLabel(label, { exact: false }).first()).toBeVisible();
     }
+    await expect(dialog.getByRole("textbox")).toHaveCount(3);
     await expect(dialog.getByLabel(DEVICE.form.sdkVersion.label)).toHaveValue(/^\d*$/);
 
     await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
@@ -173,6 +174,34 @@ test.describe("appareils", () => {
 
     await expect(dialog.getByText(DEVICE.validation.sdkVersionInvalid)).toBeVisible();
     await expect(page.getByText(DEVICE.success.update)).toHaveCount(0);
+  });
+
+  // Ces tests annulent la confirmation : aucun appareil n'est désenrôlé.
+  test("demande confirmation avant de supprimer un appareil, et le garde si on annule", async ({ page }) => {
+    const rows = await rowCount(page);
+    await page.getByRole("button", { name: new RegExp(`^${DEVICE.actionsFor} `) }).first().click();
+    await page.getByRole("menuitem", { name: DEVICE.button.delete }).click();
+
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText(DEVICE.dialog.delete.description);
+    await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
+
+    await expect(dialog).toBeHidden();
+    expect(await rowCount(page)).toBe(rows);
+  });
+
+  test("demande confirmation avant de supprimer la sélection, et la garde si on annule", async ({ page }) => {
+    const rowCheckboxes = page.getByRole("checkbox", { name: DATA_TABLE.selection.row });
+    await rowCheckboxes.nth(0).check();
+    await rowCheckboxes.nth(1).check();
+    await page.getByRole("toolbar").getByRole("button", { name: DEVICE.button.deleteMany }).click();
+
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText(DEVICE.dialog.deleteMany.description);
+    await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("toolbar")).toContainText(`2 ${DATA_TABLE.selection.many}`);
   });
 
   test("propose d'actualiser ou de supprimer les appareils sélectionnés", async ({ page }) => {

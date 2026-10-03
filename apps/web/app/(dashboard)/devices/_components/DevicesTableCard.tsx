@@ -62,7 +62,10 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
           dataTable={dataTable}
           showSearch={false}
           showPagination={false}
-          selectionActions={() => [<RefreshDevicesAction key="refresh" />, <RemoveDevicesAction key="remove" />]}
+          selectionActions={(selected) => [
+            <RefreshDevicesAction key="refresh" />,
+            <RemoveDevicesAction key="remove" devices={selected} onDeleted={dataTable.selection.clear} />,
+          ]}
         />
         <DataTablePagination dataTable={dataTable} itemsLabel={DEVICE.pagination.items} className="border-t border-border" />
       </CardQueryState>
