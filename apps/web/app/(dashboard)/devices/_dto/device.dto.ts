@@ -48,6 +48,9 @@ export const deviceSummarySchema = z.object({
       count: z.number().int().nonnegative(),
     }),
   ),
+  // Les marques et les modèles du parc, par ordre alphabétique : les choix des filtres du même nom.
+  brands: z.array(z.string()),
+  models: z.array(z.string()),
 });
 
 // Ce que `POST /devices/refresh` renvoie : un résultat par appareil, dans l'ordre des ids envoyés.

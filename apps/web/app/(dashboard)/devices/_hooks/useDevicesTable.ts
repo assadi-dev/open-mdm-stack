@@ -1,5 +1,5 @@
 import { functionalUpdate, type OnChangeFn, type SortingState } from "@tanstack/react-table";
-import { parseAsArrayOf, parseAsInteger, parseAsStringLiteral } from "nuqs";
+import { parseAsArrayOf, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useDataTableSearchParams } from "@/hooks/useDataTableSearchParams";
 import { DEVICE_STATUS_KEYS } from "../_dto/device.dto";
 import type { Device } from "../_types/device.types";
@@ -12,6 +12,8 @@ const DEFAULT_SORTING: SortingState = [{ id: "createdAt", desc: true }];
 const FILTERS = {
   status: parseAsArrayOf(parseAsStringLiteral(DEVICE_STATUS_KEYS)),
   sdkVersion: parseAsArrayOf(parseAsInteger),
+  brand: parseAsArrayOf(parseAsString),
+  model: parseAsArrayOf(parseAsString),
 };
 
 // Référence stable : `data ?? []` créerait un nouveau tableau à chaque rendu tant que la requête charge.
@@ -46,7 +48,7 @@ export const useDevicesTable = () => {
     devices: data?.data ?? NO_DEVICES,
     // À passer tel quel à `useDataTable({ server })`.
     server: { ...searchParams.table, onSortingChange, rowCount: data?.metadata.total ?? 0 },
-    // Les onglets et la version d'Android, qui vivent hors du tableau.
+    // Les onglets et le panneau « Filtrer », qui vivent hors du tableau.
     filters,
     isPending,
     isError,

@@ -88,7 +88,8 @@ export const DataTableFilter = ({ label, activeCount, onApply, onReset, onOpen, 
             <SheetHeader className="p-5 pr-14">
               <SheetTitle>{DATA_TABLE.filter.title}</SheetTitle>
             </SheetHeader>
-            <div className="overflow-y-auto px-5 pb-5">{children}</div>
+            {/* Le même espacement que dans le popover : une page qui a plusieurs champs ne les colle pas. */}
+            <div className="flex flex-col gap-3 overflow-y-auto px-5 pb-5">{children}</div>
           </div>
           <SheetFooter className="border-t border-border p-4">
             <FilterActions size="default" canReset={canReset} onApply={handleApply} onReset={handleReset} />

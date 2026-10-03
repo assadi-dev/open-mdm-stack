@@ -12,6 +12,15 @@ const currentUrl = (page: Page) => decodeURIComponent(page.url());
 const pageButton = (page: Page, number: number) =>
   page.getByRole("button", { name: `${DATA_TABLE.pagination.page} ${number}`, exact: true });
 
+// Le bouton « Filtrer » : son badge porte le nombre de valeurs appliquées, il faut donc le chercher par son début.
+const filterButton = (page: Page) => page.getByRole("button", { name: new RegExp(`^${DEVICE.button.filter}`) });
+const openFilter = async (page: Page) => {
+  await filterButton(page).click();
+  const panel = page.getByRole("dialog");
+  await expect(panel.getByText(DATA_TABLE.filter.title)).toBeVisible();
+  return panel;
+};
+
 // Le tri, la recherche et les filtres sont ceux de l'API : le tableau garde ses lignes le temps de la réponse, on attend donc le résultat.
 const allRowsMatch = (page: Page, column: number, text: string) =>
   expect
@@ -52,15 +61,53 @@ test.describe("appareils", () => {
     await allRowsMatch(page, 5, STATUS.offline.label);
   });
 
-  test("filtre par version d'Android", async ({ page }) => {
-    const results = page.getByText(new RegExp(`${DEVICE.results.many}$`));
-    const before = await results.innerText();
+  test("ouvre le panneau de filtres : marque, modèle, version d'Android et un groupe grisé", async ({ page }) => {
+    const panel = await openFilter(page);
 
-    await page.getByRole("combobox", { name: DEVICE.filters.android.label }).click();
-    await page.getByRole("option").nth(1).click();
+    for (const { label } of [DEVICE.filters.brand, DEVICE.filters.model, DEVICE.filters.android]) {
+      await expect(panel.getByRole("combobox", { name: label })).toBeEnabled();
+    }
+    await expect(panel.getByRole("combobox", { name: new RegExp(`^${DEVICE.filters.group.label}`) })).toBeDisabled();
+    await expect(panel.getByText(DEVICE.filters.group.soon)).toBeVisible();
+  });
+
+  test("filtre par version d'Android, à « Appliquer »", async ({ page }) => {
+    const panel = await openFilter(page);
+
+    await panel.getByRole("combobox", { name: DEVICE.filters.android.label }).click();
+    await page.getByRole("option", { name: new RegExp(`^${DEVICE.filters.android.version} `) }).first().click();
+    await expect(page).not.toHaveURL(/sdkVersion=/);
+
+    await panel.getByRole("button", { name: DATA_TABLE.filter.apply }).click();
 
     await expect(page).toHaveURL(/sdkVersion=\d+/);
-    await expect(results).not.toHaveText(before);
+    await expect(panel).toBeHidden();
+    await expect(filterButton(page).getByText("1", { exact: true })).toBeVisible();
+  });
+
+  test("filtre par marque", async ({ page }) => {
+    const panel = await openFilter(page);
+
+    await panel.getByRole("combobox", { name: DEVICE.filters.brand.label }).click();
+    await page.getByRole("option").nth(1).click();
+    await panel.getByRole("button", { name: DATA_TABLE.filter.apply }).click();
+
+    await expect(page).toHaveURL(/brand=[^&]+/);
+    expect(await rowCount(page)).toBeGreaterThan(0);
+  });
+
+  test("réinitialise les filtres du panneau sans toucher à l'onglet", async ({ page }) => {
+    await page.getByRole("tab", { name: new RegExp(`^${DEVICE.tabs.online}`) }).click();
+    const panel = await openFilter(page);
+    await panel.getByRole("combobox", { name: DEVICE.filters.model.label }).click();
+    await page.getByRole("option").nth(1).click();
+    await panel.getByRole("button", { name: DATA_TABLE.filter.apply }).click();
+    await expect(page).toHaveURL(/model=[^&]+/);
+
+    await (await openFilter(page)).getByRole("button", { name: DATA_TABLE.filter.reset }).click();
+
+    await expect(page).not.toHaveURL(/model=/);
+    await expect(page).toHaveURL(/status=/);
   });
 
   test("recherche un appareil par son numéro de série", async ({ page }) => {

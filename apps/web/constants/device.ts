@@ -88,9 +88,14 @@ export const DEVICE = {
       placeholder: "N° de série, modèle, utilisateur…",
       label: "Rechercher un appareil",
     },
-    android: { label: "Version Android", all: "Android : toutes", version: "Android" },
+    // Le panneau « Filtrer » : choisir « Afficher tout » vide le champ (tout revient à ne pas filtrer).
+    showAll: "Afficher tout",
+    brand: { label: "Marque", placeholder: "Toutes les marques" },
+    model: { label: "Modèle", placeholder: "Tous les modèles" },
+    // Aucun groupe côté API : le champ est grisé en attendant.
+    group: { label: "Groupe", soon: "(bientôt)", placeholder: "Tous les groupes" },
+    android: { label: "Version Android", placeholder: "Toutes les versions", version: "Android" },
   },
-  results: { one: "résultat", many: "résultats" },
   pagination: { items: "appareils" },
   dialog: {
     update: {

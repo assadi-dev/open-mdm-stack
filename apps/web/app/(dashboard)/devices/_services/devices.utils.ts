@@ -1,19 +1,22 @@
 import { DEVICE } from "@/constants/device";
 import { Conflict, GatewayTimeout } from "@/lib/api/intefaces/http-errors";
+import type { MultiSelectOption } from "@/components/multi-select/multi-select-options";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
 import type {
   Device,
+  DeviceFilterValues,
   DeviceFormValues,
   DeviceRefreshResult,
   DeviceStatus,
   DeviceSummary,
   DeviceTab,
   DeviceTabCounts,
-  FilterOption,
   UpdateDeviceInput,
 } from "../_types/device.types";
 
-export const ALL_FILTER = "all";
+// Aucun filtre du panneau : la référence est stable, pour ne pas relancer un rendu à chaque lecture.
+const NO_TEXTS: string[] = [];
+export const NO_DEVICE_FILTERS: DeviceFilterValues = { brand: NO_TEXTS, model: NO_TEXTS, sdkVersion: NO_TEXTS };
 
 // Les statuts de l'API que chaque onglet réunit (`status=online,commandRunning,pending`) ; « Tous » ne filtre pas.
 // Un appareil en attente d'enrôlement a déjà contacté le serveur : il compte parmi les appareils en ligne.
@@ -45,20 +48,30 @@ export const toTabCounts = ({ total, byStatus }: DeviceSummary) =>
     ]),
   ) as DeviceTabCounts;
 
-// Les versions viennent du résumé (tout le parc), déjà classées de la plus récente à la plus ancienne.
-export const toAndroidOptions = ({ androidVersions }: DeviceSummary): FilterOption[] => [
-  { value: ALL_FILTER, label: DEVICE.filters.android.all },
-  ...androidVersions.map(({ sdkVersion, androidVersion }) => ({
+// Les choix des filtres viennent du résumé (tout le parc). Les versions sont déjà classées de la plus récente à la plus ancienne.
+export const toAndroidLabel = (version: string | number) => `${DEVICE.filters.android.version} ${version}`;
+
+export const toAndroidOptions = ({ androidVersions }: DeviceSummary): MultiSelectOption[] =>
+  androidVersions.map(({ sdkVersion, androidVersion }) => ({
     value: String(sdkVersion),
-    label: `${DEVICE.filters.android.version} ${androidVersion ?? sdkVersion}`,
-  })),
+    label: toAndroidLabel(androidVersion ?? sdkVersion),
+  }));
+
+export const toValueOptions = (values: string[]): MultiSelectOption[] => values.map((value) => ({ value, label: value }));
+
+// Une valeur appliquée que le parc ne porte plus (lien ancien, dernier appareil désenrôlé) reste proposée : sans option,
+// le champ n'afficherait aucune puce pour la retirer.
+export const withAppliedOptions = (
+  options: MultiSelectOption[],
+  applied: string[],
+  toLabel: (value: string) => string = (value) => value,
+): MultiSelectOption[] => [
+  ...options,
+  ...applied.filter((value) => !options.some((option) => option.value === value)).map((value) => ({ value, label: toLabel(value) })),
 ];
 
 export const toDevicesSubtitle = ({ all, online }: DeviceTabCounts) =>
   `${formatNumber(all)} ${all > 1 ? DEVICE.page.subtitle.enrolled.many : DEVICE.page.subtitle.enrolled.one} · ${formatNumber(online)} ${DEVICE.page.subtitle.online}`;
-
-export const toResultsLabel = (count: number) =>
-  `${formatNumber(count)} ${count > 1 ? DEVICE.results.many : DEVICE.results.one}`;
 
 // Le nom donné à l'appareil, sinon son modèle (l'API le résout dans `displayName`).
 export const toDeviceName = ({ displayName }: Pick<Device, "displayName">) => displayName ?? DEVICE.unknownDevice;
