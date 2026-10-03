@@ -299,7 +299,10 @@
       "Bash(grep -vE \"^\\\\s*$|safe load env|npm notice\")",
       "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-refresh.cjs)",
       "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-refresh-visual.cjs)",
-      "Bash(python3 /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/edit_android_tests.py)"
+      "Bash(python3 /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/edit_android_tests.py)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-refresh-single.cjs)",
+      "Bash(node /private/tmp/claude-501/-Users-assadi-Projects-Turbo-open-mdm-stack/63cf55c8-c839-484a-bbc9-21ece458ee77/scratchpad/verify-filter.cjs)",
+      "Bash(git restore *)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

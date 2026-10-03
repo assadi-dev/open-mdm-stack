@@ -1,0 +1,31 @@
+[mcp_servers.excalidraw]
+command = "docker"
+args = [
+    "run",
+    "-i",
+    "--rm",
+    "-e",
+    "EXPRESS_SERVER_URL=http://host.docker.internal:5000",
+    "-e",
+    "ENABLE_CANVAS_SYNC=true",
+    "ghcr.io/yctimlin/mcp_excalidraw:latest",
+]
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.remotion-documentation]
+command = "npx"
+args = ["@remotion/mcp@latest"]
+
+[mcp_servers.shadcn]
+command = "npx"
+args = [
+    "shadcn@latest",
+    "mcp",
+]
+
+[mcp_servers.ui-kit]
+command = "npx"
+args = ["@ui-kit.ai/mcp-server"]
