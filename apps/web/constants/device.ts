@@ -15,11 +15,15 @@ export const DEVICE = {
     delete: "Impossible de supprimer l'appareil. Réessayez.",
     deleteMany: "Impossible de supprimer les appareils. Réessayez.",
   },
-  // L'actualisation de plusieurs appareils : un seul toast suit toute la sélection, de l'envoi au résultat. `{count}`,
-  // `{done}` et `{total}` sont remplacés par des nombres (voir `devices.utils.ts`).
+  // L'actualisation attend les appareils (15 s au plus) : un toast de promesse la suit, de l'envoi au résultat, pour un
+  // appareil comme pour plusieurs (un seul toast pour toute la sélection). `{count}`, `{done}` et `{total}` sont
+  // remplacés par des nombres (voir `devices.utils.ts`).
   toast: {
+    refresh: {
+      loading: "Interrogation en cours",
+    },
     refreshMany: {
-      loading: "Actualisation de {count} appareils…",
+      loading: "Interrogation de {count} appareils en cours",
       all: "{count} appareils actualisés.",
       partial: "{done} sur {total} appareils actualisés. Les autres sont hors ligne ou n'ont pas répondu.",
       none: "Aucun des {total} appareils n'a pu être actualisé : ils sont hors ligne ou n'ont pas répondu.",

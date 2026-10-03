@@ -98,7 +98,7 @@ export const toRefreshErrorMessage = (error: unknown) => {
 const fillCounts = (template: string, counts: Record<string, number>) =>
   Object.entries(counts).reduce((text, [name, value]) => text.replace(`{${name}}`, formatNumber(value)), template);
 
-// « Actualisation de 3 appareils… » : le toast de l'actualisation groupée, tant que l'API attend les appareils.
+// « Interrogation de 3 appareils en cours » : le toast de l'actualisation groupée, tant que l'API attend les appareils.
 export const toRefreshManyLoading = (count: number) => fillCounts(DEVICE.toast.refreshMany.loading, { count });
 
 // Le même toast, une fois les appareils passés : tous actualisés, une partie, ou aucun.
