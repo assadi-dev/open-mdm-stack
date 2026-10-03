@@ -5,6 +5,9 @@ import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 // Les statuts que `device_overview` produit. Pas de « conforme » ni « non conforme » : aucune politique n'est évaluée.
 export const DEVICE_STATUS_KEYS = ["pending", "offline", "commandRunning", "online"] as const;
 
+// Ce qui est arrivé à chaque appareil d'une actualisation groupée (`POST /devices/refresh`).
+export const DEVICE_REFRESH_OUTCOME_KEYS = ["refreshed", "offline", "timeout", "notFound", "failed"] as const;
+
 // La limite de l'API (`updateDeviceSchema`).
 const NAME_MAX_LENGTH = 100;
 
@@ -47,6 +50,16 @@ export const deviceSummarySchema = z.object({
   ),
 });
 
+// Ce que `POST /devices/refresh` renvoie : un résultat par appareil, dans l'ordre des ids envoyés.
+export const deviceRefreshSchema = z.object({
+  results: z.array(
+    z.object({
+      id: z.string(),
+      outcome: z.enum(DEVICE_REFRESH_OUTCOME_KEYS),
+    }),
+  ),
+});
+
 // Le formulaire manipule des textes : un nom vide l'efface côté API (`null`) et la liste retombe sur le modèle.
 // Il ne porte que le nom : le reste (version d'Android, SDK) est remonté par l'appareil lui-même.
 export const deviceFormSchema = z.object({
@@ -57,4 +70,5 @@ export const DeviceDto = {
   parse: (data: unknown) => deviceSchema.parse(data),
   parseCollection: (data: unknown) => deviceCollectionSchema.parse(data),
   parseSummary: (data: unknown) => deviceSummarySchema.parse(data),
+  parseRefresh: (data: unknown) => deviceRefreshSchema.parse(data),
 };

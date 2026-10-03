@@ -82,6 +82,35 @@ export class UnprocessableEntity extends Error {
     }
 }
 
+// Une réponse de l'API qui dépend d'un appareil ou d'un service en aval : l'appareil a échoué (502), le broker est
+// injoignable (503), l'appareil n'a pas répondu à temps (504).
+export class BadGateway extends Error {
+    code: number;
+    constructor(message: string, code: number = 502) {
+        super(message)
+        this.name = HTTP_ERROR.BAD_GATEWAY.name
+        this.code = code
+    }
+}
+
+export class ServiceUnavailable extends Error {
+    code: number;
+    constructor(message: string, code: number = 503) {
+        super(message)
+        this.name = HTTP_ERROR.SERVICE_UNAVAILABLE.name
+        this.code = code
+    }
+}
+
+export class GatewayTimeout extends Error {
+    code: number;
+    constructor(message: string, code: number = 504) {
+        super(message)
+        this.name = HTTP_ERROR.GATEWAY_TIMEOUT.name
+        this.code = code
+    }
+}
+
 const HTTP_ERROR_CLASSES = [
     [HTTP_ERROR.BAD_REQUEST, BadRequest],
     [HTTP_ERROR.UNAUTHORIZED, Unauthorized],
@@ -91,6 +120,9 @@ const HTTP_ERROR_CLASSES = [
     [HTTP_ERROR.UNPROCESSABLE_ENTITY, UnprocessableEntity],
     [HTTP_ERROR.LIMIT_EXCEEDED, LimitExceeded],
     [HTTP_ERROR.NOT_IMPLEMENTED, NotImplemented],
+    [HTTP_ERROR.BAD_GATEWAY, BadGateway],
+    [HTTP_ERROR.SERVICE_UNAVAILABLE, ServiceUnavailable],
+    [HTTP_ERROR.GATEWAY_TIMEOUT, GatewayTimeout],
 ] as const;
 
 export const createHttpError = (status: number, message?: string) => {

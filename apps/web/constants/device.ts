@@ -1,13 +1,29 @@
 export const DEVICE = {
   success: {
     update: "Appareil mis à jour.",
+    refresh: "Appareil actualisé.",
     delete: "Appareil supprimé.",
     deleteMany: "Appareils supprimés.",
   },
   error: {
     update: "Impossible de mettre à jour l'appareil. Réessayez.",
+    refresh: "Impossible d'actualiser l'appareil. Réessayez.",
+    // Deux situations que l'administrateur règle différemment : l'API répond 409 (hors ligne) ou 504 (aucune réponse).
+    refreshOffline: "L'appareil est hors ligne.",
+    refreshTimeout: "L'appareil n'a pas répondu.",
+    refreshMany: "Impossible d'actualiser les appareils. Réessayez.",
     delete: "Impossible de supprimer l'appareil. Réessayez.",
     deleteMany: "Impossible de supprimer les appareils. Réessayez.",
+  },
+  // L'actualisation de plusieurs appareils : un seul toast suit toute la sélection, de l'envoi au résultat. `{count}`,
+  // `{done}` et `{total}` sont remplacés par des nombres (voir `devices.utils.ts`).
+  toast: {
+    refreshMany: {
+      loading: "Actualisation de {count} appareils…",
+      all: "{count} appareils actualisés.",
+      partial: "{done} sur {total} appareils actualisés. Les autres sont hors ligne ou n'ont pas répondu.",
+      none: "Aucun des {total} appareils n'a pu être actualisé : ils sont hors ligne ou n'ont pas répondu.",
+    },
   },
   battery: {
     label: "Batterie",

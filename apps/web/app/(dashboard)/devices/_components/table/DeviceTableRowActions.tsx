@@ -5,6 +5,7 @@ import { EllipsisVertical, Eye, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/menus/DropdownMenu";
 import { DEVICE } from "@/constants/device";
+import { useDeviceMutation } from "../../_hooks/useDeviceMutation";
 import { toDeviceName } from "../../_services/devices.utils";
 import type { Device } from "../../_types/device.types";
 import { DeleteDeviceDialog } from "../modals/DeleteDeviceDialog";
@@ -14,12 +15,14 @@ type DeviceTableRowActionsProps = {
   device: Device;
 };
 
-// Le menu d'une ligne du tableau. « Modifier » et « Supprimer » sont branchés ; le détail et l'actualisation ne le sont pas encore.
+// Le menu d'une ligne du tableau. « Modifier », « Supprimer » et « Actualiser » sont branchés ; le détail ne l'est pas encore.
+// L'actualisation attend l'appareil (15 s au plus) : l'item reste grisé tant qu'elle dure, le résultat arrive par un toast.
 // Les boîtes de dialogue sont des sœurs du menu, pas ses enfants : le menu se démonte à la fermeture et emporterait la boîte avec lui.
 // Le dashboard garde `components/devices/DeviceRowActions`, qui n'a que « Voir le détail ».
 export const DeviceTableRowActions = ({ device }: DeviceTableRowActionsProps) => {
   const [isEditOpen, setEditOpen] = useState(false);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const { refresh } = useDeviceMutation();
 
   return (
     <div className="flex justify-end">
@@ -32,7 +35,7 @@ export const DeviceTableRowActions = ({ device }: DeviceTableRowActionsProps) =>
             <Eye />
             {DEVICE.button.viewDetail}
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled={refresh.isPending} onClick={() => refresh.mutate(device.id)}>
             <RefreshCw />
             {DEVICE.button.refresh}
           </DropdownMenuItem>

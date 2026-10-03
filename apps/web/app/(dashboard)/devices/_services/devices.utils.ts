@@ -1,8 +1,10 @@
 import { DEVICE } from "@/constants/device";
+import { Conflict, GatewayTimeout } from "@/lib/api/intefaces/http-errors";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
 import type {
   Device,
   DeviceFormValues,
+  DeviceRefreshResult,
   DeviceStatus,
   DeviceSummary,
   DeviceTab,
@@ -84,6 +86,31 @@ export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDevic
   id,
   name: values.name || null,
 });
+
+// Le toast d'échec d'une actualisation : hors ligne (409) et sans réponse (504) se règlent différemment, le reste reste générique.
+export const toRefreshErrorMessage = (error: unknown) => {
+  if (error instanceof Conflict) return DEVICE.error.refreshOffline;
+  if (error instanceof GatewayTimeout) return DEVICE.error.refreshTimeout;
+  return DEVICE.error.refresh;
+};
+
+// Remplace `{count}`, `{done}`… d'un texte des constantes par des nombres.
+const fillCounts = (template: string, counts: Record<string, number>) =>
+  Object.entries(counts).reduce((text, [name, value]) => text.replace(`{${name}}`, formatNumber(value)), template);
+
+// « Actualisation de 3 appareils… » : le toast de l'actualisation groupée, tant que l'API attend les appareils.
+export const toRefreshManyLoading = (count: number) => fillCounts(DEVICE.toast.refreshMany.loading, { count });
+
+// Le même toast, une fois les appareils passés : tous actualisés, une partie, ou aucun.
+export const toRefreshManySuccess = (results: DeviceRefreshResult[]) => {
+  const total = results.length;
+  const done = results.filter(({ outcome }) => outcome === "refreshed").length;
+  const { all, partial, none } = DEVICE.toast.refreshMany;
+
+  if (done === total) return fillCounts(all, { count: total });
+  if (done === 0) return fillCounts(none, { total });
+  return fillCounts(partial, { done, total });
+};
 
 // « Supprimer l'appareil « Pixel 8 » ? »
 export const toDeleteTitle = (name: string) => `${DEVICE.dialog.delete.title} « ${name} » ?`;

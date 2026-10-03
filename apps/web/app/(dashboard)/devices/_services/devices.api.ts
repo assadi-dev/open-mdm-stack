@@ -3,7 +3,8 @@ import { DeviceDto } from "../_dto/device.dto";
 import type { UpdateDeviceInput } from "../_types/device.types";
 
 // Tous les appels passent par le proxy Next (`app/api/v1/(devices)`) vers l'API. La collection se lit au pluriel ;
-// les écritures sont au singulier (`/device`), sauf la suppression, au pluriel, qui reçoit la liste des ids dans le corps.
+// les écritures sont au singulier (`/device`), sauf la suppression et l'actualisation de plusieurs appareils, au pluriel,
+// qui reçoivent la liste des ids dans le corps.
 const COLLECTION_URL = "/api/v1/devices";
 const SUMMARY_URL = "/api/v1/devices/summary";
 const ITEM_URL = "/api/v1/device";
@@ -33,6 +34,25 @@ export const updateDeviceApi = async ({ id, ...input }: UpdateDeviceInput) => {
   });
   if (!response.ok) throw createHttpError(response.status);
   return DeviceDto.parse(await response.json());
+};
+
+// L'API demande à l'appareil de se signaler et attend sa réponse (15 s au plus) : l'appel est long. Elle répond avec la
+// ligne mise à jour, ou 409 (hors ligne), 502 (l'appareil a échoué), 503 (broker injoignable), 504 (aucune réponse).
+export const refreshDeviceApi = async (id: string) => {
+  const response = await fetch(`${ITEM_URL}/${encodeURIComponent(id)}/refresh`, { method: "POST" });
+  if (!response.ok) throw createHttpError(response.status);
+  return DeviceDto.parse(await response.json());
+};
+
+// Plusieurs appareils à la fois. Toujours 200 : les appareils injoignables ne font pas échouer l'appel, chacun a son résultat.
+export const refreshDevicesApi = async (ids: string[]) => {
+  const response = await fetch(`${COLLECTION_URL}/refresh`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ ids }),
+  });
+  if (!response.ok) throw createHttpError(response.status);
+  return DeviceDto.parseRefresh(await response.json()).results;
 };
 
 // Un seul appel pour un appareil comme pour plusieurs : supprimer un seul appareil envoie une liste d'un id. L'API

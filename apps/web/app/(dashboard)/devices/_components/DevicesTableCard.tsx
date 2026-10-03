@@ -63,7 +63,7 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
           showSearch={false}
           showPagination={false}
           selectionActions={(selected) => [
-            <RefreshDevicesAction key="refresh" />,
+            <RefreshDevicesAction key="refresh" devices={selected} />,
             <RemoveDevicesAction key="remove" devices={selected} onDeleted={dataTable.selection.clear} />,
           ]}
         />

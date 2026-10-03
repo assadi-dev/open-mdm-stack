@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import type { z } from "zod";
 import {
+    BadGateway,
     BadRequest,
     Conflict,
     Forbidden,
+    GatewayTimeout,
     InternalError,
     LimitExceeded,
     NotFound,
     NotImplemented,
+    ServiceUnavailable,
     Unauthorized,
     UnprocessableEntity,
     createHttpError,
@@ -32,6 +35,9 @@ const errorContext = new ErrorContextStrategy(
         new InstanceErrorStrategy(UnprocessableEntity),
         new InstanceErrorStrategy(LimitExceeded),
         new InstanceErrorStrategy(NotImplemented),
+        new InstanceErrorStrategy(BadGateway),
+        new InstanceErrorStrategy(ServiceUnavailable),
+        new InstanceErrorStrategy(GatewayTimeout),
         new InstanceErrorStrategy(InternalError),
     ],
     new DefaultErrorStrategy(),
