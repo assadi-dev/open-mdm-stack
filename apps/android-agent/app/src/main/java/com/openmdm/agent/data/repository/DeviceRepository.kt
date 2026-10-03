@@ -101,6 +101,7 @@ class DeviceRepository(
                 ts = System.currentTimeMillis(),
                 screenOn = inventory.isScreenOn(),
                 sdkVersion = device.sdkVersion,
+                release = device.release,
                 ipAddress = inventory.networkInventory.getIpAddress(),
                 agentVersionName = device.agentVersionName,
                 agentVersionCode = device.agentVersionCode,
@@ -140,6 +141,17 @@ class DeviceRepository(
     }.onFailure {
         if (it is CancellationException) throw it
         Log.w(TAG, "Telemetry report failed", it)
+    }
+
+    /**
+     * Pushes the heartbeat and the telemetry snapshot — what the periodic [com.openmdm.agent.work.HeartbeatWorker] does,
+     * and what a `refresh` command asks for on demand. The two calls are independent: both always run, so a failure on
+     * one doesn't skip the other. Fails if either did (with the heartbeat's error first).
+     */
+    suspend fun report(): Result<Unit> {
+        val heartbeat = sendHeartbeat()
+        val telemetry = sendTelemetry()
+        return heartbeat.exceptionOrNull()?.let { Result.failure(it) } ?: telemetry
     }
 
     private companion object {

@@ -36,7 +36,10 @@ class AppContainer(private val appContext: Context) {
 
     val mqttGateway: DeviceMqttGateway by lazy { DeviceMqttGateway(secureStore) }
 
-    val commandExecutor: CommandExecutor by lazy { CommandExecutor(deviceOwnerManager) }
+    // `refresh` pushes the heartbeat and the telemetry through the repository, built lazily below.
+    val commandExecutor: CommandExecutor by lazy {
+        CommandExecutor(deviceOwnerManager, report = { deviceRepository.report() })
+    }
 
     val inventoryCollector: InventoryCollector by lazy { InventoryCollector(appContext) }
 
