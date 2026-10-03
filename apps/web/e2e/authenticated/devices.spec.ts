@@ -153,26 +153,23 @@ test.describe("appareils", () => {
     return dialog;
   };
 
-  test("ouvre le formulaire de modification avec ses trois champs", async ({ page }) => {
+  test("ouvre le formulaire de modification avec son seul champ, le nom", async ({ page }) => {
     const dialog = await openUpdateDialog(page);
 
-    for (const { label } of [DEVICE.form.name, DEVICE.form.androidVersion, DEVICE.form.sdkVersion]) {
-      await expect(dialog.getByLabel(label, { exact: false }).first()).toBeVisible();
-    }
-    await expect(dialog.getByRole("textbox")).toHaveCount(3);
-    await expect(dialog.getByLabel(DEVICE.form.sdkVersion.label)).toHaveValue(/^\d*$/);
+    await expect(dialog.getByLabel(DEVICE.form.name.label, { exact: false }).first()).toBeVisible();
+    await expect(dialog.getByRole("textbox")).toHaveCount(1);
 
     await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
     await expect(dialog).toBeHidden();
   });
 
-  test("refuse une version du SDK qui n'est pas un nombre, sans envoyer", async ({ page }) => {
+  test("refuse un nom de plus de 100 caractères, sans envoyer", async ({ page }) => {
     const dialog = await openUpdateDialog(page);
 
-    await dialog.getByLabel(DEVICE.form.sdkVersion.label).fill("abc");
+    await dialog.getByLabel(DEVICE.form.name.label, { exact: false }).first().fill("x".repeat(101));
     await dialog.getByRole("button", { name: DEVICE.dialog.update.submit }).click();
 
-    await expect(dialog.getByText(DEVICE.validation.sdkVersionInvalid)).toBeVisible();
+    await expect(dialog.getByText(DEVICE.validation.nameTooLong)).toBeVisible();
     await expect(page.getByText(DEVICE.success.update)).toHaveCount(0);
   });
 

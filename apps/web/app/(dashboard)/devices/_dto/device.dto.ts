@@ -5,10 +5,8 @@ import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 // Les statuts que `device_overview` produit. Pas de « conforme » ni « non conforme » : aucune politique n'est évaluée.
 export const DEVICE_STATUS_KEYS = ["pending", "offline", "commandRunning", "online"] as const;
 
-// Les limites de l'API (`updateDeviceSchema`).
+// La limite de l'API (`updateDeviceSchema`).
 const NAME_MAX_LENGTH = 100;
-const ANDROID_VERSION_MAX_LENGTH = 32;
-const SDK_VERSION_MAX = 99;
 
 // Ce que `GET /devices` renvoie pour chaque appareil. Le nom, le modèle, le n° de série, la version d'Android et le porteur sont
 // facultatifs côté API ; la batterie est `null` tant qu'elle n'a jamais été remontée, les deux dates quand l'appareil n'a jamais été vu.
@@ -49,15 +47,10 @@ export const deviceSummarySchema = z.object({
   ),
 });
 
-// Vide, la version du SDK efface la valeur ; sinon un entier de 1 à `SDK_VERSION_MAX`.
-const isSdkVersion = (value: string) =>
-  value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= SDK_VERSION_MAX);
-
-// Le formulaire manipule des textes : un champ vide efface la valeur côté API (`null`). Rien n'est obligatoire.
+// Le formulaire manipule des textes : un nom vide l'efface côté API (`null`) et la liste retombe sur le modèle.
+// Il ne porte que le nom : le reste (version d'Android, SDK) est remonté par l'appareil lui-même.
 export const deviceFormSchema = z.object({
   name: z.string().trim().max(NAME_MAX_LENGTH, DEVICE.validation.nameTooLong),
-  androidVersion: z.string().trim().max(ANDROID_VERSION_MAX_LENGTH, DEVICE.validation.androidVersionTooLong),
-  sdkVersion: z.string().trim().refine(isSdkVersion, DEVICE.validation.sdkVersionInvalid),
 });
 
 export const DeviceDto = {

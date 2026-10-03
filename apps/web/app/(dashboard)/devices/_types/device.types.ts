@@ -13,8 +13,6 @@ export type DeviceFormValues = z.infer<typeof deviceFormSchema>;
 export type UpdateDeviceInput = {
   id: string;
   name: string | null;
-  androidVersion: string | null;
-  sdkVersion: number | null;
 };
 
 export type FilterOption = {

@@ -77,16 +77,12 @@ export const toLastContactLabel = (device: Device) => {
 // Le formulaire part de ce que l'appareil porte : un champ absent est vide.
 export const toDeviceFormValues = (device: Device): DeviceFormValues => ({
   name: device.name ?? "",
-  androidVersion: device.androidVersion ?? "",
-  sdkVersion: device.sdkVersion === null ? "" : String(device.sdkVersion),
 });
 
-// Les valeurs du formulaire sont déjà rognées par le schéma : un champ vide efface la valeur (`null`).
+// Les valeurs du formulaire sont déjà rognées par le schéma : un nom vide l'efface (`null`).
 export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDeviceInput => ({
   id,
   name: values.name || null,
-  androidVersion: values.androidVersion || null,
-  sdkVersion: values.sdkVersion === "" ? null : Number(values.sdkVersion),
 });
 
 // « Supprimer l'appareil « Pixel 8 » ? »

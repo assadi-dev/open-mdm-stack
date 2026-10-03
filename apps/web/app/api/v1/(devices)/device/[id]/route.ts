@@ -6,7 +6,7 @@ import { deviceIdSchema, updateDeviceBodySchema } from "../../schema";
 
 // Les écritures sont au singulier (`/device`) ; la lecture de la collection au pluriel (`/devices`).
 
-// PATCH /api/v1/device/[id]  { name?, androidVersion?, sdkVersion? }
+// PATCH /api/v1/device/[id]  { name }
 export const PATCH = async (request: NextRequest, { params }: RouteContext<"/api/v1/device/[id]">) => {
 
     try {

@@ -17,7 +17,7 @@ export const DeviceFormFields = ({ form, namePlaceholder }: DeviceFormFieldsProp
   const { register, formState } = form;
   const { errors } = formState;
   const fieldId = useId();
-  const { name, androidVersion, sdkVersion } = DEVICE.form;
+  const { name } = DEVICE.form;
 
   return (
     <FieldGroup className="mt-2">
@@ -36,29 +36,6 @@ export const DeviceFormFields = ({ form, namePlaceholder }: DeviceFormFieldsProp
         />
         <FieldDescription id={`${fieldId}-name-description`}>{name.description}</FieldDescription>
         <FieldError errors={[errors.name]} />
-      </Field>
-      <Field data-invalid={!!errors.androidVersion}>
-        <FieldLabel htmlFor={`${fieldId}-android-version`}>{androidVersion.label}</FieldLabel>
-        <Input
-          id={`${fieldId}-android-version`}
-          placeholder={androidVersion.placeholder}
-          autoComplete="off"
-          aria-invalid={!!errors.androidVersion}
-          {...register("androidVersion")}
-        />
-        <FieldError errors={[errors.androidVersion]} />
-      </Field>
-      <Field data-invalid={!!errors.sdkVersion}>
-        <FieldLabel htmlFor={`${fieldId}-sdk-version`}>{sdkVersion.label}</FieldLabel>
-        <Input
-          id={`${fieldId}-sdk-version`}
-          inputMode="numeric"
-          placeholder={sdkVersion.placeholder}
-          autoComplete="off"
-          aria-invalid={!!errors.sdkVersion}
-          {...register("sdkVersion")}
-        />
-        <FieldError errors={[errors.sdkVersion]} />
       </Field>
     </FieldGroup>
   );

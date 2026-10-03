@@ -75,7 +75,7 @@ export const DEVICE = {
   dialog: {
     update: {
       title: "Modifier l'appareil",
-      description: "La version d'Android et la version du SDK sont remontées par l'appareil : sa prochaine connexion peut les réécrire.",
+      description: "Donnez un nom à cet appareil pour le retrouver plus facilement dans la liste.",
       submit: "Enregistrer",
       submitting: "Enregistrement…",
     },
@@ -101,12 +101,8 @@ export const DEVICE = {
       description: "Laissez vide pour afficher le modèle.",
       placeholder: "ex. Tablette entrepôt 3",
     },
-    androidVersion: { label: "Version d'Android", placeholder: "ex. 14" },
-    sdkVersion: { label: "Version du SDK", placeholder: "ex. 34" },
   },
   validation: {
     nameTooLong: "Le nom ne peut pas dépasser 100 caractères.",
-    androidVersionTooLong: "La version d'Android ne peut pas dépasser 32 caractères.",
-    sdkVersionInvalid: "La version du SDK est un nombre entier entre 1 et 99.",
   },
 } as const;

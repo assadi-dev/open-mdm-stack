@@ -1,13 +1,12 @@
 import { z } from "zod";
 
-// `PATCH /api/v1/device/[id]` : tout est facultatif, mais au moins un champ ; `null` efface la valeur.
-// Les longueurs et les formats restent validés par l'API. L'Android ID n'est pas modifiable depuis le dashboard (l'API,
-// elle, l'accepte) : `validateBody` retire la clé, et un corps qui ne contient que lui est refusé (400).
+// `PATCH /api/v1/device/[id]` : le nom, et rien d'autre ; `null` l'efface. La longueur reste validée par l'API.
+// L'Android ID, la version d'Android et la version du SDK ne sont pas modifiables depuis le dashboard (l'API, elle, les
+// accepte) : l'appareil les remonte lui-même et écraserait la saisie. `validateBody` retire ces clés, et un corps qui ne
+// contient qu'elles est refusé (400).
 export const updateDeviceBodySchema = z
     .object({
         name: z.string().nullable().optional(),
-        androidVersion: z.string().nullable().optional(),
-        sdkVersion: z.number().int().nullable().optional(),
     })
     .refine((data) => Object.keys(data).length > 0, { message: "At least one field is required" });
 
