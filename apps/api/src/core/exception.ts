@@ -48,3 +48,14 @@ export class HTTPInternalServerErrorException implements ExceptionResponse {
         this.name = "HTTPInternalServerErrorException";
     }
 }
+
+export class HTTPConflictException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 409;
+        this.name = "HTTPConflictException";
+    }
+}

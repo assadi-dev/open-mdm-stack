@@ -1,6 +1,15 @@
 import { DEVICE } from "@/constants/device";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
-import type { Device, DeviceStatus, DeviceSummary, DeviceTab, DeviceTabCounts, FilterOption } from "../_types/device.types";
+import type {
+  Device,
+  DeviceFormValues,
+  DeviceStatus,
+  DeviceSummary,
+  DeviceTab,
+  DeviceTabCounts,
+  FilterOption,
+  UpdateDeviceInput,
+} from "../_types/device.types";
 
 export const ALL_FILTER = "all";
 
@@ -64,3 +73,20 @@ export const toLastContactLabel = (device: Device) => {
   const lastSeen = toLastSeenTime(device);
   return lastSeen === null ? DEVICE.lastContact.never : formatRelativeTime(lastSeen);
 };
+
+// Le formulaire part de ce que l'appareil porte : un champ absent est vide.
+export const toDeviceFormValues = (device: Device): DeviceFormValues => ({
+  name: device.name ?? "",
+  androidVersion: device.androidVersion ?? "",
+  sdkVersion: device.sdkVersion === null ? "" : String(device.sdkVersion),
+  androidId: device.androidId ?? "",
+});
+
+// Les valeurs du formulaire sont déjà rognées par le schéma : un champ vide efface la valeur (`null`).
+export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDeviceInput => ({
+  id,
+  name: values.name || null,
+  androidVersion: values.androidVersion || null,
+  sdkVersion: values.sdkVersion === "" ? null : Number(values.sdkVersion),
+  androidId: values.androidId || null,
+});

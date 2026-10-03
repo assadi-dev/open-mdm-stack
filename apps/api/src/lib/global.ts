@@ -1,5 +1,6 @@
 import {
     HTTPBadRequestException,
+    HTTPConflictException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
     HTTPUnauthorizedException,
@@ -16,6 +17,7 @@ export const HttpError = (err: unknown) => {
         err instanceof HTTPBadRequestException ||
         err instanceof HTTPUnauthorizedException ||
         err instanceof HTTPNotFoundException ||
+        err instanceof HTTPConflictException ||
         err instanceof HTTPInternalServerErrorException
     ) {
         return {

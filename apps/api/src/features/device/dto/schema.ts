@@ -141,11 +141,33 @@ export const deviceCollectionQuerySchema = createCollectionQuerySchema({
     },
 });
 
+const NAME_MAX_LENGTH = 100;
+const ANDROID_VERSION_MAX_LENGTH = 32;
+const ANDROID_ID_MAX_LENGTH = 64;
+const SDK_VERSION_MAX = 99;
+
+// A blank text is "no value": it clears the field, like an explicit `null`.
+const clearableText = (maxLength: number) =>
+    z.string().trim().max(maxLength).transform((value) => value || null).nullable();
+
+// Admin -> API on PATCH /devices/:id. Every field is optional but at least one is required; a field left out is
+// untouched, `null` (or a blank text) clears it. `androidVersion` is the `release` column.
+export const updateDeviceSchema = z.object({
+    name: clearableText(NAME_MAX_LENGTH).optional(),
+    androidVersion: clearableText(ANDROID_VERSION_MAX_LENGTH).optional(),
+    sdkVersion: z.number().int().min(1).max(SDK_VERSION_MAX).nullable().optional(),
+    androidId: clearableText(ANDROID_ID_MAX_LENGTH).optional(),
+}).refine(
+    (data) => Object.keys(data).length > 0,
+    { message: "At least one of name, androidVersion, sdkVersion, androidId is required" },
+);
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
 export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
 export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
+export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
 
 
 export const deviceDecoder = {
@@ -154,4 +176,5 @@ export const deviceDecoder = {
     inventory: (data: unknown) => inventorySchema.safeParse(data),
     telemetryPatch: (data: unknown) => telemetryPatchSchema.safeParse(data),
     collection: (data: unknown) => deviceCollectionQuerySchema.safeParse(data),
+    update: (data: unknown) => updateDeviceSchema.safeParse(data),
 };

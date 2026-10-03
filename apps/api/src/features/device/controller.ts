@@ -5,10 +5,12 @@ import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
     validateDeviceCollectionQuery,
+    validateDeviceIdParam,
     validateEnrollDeviceInput,
     validateHeartbeatInput,
     validateInventoryInput,
     validateTelemetryPatchInput,
+    validateUpdateDeviceInput,
 } from "./validator";
 
 export class DeviceController {
@@ -59,5 +61,13 @@ export class DeviceController {
     summary = async (_req: Request, res: Response) => {
         const result = await this.deviceService.summary();
         return res.json(result);
+    };
+
+    // PATCH /devices/:id  { name?, androidVersion?, sdkVersion?, androidId? }  (admin)
+    update = async (req: Request<{ id: string }>, res: Response) => {
+        const id = validateDeviceIdParam(req.params.id);
+        const input = validateUpdateDeviceInput(req.body);
+        const device = await this.deviceService.update(id, input);
+        return res.json(device);
     };
 }

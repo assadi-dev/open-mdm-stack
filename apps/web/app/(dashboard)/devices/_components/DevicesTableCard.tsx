@@ -13,6 +13,8 @@ import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable"
 import { toResultsLabel } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
 import { deviceColumns } from "./device-columns";
+import { RefreshDevicesAction } from "./selection-actions/RefreshDevicesAction";
+import { RemoveDevicesAction } from "./selection-actions/RemoveDevicesAction";
 
 type DevicesTableCardProps = {
   // La page courante seulement : l'API trie, filtre et pagine.
@@ -56,7 +58,12 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
         )}
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-96">
-        <DataTable dataTable={dataTable} showSearch={false} showPagination={false} />
+        <DataTable
+          dataTable={dataTable}
+          showSearch={false}
+          showPagination={false}
+          selectionActions={() => [<RefreshDevicesAction key="refresh" />, <RemoveDevicesAction key="remove" />]}
+        />
         <DataTablePagination dataTable={dataTable} itemsLabel={DEVICE.pagination.items} className="border-t border-border" />
       </CardQueryState>
     </Card>

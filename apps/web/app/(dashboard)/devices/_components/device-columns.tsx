@@ -1,10 +1,10 @@
 import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
 import { BatteryMeter } from "@/components/devices/BatteryMeter";
-import { DeviceRowActions } from "@/components/devices/DeviceRowActions";
 import { DeviceStatusBadge } from "@/components/devices/DeviceStatusBadge";
 import { DEVICE } from "@/constants/device";
 import { toDeviceName, toLastContactLabel, toLastSeenTime } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
+import { DeviceTableRowActions } from "./table/DeviceTableRowActions";
 
 const helper = createDataTableColumnHelper<Device>();
 
@@ -60,6 +60,6 @@ export const deviceColumns = [
   helper.display({
     id: "actions",
     header: () => <span className="sr-only">{DEVICE.table.actions}</span>,
-    cell: ({ row }) => <DeviceRowActions deviceName={toDeviceName(row.original)} />,
+    cell: ({ row }) => <DeviceTableRowActions device={row.original} />,
   }),
 ];

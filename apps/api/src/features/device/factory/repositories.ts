@@ -14,6 +14,7 @@ export const deviceRepositoryFactory = {
     ) => {
         return {
             id: view.id,
+            name: view.name,
             displayName: view.displayName,
             serial: view.serial,
             androidId: view.androidId,

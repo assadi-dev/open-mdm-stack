@@ -5,6 +5,7 @@ import { ENV } from "@config/env";
 import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
+    HTTPConflictException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
 } from "@core/exception";
@@ -17,6 +18,7 @@ import {
     HeartbeatInput,
     InventoryInput,
     TelemetryPatchInput,
+    UpdateDeviceInput,
 } from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
@@ -40,13 +42,16 @@ function generateEnrollmentCode(): string {
     return code;
 }
 
-/** Postgres unique-violation (e.g. a code/token collision). */
+/**
+ * Postgres unique-violation (e.g. a code/token collision). Drizzle wraps the driver error in a
+ * DrizzleQueryError, so the SQLSTATE sits on `cause`; a raw driver error carries it directly.
+ */
 function isUniqueViolation(error: unknown): boolean {
-    return (
-        typeof error === "object" &&
-        error !== null &&
-        (error as { code?: string }).code === "23505"
-    );
+    if (typeof error !== "object" || error === null) {
+        return false;
+    }
+    const { code, cause } = error as { code?: string; cause?: { code?: string } };
+    return (code ?? cause?.code) === "23505";
 }
 
 export class DeviceService {
@@ -217,6 +222,37 @@ export class DeviceService {
 
     async collection(query: DeviceCollectionQuery) {
         return this.repository.collection(query);
+    }
+
+    /**
+     * Admin edit from the devices list: the label and the facts a device reports. Answers with the updated
+     * list row. Only listed devices can be edited (see `device_overview`). Note that a heartbeat or a
+     * re-enrollment re-reports `sdkVersion` / `release`, and overwrites what an admin typed.
+     */
+    async update(id: string, input: UpdateDeviceInput) {
+        if (!(await this.repository.findOverviewById(id))) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+
+        try {
+            await this.repository.update(id, {
+                name: input.name,
+                release: input.androidVersion,
+                sdkVersion: input.sdkVersion,
+                androidId: input.androidId,
+            });
+        } catch (error) {
+            if (isUniqueViolation(error)) {
+                throw new HTTPConflictException("Android ID already used by another device");
+            }
+            throw error;
+        }
+
+        const updated = await this.repository.findOverviewById(id);
+        if (!updated) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return updated;
     }
 
     /**

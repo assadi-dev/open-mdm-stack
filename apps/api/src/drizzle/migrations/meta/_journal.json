@@ -120,6 +120,13 @@
       "when": 1790984364083,
       "tag": "0016_add_android_id_to_device_overview",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791025303526,
+      "tag": "0017_add_name_to_device_overview",
+      "breakpoints": true
     }
   ]
 }

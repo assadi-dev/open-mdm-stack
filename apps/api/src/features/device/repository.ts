@@ -225,6 +225,26 @@ export class DeviceRepository {
             .where(eq(deviceTelemetry.deviceId, deviceId));
     }
 
+    /** One row of the devices list (see `device_overview`), or undefined when the device doesn't exist or isn't listed. */
+    async findOverviewById(id: string) {
+        const selection = deviceRepositoryFactory.toSelectCollection(deviceOverview);
+        const [row] = await this.db.select(selection).from(deviceOverview).where(eq(deviceOverview.id, id)).limit(1);
+        return row;
+    }
+
+    /**
+     * Admin edit of the label and of the identity facts a device reports. A key left `undefined` leaves its column
+     * unchanged (Drizzle omits it), `null` clears it.
+     */
+    async update(id: string, patch: {
+        name?: string | null;
+        release?: string | null;
+        sdkVersion?: number | null;
+        androidId?: string | null;
+    }) {
+        await this.db.update(devices).set(patch).where(eq(devices.id, id));
+    }
+
     /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */
     async collection(collectionQuery: DeviceCollectionQuery) {
         const selection = deviceRepositoryFactory.toSelectCollection(deviceOverview);

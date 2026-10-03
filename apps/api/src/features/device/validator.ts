@@ -1,3 +1,5 @@
+import z from "zod";
+import { HTTPNotFoundException } from "@core/exception";
 import {
 
     deviceDecoder,
@@ -6,6 +8,7 @@ import {
     HeartbeatInput,
     InventoryInput,
     TelemetryPatchInput,
+    UpdateDeviceInput,
 } from "./dto/schema";
 
 
@@ -48,4 +51,20 @@ export const validateDeviceCollectionQuery = (query: unknown): DeviceCollectionQ
         throw result.error;
     }
     return result.data;
+};
+
+export const validateUpdateDeviceInput = (body: unknown): UpdateDeviceInput => {
+    const result = deviceDecoder.update(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+/** Device ids are UUIDs; anything else can't exist (and would make Postgres throw). */
+export const validateDeviceIdParam = (id: string): string => {
+    if (!z.uuid().safeParse(id).success) {
+        throw new HTTPNotFoundException("Device not found");
+    }
+    return id;
 };

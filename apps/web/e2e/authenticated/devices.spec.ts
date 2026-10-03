@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ACTION_LABELS } from "@/constants/actions";
 import { DATA_TABLE } from "@/constants/data-table";
 import { DEVICE } from "@/constants/device";
 import { STATUS } from "@/constants/status";
@@ -126,9 +127,59 @@ test.describe("appareils", () => {
 
     await rowCheckboxes.nth(0).check();
     await rowCheckboxes.nth(1).check();
-    await expect(page.getByRole("status")).toContainText(`2 ${DATA_TABLE.selection.many}`);
+    await expect(page.getByRole("toolbar")).toContainText(`2 ${DATA_TABLE.selection.many}`);
 
     await page.getByRole("button", { name: DATA_TABLE.selection.clear }).click();
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(page.getByRole("toolbar")).toHaveCount(0);
+  });
+
+  test("propose les actions d'un appareil dans son menu", async ({ page }) => {
+    await page.getByRole("button", { name: new RegExp(`^${DEVICE.actionsFor} `) }).first().click();
+
+    await expect(page.getByRole("menuitem")).toHaveText([
+      DEVICE.button.viewDetail,
+      DEVICE.button.refresh,
+      DEVICE.button.update,
+      DEVICE.button.delete,
+    ]);
+  });
+
+  // La boîte de modification, ouverte depuis le menu de la première ligne. Aucun de ces tests n'enregistre : les données restent intactes.
+  const openUpdateDialog = async (page: Page) => {
+    await page.getByRole("button", { name: new RegExp(`^${DEVICE.actionsFor} `) }).first().click();
+    await page.getByRole("menuitem", { name: DEVICE.button.update }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(DEVICE.dialog.update.title)).toBeVisible();
+    return dialog;
+  };
+
+  test("ouvre le formulaire de modification avec les quatre champs", async ({ page }) => {
+    const dialog = await openUpdateDialog(page);
+
+    for (const { label } of [DEVICE.form.name, DEVICE.form.androidVersion, DEVICE.form.sdkVersion, DEVICE.form.androidId]) {
+      await expect(dialog.getByLabel(label, { exact: false }).first()).toBeVisible();
+    }
+    await expect(dialog.getByLabel(DEVICE.form.sdkVersion.label)).toHaveValue(/^\d*$/);
+
+    await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
+    await expect(dialog).toBeHidden();
+  });
+
+  test("refuse une version du SDK qui n'est pas un nombre, sans envoyer", async ({ page }) => {
+    const dialog = await openUpdateDialog(page);
+
+    await dialog.getByLabel(DEVICE.form.sdkVersion.label).fill("abc");
+    await dialog.getByRole("button", { name: DEVICE.dialog.update.submit }).click();
+
+    await expect(dialog.getByText(DEVICE.validation.sdkVersionInvalid)).toBeVisible();
+    await expect(page.getByText(DEVICE.success.update)).toHaveCount(0);
+  });
+
+  test("propose d'actualiser ou de supprimer les appareils sélectionnés", async ({ page }) => {
+    await page.getByRole("checkbox", { name: DATA_TABLE.selection.row }).first().check();
+
+    const bar = page.getByRole("toolbar");
+    await expect(bar.getByRole("button", { name: DEVICE.button.refreshMany })).toBeVisible();
+    await expect(bar.getByRole("button", { name: DEVICE.button.deleteMany })).toBeVisible();
   });
 });
