@@ -8,6 +8,7 @@ import {
     EnrollDeviceInput,
     HeartbeatInput,
     InventoryInput,
+    RefreshDevicesInput,
     TelemetryPatchInput,
     UpdateDeviceInput,
 } from "./dto/schema";
@@ -64,6 +65,14 @@ export const validateUpdateDeviceInput = (body: unknown): UpdateDeviceInput => {
 
 export const validateDeleteDevicesInput = (body: unknown): DeleteDevicesInput => {
     const result = deviceDecoder.deleteMany(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateRefreshDevicesInput = (body: unknown): RefreshDevicesInput => {
+    const result = deviceDecoder.refreshMany(body);
     if (!result.success) {
         throw result.error;
     }

@@ -1,8 +1,11 @@
 import {
+    HTTPBadGatewayException,
     HTTPBadRequestException,
     HTTPConflictException,
+    HTTPGatewayTimeoutException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
+    HTTPServiceUnavailableException,
     HTTPUnauthorizedException,
 } from "@core/exception";
 import { APIError } from "better-auth";
@@ -18,6 +21,9 @@ export const HttpError = (err: unknown) => {
         err instanceof HTTPUnauthorizedException ||
         err instanceof HTTPNotFoundException ||
         err instanceof HTTPConflictException ||
+        err instanceof HTTPBadGatewayException ||
+        err instanceof HTTPServiceUnavailableException ||
+        err instanceof HTTPGatewayTimeoutException ||
         err instanceof HTTPInternalServerErrorException
     ) {
         return {

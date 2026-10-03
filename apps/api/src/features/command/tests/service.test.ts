@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { commandRepoMock, deviceRepoMock, publishJsonMock } = vi.hoisted(() => ({
     commandRepoMock: {
@@ -9,6 +9,8 @@ const { commandRepoMock, deviceRepoMock, publishJsonMock } = vi.hoisted(() => ({
         markSent: vi.fn(),
         applyAck: vi.fn(),
         expireOverdue: vi.fn(),
+        findById: vi.fn(),
+        expire: vi.fn(),
     },
     deviceRepoMock: {
         findDeviceById: vi.fn(),
@@ -35,7 +37,7 @@ vi.mock("@lib/mqtt", () => ({
     mqttTopics: { commands: (id: string) => `mdm/devices/${id}/commands` },
 }));
 
-import { CommandService } from "../service";
+import { CommandService, REFRESH_TIMEOUT_MS } from "../service";
 
 const DEVICE_ID = "7f1c2e4a-9b3d-4c5e-8f6a-1b2c3d4e5f60";
 const COMMAND_ID = "0b6f1d2e-3c4a-4b5c-9d6e-7f8091a2b3c4";
@@ -105,6 +107,114 @@ describe("CommandService", () => {
 
             await expect(service.create(DEVICE_ID, { type: "lock" })).rejects.toMatchObject({ statusCode: 404 });
             expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("refresh", () => {
+        const NOW = new Date("2026-10-03T12:00:00Z");
+        const onlineDevice = { id: DEVICE_ID, enrollmentStatus: "enrolled", online: true };
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            vi.setSystemTime(NOW);
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        const deviceAnswers = (...statuses: object[]) => {
+            commandRepoMock.create.mockResolvedValue(commandRow({ type: "refresh" }));
+            publishJsonMock.mockResolvedValue(true);
+            statuses.forEach((status) => commandRepoMock.findById.mockResolvedValueOnce(commandRow(status)));
+        };
+
+        it("sends a short-lived refresh command and returns once the device reports it succeeded", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(onlineDevice);
+            deviceAnswers({ status: "sent" }, { status: "acknowledged" }, { status: "succeeded" });
+
+            const done = service.refresh(DEVICE_ID);
+            await vi.advanceTimersByTimeAsync(1_000);
+            await done;
+
+            expect(commandRepoMock.create).toHaveBeenCalledWith({
+                deviceId: DEVICE_ID,
+                type: "refresh",
+                payload: {},
+                // Not the 24 h default: a refresh replayed on reconnect would be noise.
+                expiresAt: new Date(NOW.getTime() + REFRESH_TIMEOUT_MS + 5_000),
+            });
+            expect(publishJsonMock).toHaveBeenCalledWith(`mdm/devices/${DEVICE_ID}/commands`, expect.objectContaining({
+                id: COMMAND_ID,
+                type: "refresh",
+            }));
+            expect(commandRepoMock.markSent).toHaveBeenCalledWith(COMMAND_ID);
+            expect(commandRepoMock.findById).toHaveBeenCalledTimes(3);
+            expect(commandRepoMock.expire).not.toHaveBeenCalled();
+        });
+
+        it("answers 502 with the device's own error when it reports the command failed", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(onlineDevice);
+            deviceAnswers({ status: "failed", error: "Unknown command type: refresh" });
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({
+                statusCode: 502,
+                message: "Unknown command type: refresh",
+            });
+            expect(commandRepoMock.expire).not.toHaveBeenCalled();
+        });
+
+        it("answers 504 once the timeout is over, expires the command and leaves the presence alone", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(onlineDevice);
+            deviceAnswers();
+            commandRepoMock.findById.mockResolvedValue(commandRow({ status: "sent" }));
+
+            const outcome = expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 504 });
+
+            await vi.advanceTimersByTimeAsync(REFRESH_TIMEOUT_MS - 1_000);
+            expect(commandRepoMock.expire).not.toHaveBeenCalled();
+
+            await vi.advanceTimersByTimeAsync(2_000);
+            await outcome;
+            expect(commandRepoMock.expire).toHaveBeenCalledWith(COMMAND_ID);
+            expect(deviceRepoMock.setPresence).not.toHaveBeenCalled();
+        });
+
+        it("answers 409 without creating or sending anything when the device is offline", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ ...onlineDevice, online: false });
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 409 });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+            expect(publishJsonMock).not.toHaveBeenCalled();
+        });
+
+        it("answers 409 for a device that has not finished enrolling", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ ...onlineDevice, enrollmentStatus: "pending", online: false });
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 409 });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["is unknown", undefined],
+            ["is revoked", { ...onlineDevice, enrollmentStatus: "revoked" }],
+            ["is unenrolled", { ...onlineDevice, enrollmentStatus: "unenrolled" }],
+        ])("answers 404 when the device %s", async (_label, device) => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(device);
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 404 });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("answers 503 and expires the command when the broker is unreachable", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(onlineDevice);
+            commandRepoMock.create.mockResolvedValue(commandRow({ type: "refresh" }));
+            publishJsonMock.mockResolvedValue(false);
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 503 });
+            expect(commandRepoMock.expire).toHaveBeenCalledWith(COMMAND_ID);
+            expect(commandRepoMock.markSent).not.toHaveBeenCalled();
+            expect(commandRepoMock.findById).not.toHaveBeenCalled();
         });
     });
 

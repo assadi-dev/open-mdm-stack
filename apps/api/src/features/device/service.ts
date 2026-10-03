@@ -6,6 +6,7 @@ import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
     HTTPConflictException,
+    HTTPGatewayTimeoutException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
 } from "@core/exception";
@@ -22,10 +23,14 @@ import {
 } from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
+import { CommandService } from "@features/command/service";
 import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
 import { verifyDeviceSignature } from "./utils/keys";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
+
+/** What happened to one device of a bulk refresh. */
+export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "failed";
 
 // Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
 const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -57,10 +62,12 @@ function isUniqueViolation(error: unknown): boolean {
 export class DeviceService {
     private repository: DeviceRepository;
     private enrollmentService: EnrollmentService;
+    private commandService: CommandService;
 
     constructor() {
         this.repository = new DeviceRepository();
         this.enrollmentService = new EnrollmentService();
+        this.commandService = new CommandService();
     }
 
 
@@ -263,6 +270,41 @@ export class DeviceService {
             throw new HTTPNotFoundException("Device not found");
         }
         return updated;
+    }
+
+    /**
+     * Asks the device to report now, then answers with its (fresh) list row. Throws what the command service
+     * throws: 404 unknown device, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
+     */
+    async refresh(id: string) {
+        await this.commandService.refresh(id);
+
+        const device = await this.repository.findOverviewById(id);
+        if (!device) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return device;
+    }
+
+    /**
+     * The same for several devices at once, in parallel (the whole call lasts as long as the slowest device, at most
+     * `REFRESH_TIMEOUT_MS`). One outcome per device rather than failing as a whole: some answer, some don't.
+     */
+    async refreshMany(ids: string[]) {
+        return Promise.all(ids.map(async (id) => ({ id, outcome: await this.refreshOutcome(id) })));
+    }
+
+    private async refreshOutcome(id: string): Promise<RefreshOutcome> {
+        try {
+            await this.commandService.refresh(id);
+            return "refreshed";
+        } catch (error) {
+            if (error instanceof HTTPNotFoundException) return "notFound";
+            if (error instanceof HTTPConflictException) return "offline";
+            if (error instanceof HTTPGatewayTimeoutException) return "timeout";
+            console.error(`Refresh failed for device ${id}`, error);
+            return "failed";
+        }
     }
 
     /**

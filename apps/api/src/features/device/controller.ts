@@ -10,6 +10,7 @@ import {
     validateEnrollDeviceInput,
     validateHeartbeatInput,
     validateInventoryInput,
+    validateRefreshDevicesInput,
     validateTelemetryPatchInput,
     validateUpdateDeviceInput,
 } from "./validator";
@@ -77,5 +78,21 @@ export class DeviceController {
         const { ids } = validateDeleteDevicesInput(req.body);
         await this.deviceService.unenroll(ids);
         return res.status(204).send();
+    };
+
+    // POST /devices/:id/refresh  (admin) — asks the device to report now, then answers with its updated list row.
+    // 404 unknown device, 409 offline, 502 the device failed, 503 broker down, 504 no answer (see CommandService.refresh)
+    refresh = async (req: Request<{ id: string }>, res: Response) => {
+        const id = validateDeviceIdParam(req.params.id);
+        const device = await this.deviceService.refresh(id);
+        return res.json(device);
+    };
+
+    // POST /devices/refresh  { ids: [...] }  (admin) — the same for several devices at once: always 200, with one
+    // outcome per device
+    refreshMany = async (req: Request, res: Response) => {
+        const { ids } = validateRefreshDevicesInput(req.body);
+        const results = await this.deviceService.refreshMany(ids);
+        return res.json({ results });
     };
 }

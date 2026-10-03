@@ -163,11 +163,17 @@ export const updateDeviceSchema = z.object({
     { message: "At least one of name, androidVersion, sdkVersion, androidId is required" },
 );
 
-// Admin -> API on DELETE /devices. Unenrolling one device is a list of one id: single and bulk unenrollment share
-// this endpoint. Duplicated ids are collapsed.
-export const deleteDevicesSchema = z.object({
+// A list of devices to act on. Duplicated ids are collapsed.
+const deviceIdsSchema = z.object({
     ids: z.array(z.uuid()).min(1, "at least one id is required").max(MAX_LIMIT).transform((ids) => [...new Set(ids)]),
 });
+
+// Admin -> API on DELETE /devices. Unenrolling one device is a list of one id: single and bulk unenrollment share
+// this endpoint.
+export const deleteDevicesSchema = deviceIdsSchema;
+
+// Admin -> API on POST /devices/refresh. The single-device refresh is POST /devices/:id/refresh, which has no body.
+export const refreshDevicesSchema = deviceIdsSchema;
 
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
@@ -176,6 +182,7 @@ export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
 export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
 export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
 export type DeleteDevicesInput = z.infer<typeof deleteDevicesSchema>;
+export type RefreshDevicesInput = z.infer<typeof refreshDevicesSchema>;
 
 
 export const deviceDecoder = {
@@ -186,4 +193,5 @@ export const deviceDecoder = {
     collection: (data: unknown) => deviceCollectionQuerySchema.safeParse(data),
     update: (data: unknown) => updateDeviceSchema.safeParse(data),
     deleteMany: (data: unknown) => deleteDevicesSchema.safeParse(data),
+    refreshMany: (data: unknown) => refreshDevicesSchema.safeParse(data),
 };

@@ -127,6 +127,13 @@
       "when": 1791025303526,
       "tag": "0017_add_name_to_device_overview",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791035333947,
+      "tag": "0018_add_refresh_command_type",
+      "breakpoints": true
     }
   ]
 }
