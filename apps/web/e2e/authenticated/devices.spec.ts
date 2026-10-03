@@ -110,6 +110,26 @@ test.describe("appareils", () => {
     await expect(page).toHaveURL(/status=/);
   });
 
+  test("masque et réaffiche une colonne avec le bouton « Colonnes »", async ({ page }) => {
+    const hideable = [DEVICE.table.model, DEVICE.table.user, DEVICE.table.status, DEVICE.table.battery, DEVICE.table.lastContact];
+    const header = (name: string) => page.getByRole("columnheader", { name });
+
+    await page.getByRole("button", { name: DATA_TABLE.columns.button }).click();
+    const items = page.getByRole("menuitemcheckbox");
+    // Tout est coché au départ ; l'appareil et les actions ne se masquent pas.
+    await expect(items).toHaveCount(hideable.length);
+    for (const name of hideable) await expect(page.getByRole("menuitemcheckbox", { name })).toBeChecked();
+
+    await page.getByRole("menuitemcheckbox", { name: DEVICE.table.battery }).click();
+    await expect(header(DEVICE.table.battery)).toHaveCount(0);
+    await expect(header(DEVICE.table.model)).toBeVisible();
+    // Le menu reste ouvert pendant qu'on coche.
+    await expect(items.first()).toBeVisible();
+
+    await page.getByRole("menuitemcheckbox", { name: DEVICE.table.battery }).click();
+    await expect(header(DEVICE.table.battery)).toBeVisible();
+  });
+
   test("recherche un appareil par son numéro de série", async ({ page }) => {
     const [device = ""] = await columnTexts(page, 2);
     const serial = device.split(DEVICE.serialPrefix).at(-1)?.trim() ?? "";

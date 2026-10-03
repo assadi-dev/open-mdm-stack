@@ -18,6 +18,8 @@ export const deviceColumns = [
   helper.accessor((device) => toDeviceName(device), {
     id: "displayName",
     header: DEVICE.table.device,
+    // L'identité de la ligne : la seule colonne de données qu'on ne masque pas (comme « Réseau » au Wi-Fi).
+    enableHiding: false,
     cell: ({ row }) => (
       <div className="flex flex-col">
         <span className="font-medium">{toDeviceName(row.original)}</span>
@@ -60,6 +62,7 @@ export const deviceColumns = [
   helper.display({
     id: "actions",
     header: () => <span className="sr-only">{DEVICE.table.actions}</span>,
+    enableHiding: false,
     cell: ({ row }) => <DeviceTableRowActions device={row.original} />,
   }),
 ];

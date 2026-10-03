@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/cards/Card";
 import { CardQueryState } from "@/components/cards/CardQueryState";
 import { DataTable } from "@/components/data-table/DataTable";
+import { DataTableColumnVisibility } from "@/components/data-table/DataTableColumnVisibility";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { DEVICE } from "@/constants/device";
@@ -44,8 +45,11 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
             className="h-9 w-full sm:w-70"
           />
         </div>
-        {/* Le total des appareils est dans l'en-tête de la page : ici, le bouton « Filtrer ». */}
-        <div className="flex items-center gap-2">{filters}</div>
+        {/* Le total des appareils est dans l'en-tête de la page : ici, les boutons « Filtrer » et « Colonnes ». */}
+        <div className="flex items-center gap-2">
+          {filters}
+          <DataTableColumnVisibility dataTable={dataTable} />
+        </div>
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-96">
         <DataTable
