@@ -309,11 +309,11 @@ export class DeviceService {
     }
 
     /**
-     * Counts behind the list's tabs, subtitle and Android filter. Every status
+     * Counts and values behind the list's tabs, subtitle and filters (Android version, brand, model). Every status
      * is present (0 when no device has it), so the front never has to guess.
      */
     async summary() {
-        const { byStatus, androidVersions } = await this.repository.summary();
+        const { byStatus, androidVersions, brands, models } = await this.repository.summary();
 
         const counts = Object.fromEntries(deviceOverviewStatus.map((status) => [status, 0])) as Record<DeviceOverviewStatus, number>;
         for (const row of byStatus) {
@@ -321,6 +321,6 @@ export class DeviceService {
         }
         const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
 
-        return { total, byStatus: counts, androidVersions };
+        return { total, byStatus: counts, androidVersions, brands, models };
     }
 }

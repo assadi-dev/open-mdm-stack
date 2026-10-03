@@ -34,6 +34,14 @@ describe("devices list SQL", () => {
         expect(toSql({}).sql).toContain('"android_id"');
     });
 
+    it("filters on the brand and on the model, by exact values", () => {
+        const { sql, params } = toSql({ brand: "Google,samsung", model: "Pixel 8" });
+
+        expect(sql).toMatch(/"brand" in \(\$\d+, \$\d+\)/);
+        expect(sql).toMatch(/"model" in \(\$\d+\)/);
+        expect(params).toEqual(expect.arrayContaining(["Google", "samsung", "Pixel 8"]));
+    });
+
     it("sorts on the displayed name", () => {
         expect(toSql({ sort: "-displayName" }).sql).toContain('order by "display_name" desc');
     });

@@ -56,6 +56,8 @@ export const deviceRepositoryFactory = {
             filters: {
                 status: (values) => inArray(view.status, values),
                 sdkVersion: (values) => inArray(view.sdkVersion, values),
+                brand: (values) => inArray(view.brand, values),
+                model: (values) => inArray(view.model, values),
             },
         }
     },

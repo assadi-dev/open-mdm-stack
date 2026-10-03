@@ -13,7 +13,7 @@ import {
     DEFAULT_BATTERY_TELEMETRY,
     DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
-import { and, count, desc, eq, inArray, isNotNull, max } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, max, ne } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
 import type { DeviceCollectionQuery } from "./dto/schema";
@@ -273,7 +273,7 @@ export class DeviceRepository {
      * how many devices per status, and per Android version (newest first).
      */
     async summary() {
-        const [byStatus, androidVersions] = await Promise.all([
+        const [byStatus, androidVersions, brands, models] = await Promise.all([
             this.db
                 .select({ status: deviceOverview.status, count: count() })
                 .from(deviceOverview)
@@ -288,7 +288,22 @@ export class DeviceRepository {
                 .where(isNotNull(deviceOverview.sdkVersion))
                 .groupBy(deviceOverview.sdkVersion)
                 .orderBy(desc(deviceOverview.sdkVersion)),
+            this.db
+                .selectDistinct({ value: deviceOverview.brand })
+                .from(deviceOverview)
+                .where(and(isNotNull(deviceOverview.brand), ne(deviceOverview.brand, "")))
+                .orderBy(asc(deviceOverview.brand)),
+            this.db
+                .selectDistinct({ value: deviceOverview.model })
+                .from(deviceOverview)
+                .where(and(isNotNull(deviceOverview.model), ne(deviceOverview.model, "")))
+                .orderBy(asc(deviceOverview.model)),
         ]);
-        return { byStatus, androidVersions };
+        return {
+            byStatus,
+            androidVersions,
+            brands: brands.flatMap(({ value }) => (value ? [value] : [])),
+            models: models.flatMap(({ value }) => (value ? [value] : [])),
+        };
     }
 }

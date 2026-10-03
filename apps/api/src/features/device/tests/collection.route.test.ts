@@ -95,6 +95,32 @@ describe("devices list routes", () => {
             expect(repoMock.collection).not.toHaveBeenCalled();
         });
 
+        it("hands the brand and model filters to the repository, values matched as they are", async () => {
+            authenticate();
+            repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
+
+            await request(app)
+                .get("/api/v1/devices?brand=Google,samsung&model=Pixel%208")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(200);
+
+            expect(repoMock.collection).toHaveBeenCalledWith(
+                expect.objectContaining({ filters: { brand: ["Google", "samsung"], model: ["Pixel 8"] } }),
+            );
+        });
+
+        it("ignores an empty brand filter instead of filtering on nothing", async () => {
+            authenticate();
+            repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
+
+            await request(app)
+                .get("/api/v1/devices?brand=&model=")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(200);
+
+            expect(repoMock.collection).toHaveBeenCalledWith(expect.objectContaining({ filters: {} }));
+        });
+
         it("accepts a sort on the displayed name (the name, or the model when there is none)", async () => {
             authenticate();
             repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
@@ -145,6 +171,8 @@ describe("devices list routes", () => {
             repoMock.summary.mockResolvedValue({
                 byStatus: [{ status: "offline", count: 4 }],
                 androidVersions: [{ sdkVersion: 34, androidVersion: "14", count: 4 }],
+                brands: ["Google"],
+                models: ["Pixel 8"],
             });
 
             const res = await request(app)
@@ -156,6 +184,8 @@ describe("devices list routes", () => {
                 total: 4,
                 byStatus: { pending: 0, offline: 4, commandRunning: 0, online: 0 },
                 androidVersions: [{ sdkVersion: 34, androidVersion: "14", count: 4 }],
+                brands: ["Google"],
+                models: ["Pixel 8"],
             });
         });
     });

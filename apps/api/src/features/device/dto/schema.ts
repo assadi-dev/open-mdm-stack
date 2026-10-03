@@ -126,7 +126,7 @@ export const telemetryPatchSchema = z.object({
     { message: "At least one of network, memory, storage, battery, location is required" },
 );
 
-// Admin -> API on GET /devices?page=1&limit=20&search=pixel&sort=-createdAt,model&status=offline,pending&sdkVersion=34,33
+// Admin -> API on GET /devices?page=1&limit=20&search=pixel&sort=-createdAt,model&status=offline,pending&sdkVersion=34,33&brand=Google,samsung&model=Pixel 8
 // Sort and filter names are the API field names (see DeviceRepository.collection).
 export const deviceCollectionQuerySchema = createCollectionQuerySchema({
     sortable: [
@@ -143,6 +143,10 @@ export const deviceCollectionQuerySchema = createCollectionQuerySchema({
     filters: {
         status: z.enum(deviceOverviewStatus),
         sdkVersion: z.coerce.number<string>().int(),
+        // The brands and models the fleet reports (`GET /devices/summary` lists them), matched exactly. A value with a
+        // comma can't be filtered on: the comma separates the values of a filter.
+        brand: z.string().min(1),
+        model: z.string().min(1),
     },
 });
 

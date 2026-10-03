@@ -60,6 +60,8 @@ describe("DeviceService devices list", () => {
                     { status: "offline", count: 3 },
                 ],
                 androidVersions: [],
+                brands: [],
+                models: [],
             });
 
             const result = await service.summary();
@@ -79,6 +81,8 @@ describe("DeviceService devices list", () => {
                     { status: "pending", count: 3 },
                 ],
                 androidVersions,
+                brands: [],
+                models: [],
             });
 
             const result = await service.summary();
@@ -87,13 +91,26 @@ describe("DeviceService devices list", () => {
             expect(result.androidVersions).toBe(androidVersions);
         });
 
+        it("passes the brands and models of the fleet through, for the list's filters", async () => {
+            const brands = ["Google", "samsung"];
+            const models = ["Galaxy A54", "Pixel 8"];
+            repoMock.summary.mockResolvedValue({ byStatus: [], androidVersions: [], brands, models });
+
+            const result = await service.summary();
+
+            expect(result.brands).toBe(brands);
+            expect(result.models).toBe(models);
+        });
+
         it("reports an empty fleet as all zeros", async () => {
-            repoMock.summary.mockResolvedValue({ byStatus: [], androidVersions: [] });
+            repoMock.summary.mockResolvedValue({ byStatus: [], androidVersions: [], brands: [], models: [] });
 
             await expect(service.summary()).resolves.toEqual({
                 total: 0,
                 byStatus: { pending: 0, offline: 0, commandRunning: 0, online: 0 },
                 androidVersions: [],
+                brands: [],
+                models: [],
             });
         });
     });
