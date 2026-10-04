@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Enrôlement — D · Manuel</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/openmdm/tokens.css">
+<link rel="stylesheet" href="ds/openmdm/bundle.css">
+<script src="ds/openmdm/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--gradient-ambient);background-attachment:fixed}
+.grid{display:grid;gap:20px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stack{display:flex;flex-direction:column}
+.muted{color:var(--muted-foreground)}
+.opt{margin-left:6px;font:400 12px/16px var(--font-sans);color:var(--muted-foreground)}
+.section-label{font:600 13px/18px var(--font-sans);color:var(--muted-foreground);text-transform:uppercase;letter-spacing:0.4px}
+.code{display:block;padding:12px 14px;border-radius:var(--radius-md);background:var(--ink);color:var(--ink-foreground);font:400 12px/18px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1300px; box-sizing: border-box; display: flex">
+<dc-import name="Sidebar" active="enroll" height="{{sideH}}" hint-size="304px,1300px"></dc-import>
+<div style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+<dc-import name="Topbar" hint-size="1088px,64px"></dc-import>
+<dc-import name="PageHeader" title="Enrôler un appareil" subtitle="{{subtitle}}" crumbs="{{crumbs}}" hint-size="1088px,60px"></dc-import>
+
+<x-import component-from-global-scope="OpenMDM.Tabs" default-value="manual" on-value-change="{{setMode}}">
+<x-import component-from-global-scope="OpenMDM.TabsList" aria-label="Méthode d’enrôlement">
+<x-import component-from-global-scope="OpenMDM.TabsTrigger" value="qr"><x-import component-from-global-scope="OpenMDM.Icon" name="qr-code"></x-import>QR code</x-import>
+<x-import component-from-global-scope="OpenMDM.TabsTrigger" value="manual"><x-import component-from-global-scope="OpenMDM.Icon" name="terminal"></x-import>Manuel</x-import>
+</x-import>
+</x-import>
+
+<div class="grid" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; height: 1187px; width: 1094px">
+<x-import component-from-global-scope="OpenMDM.Card">
+<x-import component-from-global-scope="OpenMDM.CardHeader">
+<x-import component-from-global-scope="OpenMDM.CardTitle">Configuration</x-import>
+<x-import component-from-global-scope="OpenMDM.CardDescription">{{configDesc}}</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.CardContent">
+<x-import component-from-global-scope="OpenMDM.FieldGroup">
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel" for="d-name">Nom des appareils</x-import>
+<x-import component-from-global-scope="OpenMDM.Input" id="d-name" default-value="Terrain-Lyon-{n}"></x-import>
+<x-import component-from-global-scope="OpenMDM.FieldDescription">{n} est remplacé par un numéro incrémental.</x-import>
+</x-import>
+<div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr))">
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Groupe</x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="lyon">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" aria-label="Groupe"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="lyon">Terrain Lyon</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="nord">Entrepôt Nord</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="liv">Livraison</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="siege">Siège</x-import>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Politique</x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="std">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" aria-label="Politique"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="std">Terrain — standard (v7)</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="kio">Kiosque — entrepôt (v3)</x-import>
+</x-import>
+</x-import>
+</x-import>
+</div>
+
+<x-import component-from-global-scope="OpenMDM.Separator"></x-import>
+
+<sc-if value="{{isQr}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel">Réseau Wi-Fi<span class="opt">facultatif</span></x-import>
+<x-import component-from-global-scope="OpenMDM.Select" default-value="none">
+<x-import component-from-global-scope="OpenMDM.SelectTrigger" aria-label="Réseau Wi-Fi"><x-import component-from-global-scope="OpenMDM.SelectValue"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.SelectContent">
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="none">Aucun · choisi sur l’appareil</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="nord">Entrepôt-Nord-5G · WPA2</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="lyon">Terrain-Lyon · WPA2</x-import>
+<x-import component-from-global-scope="OpenMDM.SelectItem" value="siege">Siège-Corp · WPA3</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.FieldDescription">Réseaux enregistrés dans les paramètres. Sans réseau, l’appareil demandera d’en choisir un après le scan.</x-import>
+</x-import>
+</sc-if>
+
+<x-import component-from-global-scope="OpenMDM.Field">
+<x-import component-from-global-scope="OpenMDM.FieldLabel" for="d-url">URL de téléchargement de l’agent<span class="opt">facultatif</span></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroup">
+<x-import component-from-global-scope="OpenMDM.InputGroupInput" id="d-url" type="url" placeholder="https://mdm.entreprise.fr/agent/openmdm-agent.apk"></x-import>
+<x-import component-from-global-scope="OpenMDM.InputGroupAddon" align="inline-end"><x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="icon-sm" href="https://mdm.entreprise.fr/agent/openmdm-agent.apk" download="openmdm-agent.apk" aria-label="Télécharger l’APK de l’agent"><x-import component-from-global-scope="OpenMDM.Icon" name="download"></x-import></x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.FieldDescription">Vide : l’APK par défaut du serveur est utilisé (version 0.4.2), téléchargeable avec le bouton.</x-import>
+</x-import>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.CardFooter" style="justify-content: flex-end">
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary">Réinitialiser</x-import>
+<sc-if value="{{isQr}}" hint-placeholder-val="{{true}}"><x-import component-from-global-scope="OpenMDM.Button"><x-import component-from-global-scope="OpenMDM.Icon" name="refresh-cw"></x-import>{{regenLabel}}</x-import></sc-if>
+</x-import>
+</x-import>
+
+<sc-if value="{{isQr}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="OpenMDM.Card">
+<x-import component-from-global-scope="OpenMDM.CardHeader">
+<x-import component-from-global-scope="OpenMDM.CardTitle">QR code d’enrôlement</x-import>
+<x-import component-from-global-scope="OpenMDM.CardDescription">Expire le 28 sept. 2026 à 14:32</x-import>
+<x-import component-from-global-scope="OpenMDM.CardAction"><x-import component-from-global-scope="OpenMDM.Badge" variant="warning"><x-import component-from-global-scope="OpenMDM.Icon" name="hourglass"></x-import>Expire dans 23 h 52</x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.CardContent" style="display: flex; flex-direction: column; align-items: center; gap: 24px">
+<div style="display: flex; width: fit-content; height: fit-content; flex: none; align-self: center; margin-inline: auto; box-sizing: border-box; background: var(--sand-0); color: var(--sand-950); padding: 12px; border-radius: var(--radius-lg)">
+<svg viewBox="0 0 29 29" width="232" height="232" style="display: block" shape-rendering="crispEdges" role="img" aria-label="QR code d’enrôlement (démo)"><path d="M0 0.5h7m2 0h1m1 0h1m6 0h3m1 0h7M0 1.5h1m5 0h1m3 0h2m2 0h1m2 0h1m4 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h3m2 0h1m2 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m1 0h1m2 0h1m1 0h2m1 0h1m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h2m6 0h2m2 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h3m1 0h4m3 0h2M0 8.5h1m1 0h5m2 0h3m1 0h1m1 0h3m1 0h1m2 0h5M3 9.5h1m1 0h1m1 0h2m1 0h1m2 0h3m2 0h7m3 0h1M0 10.5h3m2 0h5m2 0h3m1 0h1M1 11.5h1m1 0h1m1 0h1m2 0h4m1 0h1m1 0h1m3 0h2m2 0h1m1 0h1m1 0h1M1 12.5h7m3 0h2m2 0h3m1 0h1m5 0h2M1 13.5h4m4 0h1m2 0h8m2 0h1m1 0h1m3 0h1M0 14.5h1m1 0h2m2 0h6m1 0h3m1 0h1m2 0h7M0 15.5h2m1 0h1m1 0h1m2 0h1m6 0h2m1 0h1m1 0h2m1 0h1m3 0h1M5 16.5h2m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m7 0h2M0 17.5h2m1 0h3m7 0h1m1 0h1m3 0h6m1 0h1m1 0h1M0 18.5h1m2 0h2m1 0h2m8 0h3m2 0h1m2 0h1m1 0h1M0 19.5h1m4 0h1m2 0h2m1 0h2m3 0h1m1 0h1m1 0h1m2 0h2m2 0h1M0 20.5h1m3 0h6m2 0h1m4 0h1m1 0h6m1 0h3M8 21.5h1m1 0h4m2 0h3m1 0h1m3 0h5M0 22.5h7m3 0h2m1 0h3m1 0h1m1 0h2m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m1 0h1m2 0h1m1 0h1m3 0h2m3 0h1m2 0h2M0 24.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h2m1 0h1m2 0h5m1 0h1m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m3 0h2m6 0h2M0 26.5h1m1 0h3m1 0h1m1 0h4m1 0h3m5 0h7M0 27.5h1m5 0h1m2 0h5m1 0h2m1 0h3m1 0h4m1 0h1M0 28.5h7m1 0h1m5 0h1m2 0h1m1 0h1m3 0h1m2 0h1" stroke="currentColor" fill="none"></path></svg>
+</div>
+<div class="stack" style="align-items: center; gap: 16px; width: 100%; padding-block: 16px">
+<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px">
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="sm"><x-import component-from-global-scope="OpenMDM.Icon" name="download"></x-import>Télécharger</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="sm"><x-import component-from-global-scope="OpenMDM.Icon" name="printer"></x-import>Imprimer</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="sm"><x-import component-from-global-scope="OpenMDM.Icon" name="copy"></x-import>Copier le lien</x-import>
+</div>
+</div>
+<div role="note" style="width: 100%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--info-soft); color: var(--foreground)">
+<span style="flex: none; display: flex; padding-top: 2px; color: var(--info-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="info" size="{{alertIcon}}"></x-import></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-weight: 600">Sur l’appareil</span>
+<div class="caption" style="display: flex; flex-direction: column; gap: 4px"><span>1. Réinitialisez l’appareil aux paramètres d’usine.</span><span>2. Touchez 6 fois l’écran d’accueil pour ouvrir le lecteur.</span><span>3. Scannez ce code et connectez-vous au Wi-Fi.</span></div>
+</div>
+</div>
+</x-import>
+</x-import>
+</sc-if>
+
+<sc-if value="{{isManual}}" hint-placeholder-val="{{false}}">
+<div class="stack" style="gap: 20px; min-width: 0">
+<x-import component-from-global-scope="OpenMDM.Card">
+<x-import component-from-global-scope="OpenMDM.CardHeader">
+<x-import component-from-global-scope="OpenMDM.CardTitle">Connexion USB</x-import>
+<x-import component-from-global-scope="OpenMDM.CardDescription">Installe l’agent et active Device Owner depuis le navigateur, via WebUSB</x-import>
+<x-import component-from-global-scope="OpenMDM.CardAction"><x-import component-from-global-scope="OpenMDM.Badge" variant="secondary"><x-import component-from-global-scope="OpenMDM.Icon" name="globe"></x-import>Chrome · Edge · Opera</x-import></x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.CardContent" class="stack" style="gap: 20px">
+
+<sc-if value="{{usbIdle}}" hint-placeholder-val="{{true}}">
+<div class="stack" style="align-items: center; gap: 12px; padding: 20px 16px; text-align: center; border: 1px dashed var(--border-strong); border-radius: var(--radius-lg)">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--card-strong); color: var(--primary-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="usb" size="{{bigIcon}}"></x-import></span>
+<div class="stack" style="gap: 4px"><span class="body-medium">Aucun appareil connecté</span><span class="caption muted">Branchez l’appareil puis autorisez ce poste sur l’écran du téléphone.</span></div>
+<x-import component-from-global-scope="OpenMDM.Button" on-click="{{connect}}"><x-import component-from-global-scope="OpenMDM.Icon" name="usb"></x-import>Connecter un appareil</x-import>
+</div>
+<div class="stack" style="gap: 8px">
+<span class="label muted">Avant de connecter</span>
+<sc-for list="{{prereqs}}" as="p" hint-placeholder-count="3">
+<div style="display: flex; align-items: flex-start; gap: 10px"><span style="flex: none; display: flex; padding-top: 2px; color: var(--success-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="check"></x-import></span><span class="caption">{{p}}</span></div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{usbOn}}" hint-placeholder-val="{{false}}">
+<div class="between" style="gap: 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--card-strong); border: 1px solid var(--card-border)">
+<div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+<span style="flex: none; display: flex; color: var(--primary-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="smartphone" size="{{bigIcon}}"></x-import></span>
+<div class="stack" style="min-width: 0"><span class="body-medium">Google Pixel 8</span><span class="meta muted">N° 3A1B7K2P · Android 14 · ADB autorisé</span></div>
+</div>
+<x-import component-from-global-scope="OpenMDM.Badge" variant="success"><span class="om-badge__dot" aria-hidden="true"></span>Connecté</x-import>
+</div>
+<x-import component-from-global-scope="OpenMDM.ItemGroup">
+<sc-for list="{{usbSteps}}" as="u" hint-placeholder-count="3">
+<x-import component-from-global-scope="OpenMDM.Item" size="sm">
+<x-import component-from-global-scope="OpenMDM.ItemMedia" variant="icon"><x-import component-from-global-scope="OpenMDM.Icon" name="{{u.icon}}"></x-import></x-import>
+<x-import component-from-global-scope="OpenMDM.ItemContent">
+<x-import component-from-global-scope="OpenMDM.ItemTitle">{{u.title}}</x-import>
+<x-import component-from-global-scope="OpenMDM.ItemDescription">{{u.desc}}</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.ItemActions"><x-import component-from-global-scope="OpenMDM.Badge" variant="{{u.tone}}">{{u.status}}</x-import></x-import>
+</x-import>
+</sc-for>
+</x-import>
+<sc-if value="{{usbDone}}" hint-placeholder-val="{{false}}">
+<div role="note" style="width: 100%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--success-soft); color: var(--foreground)">
+<span style="flex: none; display: flex; padding-top: 2px; color: var(--success-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="circle-check" size="{{alertIcon}}"></x-import></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-weight: 600">Appareil enrôlé</span><span class="caption">Premier check-in MQTT reçu. Vous pouvez débrancher le câble.</span></div>
+</div>
+</sc-if>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<x-import component-from-global-scope="OpenMDM.Button" variant="ghost" on-click="{{disconnect}}">Déconnecter</x-import>
+<x-import component-from-global-scope="OpenMDM.Button" on-click="{{runAll}}" disabled="{{usbDone}}"><x-import component-from-global-scope="OpenMDM.Icon" name="send"></x-import>Enrôler</x-import>
+</div>
+</sc-if>
+
+<div role="note" style="width: 100%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--info-soft); color: var(--foreground)">
+<span style="flex: none; display: flex; padding-top: 2px; color: var(--info-text)"><x-import component-from-global-scope="OpenMDM.Icon" name="info" size="{{alertIcon}}"></x-import></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-weight: 600">Navigateurs basés sur Chromium uniquement</span>
+<span class="caption">Firefox et Safari ne prennent pas en charge WebUSB : utilisez l’installation sans USB ci-dessous. Si ADB tourne sur ce poste, arrêtez-le (« adb kill-server ») : il bloque l’accès à l’appareil.</span>
+</div>
+</div>
+</x-import>
+</x-import>
+
+<x-import component-from-global-scope="OpenMDM.Card">
+<x-import component-from-global-scope="OpenMDM.CardHeader">
+<x-import component-from-global-scope="OpenMDM.CardTitle">Sans USB</x-import>
+<x-import component-from-global-scope="OpenMDM.CardDescription">Installation depuis l’appareil, en mode restreint (sans Device Owner)</x-import>
+<x-import component-from-global-scope="OpenMDM.CardAction" style="align-self: center">
+<a class="om-btn om-btn--secondary om-btn--size-sm" data-slot="button" href="https://mdm.entreprise.fr/agent/openmdm-agent.apk" download="openmdm-agent.apk" style="text-decoration: none"><x-import component-from-global-scope="OpenMDM.Icon" name="download"></x-import>Télécharger l’agent</a>
+</x-import>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.CardContent" style="padding: 0">
+<div style="display: flex; flex-direction: column; gap: 24px; padding: 0 24px; box-sizing: border-box; width: 100%">
+<div style="position: relative; display: flex; justify-content: center; padding: 24px 96px; border-radius: var(--radius-lg); background: var(--card-strong); border: 1px solid var(--card-border)">
+<div class="stack" style="align-items: center; gap: 6px; text-align: center; width: 229px"><span class="label muted">Code à saisir dans l’agent</span><span class="om-num" style="font: 600 32px/38px var(--font-sans); letter-spacing: 6px">482 913</span><span class="meta muted"><br></span><x-import component-from-global-scope="OpenMDM.Badge" variant="warning"><x-import component-from-global-scope="OpenMDM.Icon" name="hourglass"></x-import>Expire dans 23 h 52</x-import></div>
+<div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 4px"><x-import component-from-global-scope="OpenMDM.Button" variant="ghost" size="icon" aria-label="Générer un nouveau code"><x-import component-from-global-scope="OpenMDM.Icon" name="refresh-cw"></x-import></x-import><x-import component-from-global-scope="OpenMDM.Button" variant="secondary" size="icon" aria-label="Copier le code"><x-import component-from-global-scope="OpenMDM.Icon" name="copy"></x-import></x-import></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{noUsbSteps}}" as="n" hint-placeholder-count="2">
+<div style="display: flex; align-items: flex-start; gap: 12px"><span style="flex: none; display: flex; padding-top: 2px; color: var(--muted-foreground)"><x-import component-from-global-scope="OpenMDM.Icon" name="{{n.icon}}"></x-import></span><span class="caption">{{n.text}}</span></div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; width: 100%">
+<x-import component-from-global-scope="OpenMDM.AlertDialog">
+<x-import component-from-global-scope="OpenMDM.AlertDialogTrigger">
+<div class="om-btn om-btn--default om-btn--size-default" style="display: flex; width: 100%; box-sizing: border-box; justify-content: center"><x-import component-from-global-scope="OpenMDM.Icon" name="shield-check"></x-import>Appliquer le mode sans restriction</div>
+</x-import>
+<x-import component-from-global-scope="OpenMDM.AlertDialogContent" style="width: 460px">
+<x-import component-from-global-scope="OpenMDM.AlertDialogHeader">
+<div style="display: flex; flex-direction: column; gap: 8px; width: 100%">
+<div style="display: flex; flex-direction: row; align-items: center; gap: 12px; width: 100%">
+<span style="flex: none; display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary)"><x-import component-from-global-scope="OpenMDM.Icon" name="shield-check"></x-import></span>
+<x-import component-from-global-scope="OpenMDM.AlertDialogTitle" style="margin: 0">Mode sans restriction</x-import>
+</div>
+<x-import component-from-global-scope="OpenMDM.AlertDialogDescription" class="muted" style="margin: 0">Aussi appelé « Device Owner » côté Android, ce mode donne à l’agent un contrôle complet de l’appareil.</x-import>
+</div>
+</x-import>
+<div class="stack" style="gap: 12px; margin-top: 8px">
+<div style="display: flex; align-items: flex-start; gap: 10px"><span style="flex: none; display: flex; padding-top: 2px; color: var(--muted-foreground)"><x-import component-from-global-scope="OpenMDM.Icon" name="shield-check"></x-import></span><span class="caption">Il permet d’appliquer les politiques de sécurité (verrouillage, chiffrement, restrictions d’usage) sans intervention de l’utilisateur.</span></div>
+<div style="display: flex; align-items: flex-start; gap: 10px"><span style="flex: none; display: flex; padding-top: 2px; color: var(--muted-foreground)"><x-import component-from-global-scope="OpenMDM.Icon" name="wifi"></x-import></span><span class="caption">Il configure automatiquement le Wi-Fi et les comptes nécessaires à l’appareil.</span></div>
+<div style="display: flex; align-items: flex-start; gap: 10px"><span style="flex: none; display: flex; padding-top: 2px; color: var(--muted-foreground)"><x-import component-from-global-scope="OpenMDM.Icon" name="trash-2"></x-import></span><span class="caption">Il est nécessaire pour permettre l’effacement à distance en cas de perte ou de vol.</span></div>
+</div>
+<x-import component-from-global-scope="OpenMDM.AlertDialogFooter" style="margin-top: 8px">
+<x-import component-from-global-scope="OpenMDM.AlertDialogCancel">Annuler</x-import>
+<x-import component-from-global-scope="OpenMDM.AlertDialogAction">Appliquer</x-import>
+</x-import>
+</x-import>
+</x-import>
+</div>
+</div>
+</x-import>
+</x-import>
+</div>
+</sc-if>
+</div>
+
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'manual', usb: 0 };
+  }
+  renderVals() {
+    var st = this.state, qr = st.mode === 'qr';
+    return {
+      yes: true, no: false, sideH: 1300,
+      alertIcon: 18,
+      bigIcon: 22,
+      usbIdle: st.usb === 0, usbOn: st.usb > 0, usbDone: st.usb === 2,
+      connect: () => this.setState({ usb: 1 }),
+      disconnect: () => this.setState({ usb: 0 }),
+      runAll: () => this.setState({ usb: 2 }),
+      prereqs: ['Débogage USB activé dans les options pour les développeurs', 'Câble USB de données (pas seulement de charge)', 'Aucun compte Google ou autre sur l’appareil, pour Device Owner'],
+      usbSteps: [
+        { icon: 'download', title: 'Installer l’agent', desc: 'APK par défaut du serveur · 0.4.2', tone: st.usb === 2 ? 'success' : 'secondary', status: st.usb === 2 ? 'Terminé' : 'À faire' },
+        { icon: 'send', title: 'Enrôler auprès du serveur', desc: 'Automatique, aucun code à saisir', tone: st.usb === 2 ? 'success' : 'secondary', status: st.usb === 2 ? 'Terminé' : 'À faire' },
+        { icon: 'shield-check', title: 'Activer le mode Device Owner', desc: 'dpm set-device-owner, exécuté par WebUSB', tone: st.usb === 2 ? 'success' : 'secondary', status: st.usb === 2 ? 'Terminé' : 'À faire' }
+      ],
+      noUsbSteps: [
+        { icon: 'download', text: 'Téléchargez l’agent sur l’appareil et installez l’APK (sources inconnues à autoriser).' },
+        { icon: 'key-round', text: 'Ouvrez l’agent, saisissez le code à 6 chiffres puis touchez « Enrôler ».' }
+      ],
+      crumbs: ['Enrôlement', qr ? 'Nouveau QR code' : 'Enrôlement manuel'],
+      subtitle: qr ? 'Provisioning Device Owner par QR code, sans service Google.' : 'Installation de l’agent à la main, sans réinitialisation préalable.',
+      setMode: (v) => this.setState({ mode: v }),
+      isQr: qr, isManual: !qr,
+      configDesc: qr ? 'Ces réglages sont inscrits dans le QR code.' : 'Ces réglages sont appliqués à l’appareil lors de l’enrôlement.',
+      regenLabel: 'Régénérer le QR code',
+    };
+  }
+}
+</script>
+</body>
+</html>
