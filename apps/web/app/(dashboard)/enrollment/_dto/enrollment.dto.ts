@@ -39,8 +39,8 @@ export const enrollmentCodeSchema = z.object({
   ttl: z.number().int().positive(),
 });
 
-// L'appareil branché en USB. Le descripteur USB donne la marque, le modèle et le numéro de série dès la sélection ;
-// la version d'Android et l'autorisation ADB n'arrivent qu'avec la connexion ADB (`null` et `false` d'ici là).
+// L'appareil branché en USB et autorisé en ADB. Le descripteur USB donne la marque, le modèle et le numéro de série ;
+// la version d'Android sera lue par ADB (`null` d'ici là).
 export const usbDeviceSchema = z.object({
   brand: z.string().nullable(),
   model: z.string(),
@@ -75,6 +75,5 @@ export const EnrollmentDto = {
   parseWifiNetworks: (data: unknown) => enrollmentWifiNetworkCollectionSchema.parse(data),
   parseQr: (data: unknown) => enrollmentQrSchema.parse(data),
   parseCode: (data: unknown) => enrollmentCodeSchema.parse(data),
-  parseUsbDevice: (data: unknown) => usbDeviceSchema.parse(data),
   parseUsbEnrollment: (data: unknown) => usbEnrollmentSchema.parse(data),
 };

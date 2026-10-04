@@ -1,10 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { ENROLLMENT } from "@/constants/enrollment";
-import { USB_DEVICE, stubWebUsb } from "../support/webusb";
+import { NAVIGATION } from "@/constants/navigation";
+import { USB_DEVICE, readUsbLog, stubWebUsb, unplugUsbDevice } from "../support/webusb";
 
-// Le QR code, le code à saisir et les réseaux Wi-Fi viennent de l'API ; la sélection de l'appareil USB vient de WebUSB
-// (remplacé par `support/webusb`), et l'enrôlement par USB d'un mock de la page (`enrollment/_mocks`).
+// Le QR code, le code à saisir et les réseaux Wi-Fi viennent de l'API ; la connexion de l'appareil USB vient de WebUSB
+// (remplacé par un faux démon ADB dans `support/webusb`), et l'enrôlement par USB d'un mock de la page (`enrollment/_mocks`).
 const PAGE_URL = "/enrollment";
+
+const navigationLink = (page: Page, href: string) =>
+  page.getByRole("link", { name: NAVIGATION.main.find((item) => item.href === href)?.label });
 
 test.describe("enrôlement", () => {
   test.beforeEach(async ({ page }) => {
@@ -67,8 +71,10 @@ test.describe("enrôlement", () => {
 
     await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
     await expect(page.getByText(`${USB_DEVICE.manufacturer} ${USB_DEVICE.product}`)).toBeVisible();
-    // Le descripteur USB ne dit ni la version d'Android ni l'autorisation ADB : la ligne n'affiche que le numéro de série.
-    await expect(page.getByText(`${ENROLLMENT.usb.device.serial} ${USB_DEVICE.serial}`, { exact: true })).toBeVisible();
+    // L'appareil a autorisé ce poste ; sa version d'Android n'est pas encore lue.
+    await expect(
+      page.getByText(`${ENROLLMENT.usb.device.serial} ${USB_DEVICE.serial} · ${ENROLLMENT.usb.device.adbAuthorized}`),
+    ).toBeVisible();
     await expect(page.getByText(ENROLLMENT.success.connect)).toBeVisible();
     await expect(page.getByText(ENROLLMENT.usb.stepStatus.todo)).toHaveCount(3);
 
@@ -80,6 +86,46 @@ test.describe("enrôlement", () => {
 
     await page.getByRole("button", { name: ENROLLMENT.button.disconnect }).click();
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.success.disconnect)).toBeVisible();
+    // La déconnexion ferme la connexion, puis révoque l'accès du navigateur à l'appareil.
+    await expect.poll(() => readUsbLog(page)).toEqual(["open", "claim", "close", "forget"]);
+  });
+
+  test("garde l'appareil connecté en changeant de page", async ({ page }) => {
+    await stubWebUsb(page, "device");
+    await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    await expect(page.getByText(ENROLLMENT.usb.device.connected, { exact: true })).toBeVisible();
+
+    // Navigation dans l'application, sans rechargement : un rechargement ferait perdre la connexion.
+    await navigationLink(page, "/devices").click();
+    await expect(page).toHaveURL(/\/devices/);
+    await navigationLink(page, "/enrollment").click();
+    await page.getByRole("tab", { name: ENROLLMENT.methods.manual.tab }).click();
+    await expect(page.getByText(`${USB_DEVICE.manufacturer} ${USB_DEVICE.product}`)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.usb.idle.title)).toHaveCount(0);
+  });
+
+  test("repasse à la connexion quand le câble est débranché", async ({ page }) => {
+    await stubWebUsb(page, "device");
+    await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    await expect(page.getByText(ENROLLMENT.usb.device.connected, { exact: true })).toBeVisible();
+
+    await unplugUsbDevice(page);
+    await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.usb.device.connected, { exact: true })).toHaveCount(0);
+  });
+
+  test("explique qu'un autre programme tient l'appareil", async ({ page }) => {
+    await stubWebUsb(page, "busy");
+    await page.goto(`${PAGE_URL}?method=manual`);
+
+    const connect = page.getByRole("button", { name: ENROLLMENT.button.connect });
+    await connect.click();
+    await expect(page.getByText(ENROLLMENT.error.deviceBusy)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+    await expect(connect).toBeEnabled();
   });
 
   test("reste sur la connexion quand la sélection de l'appareil est refermée sans choix", async ({ page }) => {

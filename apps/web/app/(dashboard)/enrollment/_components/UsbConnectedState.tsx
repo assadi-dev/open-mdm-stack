@@ -10,13 +10,21 @@ import { UsbEnrollmentSteps } from "./UsbEnrollmentSteps";
 type UsbConnectedStateProps = {
   device: UsbDevice;
   status: UsbEnrollmentStatus;
+  isDisconnecting: boolean;
   agentVersion?: string;
   onEnroll: () => void;
   onDisconnect: () => void;
 };
 
 // Un appareil branché : ce qu'il est, les étapes de l'enrôlement, puis le bouton qui les lance.
-export const UsbConnectedState = ({ device, status, agentVersion, onEnroll, onDisconnect }: UsbConnectedStateProps) => {
+export const UsbConnectedState = ({
+  device,
+  status,
+  isDisconnecting,
+  agentVersion,
+  onEnroll,
+  onDisconnect,
+}: UsbConnectedStateProps) => {
   const isEnrolling = status === "enrolling";
   const isEnrolled = status === "enrolled";
   const { usb } = ENROLLMENT;
@@ -45,10 +53,11 @@ export const UsbConnectedState = ({ device, status, agentVersion, onEnroll, onDi
       )}
 
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onDisconnect} disabled={isEnrolling}>
+        <Button variant="ghost" onClick={onDisconnect} disabled={isEnrolling || isDisconnecting}>
+          {isDisconnecting && <LoaderCircle aria-hidden="true" className="animate-spin" />}
           {ENROLLMENT.button.disconnect}
         </Button>
-        <Button onClick={onEnroll} disabled={isEnrolling || isEnrolled}>
+        <Button onClick={onEnroll} disabled={isEnrolling || isEnrolled || isDisconnecting}>
           {isEnrolling ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
           {ENROLLMENT.button.enroll}
         </Button>
