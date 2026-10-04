@@ -15,7 +15,11 @@ export const useEnrollmentMutation = () => {
       if (queryKey) queryClient.setQueryData(queryKey, data);
       toast.success(ENROLLMENT.success[action]);
     },
-    onError: () => toast.error(ENROLLMENT.error[action]),
+    onError: (error: Error) => {
+      // Une requête annulée exprès (carte quittée pendant la génération du code) n'est pas un échec à signaler.
+      if (error.name === "AbortError") return;
+      toast.error(ENROLLMENT.error[action]);
+    },
   });
 
   // Le QR code généré est la donnée de la mutation (`generateQr.data`) : il vit tant que la page est ouverte.
@@ -24,9 +28,10 @@ export const useEnrollmentMutation = () => {
     ...afterMutation("generateQr"),
   });
 
-  // Le premier code comme les suivants : rien n'est généré à l'ouverture de la carte.
+  // Le premier code comme les suivants : rien n'est généré à l'ouverture de la carte. Le signal vient de
+  // `useEnrollmentCode`, qui annule la requête quand la carte est quittée.
   const generateCode = useMutation({
-    mutationFn: generateEnrollmentCodeApi,
+    mutationFn: (signal: AbortSignal) => generateEnrollmentCodeApi(signal),
     ...afterMutation("generateCode", ENROLLMENTS.code),
   });
 

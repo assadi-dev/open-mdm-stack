@@ -7,12 +7,10 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { ENROLLMENT } from "@/constants/enrollment";
 import { useCopyText } from "../_hooks/useCopyText";
 import { useEnrollmentCode } from "../_hooks/useEnrollmentCode";
-import { useEnrollmentMutation } from "../_hooks/useEnrollmentMutation";
 
 // Le code à 6 chiffres que l'agent demande à l'ouverture, avec de quoi le copier ou en générer un nouveau.
 export const EnrollmentCodePanel = () => {
-  const enrollmentCode = useEnrollmentCode();
-  const { generateCode } = useEnrollmentMutation();
+  const { enrollmentCode, generate, isGenerating } = useEnrollmentCode();
   const copyText = useCopyText();
   const { code } = ENROLLMENT.noUsb;
 
@@ -28,8 +26,8 @@ export const EnrollmentCodePanel = () => {
           <EmptyDescription>{code.empty.description}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button onClick={() => generateCode.mutate()} disabled={generateCode.isPending}>
-            {generateCode.isPending ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <KeyRound aria-hidden="true" />}
+          <Button onClick={generate} disabled={isGenerating}>
+            {isGenerating ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <KeyRound aria-hidden="true" />}
             {ENROLLMENT.button.generateCode}
           </Button>
         </EmptyContent>
@@ -48,11 +46,11 @@ export const EnrollmentCodePanel = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => generateCode.mutate()}
-          disabled={generateCode.isPending}
+          onClick={generate}
+          disabled={isGenerating}
           aria-label={ENROLLMENT.button.regenerateCode}
         >
-          <RefreshCw aria-hidden="true" className={generateCode.isPending ? "animate-spin" : undefined} />
+          <RefreshCw aria-hidden="true" className={isGenerating ? "animate-spin" : undefined} />
         </Button>
         <Button
           variant="secondary"

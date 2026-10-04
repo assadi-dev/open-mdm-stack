@@ -40,8 +40,9 @@ export const createEnrollmentQrApi = async (input: ProvisioningInput) => {
 };
 
 // Chaque appel génère un nouveau code (`GET /enrollment/otp-generate` côté API), à usage unique.
-export const generateEnrollmentCodeApi = async () => {
-  const response = await fetch(CODE_URL, { method: "POST" });
+// `signal` annule la requête si la carte est quittée avant la réponse.
+export const generateEnrollmentCodeApi = async (signal?: AbortSignal) => {
+  const response = await fetch(CODE_URL, { method: "POST", signal });
   if (!response.ok) throw createHttpError(response.status);
   return EnrollmentDto.parseCode(await response.json());
 };
