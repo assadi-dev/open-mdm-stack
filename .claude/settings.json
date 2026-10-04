@@ -319,7 +319,9 @@
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/enrollment-tmp.spec.ts -g \"par défaut\")",
       "Bash(perl -0pi -e 's/toHaveText\\\\\\(\"Terrain Lyon\"\\\\\\)/toContainText\\(\"Terrain Lyon\"\\)/; s/\\\\\\)\\\\\\)\\\\.toHaveText\\\\\\(ENROLLMENT\\\\.config\\\\.wifi\\\\.none\\\\\\)/\\)\\).toContainText\\(ENROLLMENT.config.wifi.none\\)/; s/getByText\\\\\\(ENROLLMENT\\\\.usb\\\\.enrolled\\\\.title\\\\\\)/getByText\\(ENROLLMENT.usb.enrolled.title, { exact: true }\\)/' e2e/authenticated/enrollment.spec.ts)",
       "Bash(npx shadcn@latest add empty)",
-      "Bash(perl -0pi -e ' *)"
+      "Bash(perl -0pi -e ' *)",
+      "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/web && ls lib/api lib/api/intefaces 2>/dev/null; sed -n 1,80p lib/api/api-handlers.ts 2>/dev/null; ls \"app/api/v1\" \"app/api/v1/\\(devices\\)\" 2>/dev/null; grep -rn \"requireAuth\" -A12 ../api/src/middleware/authMiddleware.ts | head -30)",
+      "Read(//Users/assadi/Projects/Turbo/api/src/middleware/**)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",
