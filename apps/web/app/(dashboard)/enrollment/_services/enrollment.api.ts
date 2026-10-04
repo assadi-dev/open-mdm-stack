@@ -1,3 +1,4 @@
+import { createHttpError } from "@/lib/api/intefaces/http-errors";
 import { EnrollmentDto } from "../_dto/enrollment.dto";
 import {
   ENROLLMENT_OPTIONS_MOCK,
@@ -5,24 +6,39 @@ import {
   USB_DEVICE_MOCK,
   USB_ENROLLMENT_MOCK,
   buildEnrollmentCodeMock,
-  buildEnrollmentQrMock,
   randomEnrollmentCodeMock,
   simulateLatency,
 } from "../_mocks/enrollment.mock";
 import type { ProvisioningInput, UsbEnrollmentInput } from "../_types/enrollment.types";
 
-// Les données viennent de `_mocks/` tant que le dashboard n'est pas branché sur l'enrôlement de l'API ni sur WebUSB.
-// Passer au réel : remplacer chaque mock par l'appel au proxy (`/api/v1/enrollment/...`) ou à l'ADB du navigateur,
-// le parsing Zod reste identique.
+// Le QR code et les réseaux Wi-Fi passent par le proxy Next (`app/api/v1/(enrollment)` et `(wifi-networks)`) vers l'API.
+// Le reste vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes, politiques et agent par défaut
+// (l'API n'en expose pas), code à saisir dans l'agent (`GET /enrollment/otp-generate`) et WebUSB.
+// Passer au réel : remplacer chaque mock par l'appel au proxy ou à l'ADB du navigateur, le parsing Zod reste identique.
+const QR_CODE_URL = "/api/v1/enrollment/qr-code";
+const WIFI_NETWORKS_URL = "/api/v1/wifi-networks";
+const JSON_HEADERS = { "Content-Type": "application/json" };
+// Le plafond de l'API (`MAX_LIMIT`) : le formulaire propose tous les réseaux enregistrés, sans pagination.
+const WIFI_NETWORKS_QUERY = "limit=100&sort=ssid";
 
-// Les groupes et les politiques n'existent pas encore côté API ; les réseaux Wi-Fi viendront de `GET /wifi-networks`.
-export const fetchEnrollmentOptionsApi = async () => EnrollmentDto.parseOptions(ENROLLMENT_OPTIONS_MOCK);
+// Les réseaux Wi-Fi enregistrés (l'id est celui que l'API résout dans le QR code), le reste des choix est fictif.
+export const fetchEnrollmentOptionsApi = async () => {
+  const response = await fetch(`${WIFI_NETWORKS_URL}?${WIFI_NETWORKS_QUERY}`);
+  if (!response.ok) throw createHttpError(response.status);
+  const { data: wifiNetworks } = EnrollmentDto.parseWifiNetworks(await response.json());
 
-// `POST /enrollment/display-provisioning?format=svg`. Chaque appel génère un nouveau QR code, avec la configuration reçue.
+  return EnrollmentDto.parseOptions({ ...ENROLLMENT_OPTIONS_MOCK, wifiNetworks });
+};
+
+// Chaque appel génère un nouveau QR code, avec la configuration reçue. Un Wi-Fi choisi y inscrit son nom et son mot de passe.
 export const createEnrollmentQrApi = async (input: ProvisioningInput) => {
-  void input;
-  await simulateLatency();
-  return EnrollmentDto.parseQr(buildEnrollmentQrMock());
+  const response = await fetch(QR_CODE_URL, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw createHttpError(response.status);
+  return EnrollmentDto.parseQr(await response.json());
 };
 
 // `GET /enrollment/otp-generate`. Chaque appel génère un nouveau code ; `isNew` distingue la régénération du premier code.

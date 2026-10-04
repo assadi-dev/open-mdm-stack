@@ -1,6 +1,5 @@
 import type { BreadcrumbEntry } from "../../_types/page-header.types";
 import { ENROLLMENT } from "@/constants/enrollment";
-import { formatLongDateTime } from "@/lib/format";
 import { ENROLLMENT_METHOD_KEYS } from "../_dto/enrollment.dto";
 import type {
   EnrollmentConfigFormValues,
@@ -59,9 +58,12 @@ export const toConfigFormValues = ({ defaults }: EnrollmentOptions): EnrollmentC
   apkUrl: "",
 });
 
-// Les valeurs du formulaire sont déjà rognées par le schéma : « Aucun » et une URL vide laissent le serveur décider.
-export const toProvisioningInput = ({ wifiId, apkUrl, ...values }: EnrollmentConfigFormValues): ProvisioningInput => ({
-  ...values,
+// Les valeurs du formulaire sont déjà rognées par le schéma : le nom devient `deviceName` (le champ de l'API), « Aucun »
+// et une URL vide laissent le serveur décider.
+export const toProvisioningInput = ({ namePattern, groupId, policyId, wifiId, apkUrl }: EnrollmentConfigFormValues): ProvisioningInput => ({
+  deviceName: namePattern,
+  groupId,
+  policyId,
   ...(wifiId !== NO_WIFI && { wifiId }),
   ...(apkUrl && { apkUrl }),
 });
@@ -79,9 +81,6 @@ export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => a
 export const formatEnrollmentCode = (token: string) => `${token.slice(0, 3)} ${token.slice(3)}`;
 
 export const isExpired = (expiresAt: string, now: number) => new Date(expiresAt).getTime() <= now;
-
-// « Expire le 28 sept. 2026 à 14:32 »
-export const toExpiryDate = (expiresAt: string) => `${ENROLLMENT.expiry.on} ${formatLongDateTime(expiresAt)}`;
 
 // « Expire dans 23 h 52 », « Expire dans 8 min » : le temps restant, arrondi à la minute inférieure.
 export const toRemainingLabel = (expiresAt: string, now: number) => {

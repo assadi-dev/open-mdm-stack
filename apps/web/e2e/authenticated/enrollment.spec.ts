@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { ENROLLMENT } from "@/constants/enrollment";
 
-// Les données viennent des mocks de la page (`enrollment/_mocks`) : QR code généré à la demande, code « 482 913 » et
-// Pixel 8 branché en USB.
+// Le QR code et les réseaux Wi-Fi viennent de l'API ; le code « 482 913 » et le Pixel 8 branché en USB, des mocks de la
+// page (`enrollment/_mocks`).
 const PAGE_URL = "/enrollment";
 
 test.describe("enrôlement", () => {

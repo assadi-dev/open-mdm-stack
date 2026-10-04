@@ -321,7 +321,12 @@
       "Bash(npx shadcn@latest add empty)",
       "Bash(perl -0pi -e ' *)",
       "Bash(cd /Users/assadi/Projects/Turbo/open-mdm-stack/apps/web && ls lib/api lib/api/intefaces 2>/dev/null; sed -n 1,80p lib/api/api-handlers.ts 2>/dev/null; ls \"app/api/v1\" \"app/api/v1/\\(devices\\)\" 2>/dev/null; grep -rn \"requireAuth\" -A12 ../api/src/middleware/authMiddleware.ts | head -30)",
-      "Read(//Users/assadi/Projects/Turbo/api/src/middleware/**)"
+      "Read(//Users/assadi/Projects/Turbo/api/src/middleware/**)",
+      "Bash(sed -n 40,100p apps/api/src/features/enrollment/utils/generators.ts; cd apps/web; cat \"app/\\(dashboard\\)/wifi-networks/_dto/wifi-network.dto.ts\" | head -40; sed -n 1,30p \"app/\\(dashboard\\)/wifi-networks/_services/wifi-networks.api.ts\"; cat \"app/api/v1/\\(devices\\)/schema.ts\"; grep -rn \"formatLongDateTime\\\\|toExpiryDate\\\\|copyLink\\\\|buildEnrollmentQrMock\\\\|EnrollmentQr\\\\b\" app components constants lib e2e | grep -v \"_types/enrollment\"; grep -n \"MAX_LIMIT\\\\|limit\" ../api/src/features/paginations/*.ts ../api/src/features/wifi-network/dto/schema.ts | head)",
+      "Read(//Users/assadi/Projects/Turbo/api/src/features/**)",
+      "Bash(lsof -nP -iTCP -sTCP:LISTEN)",
+      "Bash(awk '{print $1, $9}')",
+      "Bash(curl -s -X POST http://localhost:5573/api/v1/enrollment/display-provisioning -H 'Content-Type: application/json' -d '{\"deviceName\":\"Terrain-Lyon-{n}\",\"groupId\":\"lyon\",\"policyId\":\"std\"}')"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",

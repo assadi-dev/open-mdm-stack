@@ -70,6 +70,17 @@ export const handleResponse = async <T>(response: Response): Promise<T> => {
 }
 
 
+// Une réponse qui n'est pas du JSON (ex. un QR code en SVG) : le texte tel quel. Les erreurs de l'API restent du JSON.
+export const handleTextResponse = async (response: Response): Promise<string> => {
+    const text = await response.text();
+
+    if (!response.ok) {
+        throw createHttpError(response.status, extractMessage(text ? parseJson(text) : undefined));
+    }
+    return text;
+}
+
+
 // Le corps d'une écriture (POST, PATCH) : un objet JSON. Son contenu n'est pas validé ici, c'est l'API qui le fait.
 export const readJsonBody = async (request: Request): Promise<Record<string, unknown>> => {
     const body: unknown = await request.json().catch(() => undefined);

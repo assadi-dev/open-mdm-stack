@@ -1,6 +1,6 @@
 import { signBackendToken } from "../auth/backend-token";
 import { getSessionServer } from "../auth/session-server";
-import { BACKEND_API_BASE_URL, buildUrl, handleResponse } from "./api-handlers";
+import { BACKEND_API_BASE_URL, buildUrl, handleResponse, handleTextResponse } from "./api-handlers";
 import { HTTP_ERROR } from "./intefaces/http-status";
 import { Unauthorized } from "./intefaces/http-errors";
 import { IApiRequest } from "./intefaces/interfaces";
@@ -42,6 +42,14 @@ class ApiRequest implements IApiRequest {
         const response = await fetch(url, httpOptions);
         return this.handleResponse(response);
 
+    }
+
+    // Comme `post`, pour une réponse qui n'est pas du JSON : renvoie le texte de la réponse.
+    public async postText(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<string> {
+        const url = buildUrl(path);
+        const httpOptions = await this.buildOptions({ method: "POST", ...options, body: JSON.stringify(body) })
+        const response = await fetch(url, httpOptions);
+        return handleTextResponse(response);
     }
 
     public async put<T>(path: string, body: Record<string, unknown>, options?: RequestInit): Promise<T> {

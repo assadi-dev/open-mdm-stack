@@ -24,9 +24,10 @@ export type EnrollmentOption = {
   label: string;
 };
 
-// Ce que l'API reçoit pour générer un QR code ou enrôler un appareil : un champ absent laisse la valeur par défaut du serveur.
+// Ce que l'API reçoit pour générer un QR code ou enrôler un appareil : un champ absent laisse la valeur par défaut du
+// serveur. `deviceName` est le nom du formulaire tel quel, `{n}` compris.
 export type ProvisioningInput = {
-  namePattern: string;
+  deviceName: string;
   groupId: string;
   policyId: string;
   wifiId?: string;
@@ -44,4 +45,4 @@ export type UsbStep = keyof typeof ENROLLMENT.usb.steps;
 export type UsbStepStatus = keyof typeof ENROLLMENT.usb.stepStatus;
 
 // Les actions de copie, qui partagent leur hook et leurs messages.
-export type CopyAction = "copyLink" | "copyCode";
+export type CopyAction = "copyCode";
