@@ -41,11 +41,14 @@ export class EnrollmentController {
     }
 
     otpVerify = async (req: Request, res: Response) => {
-        const { code } = req.body as { code: string }
+        const payload = enrollmentValidator.verifyOtp(req.body);
+        if (!payload.success) {
+            throw payload.error
+        }
         const ttlSeconds = Number(ENV.ENROLLMENT_CHALLENGE_TTL_SECONDS);
 
         const result = await this.enrollmentService.verifyOTP({
-            otp: code,
+            otp: payload.data.code,
             ttlSeconds
         });
         return res.json(result);

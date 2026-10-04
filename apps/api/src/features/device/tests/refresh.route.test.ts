@@ -50,6 +50,10 @@ vi.mock("@features/enrollment/repositories", () => ({
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
     }),
+    // DeviceService builds an EnrollmentService, which also wants the OTP repository — not exercised here.
+    OtpRepository: vi.fn(function () {
+        return {};
+    }),
 }));
 
 vi.mock("@features/auth/repository", () => ({

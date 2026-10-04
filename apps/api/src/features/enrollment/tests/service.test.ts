@@ -1,14 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
-import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
+import { HTTPBadRequestException, HTTPNotFoundException, HTTPServiceUnavailableException } from "@core/exception";
 
 // `vi.hoisted` runs alongside the hoisted `vi.mock` below, so `challengeRepoMock`
 // is already initialized when the mock factory references it.
-const { challengeRepoMock, wifiNetworkRepoMock } = vi.hoisted(() => ({
+const { challengeRepoMock, otpRepoMock, wifiNetworkRepoMock } = vi.hoisted(() => ({
     challengeRepoMock: {
         create: vi.fn(),
         byChallenge: vi.fn(),
         markConsumed: vi.fn(),
+    },
+    otpRepoMock: {
+        issue: vi.fn(),
+        consume: vi.fn(),
     },
     wifiNetworkRepoMock: {
         findById: vi.fn(),
@@ -20,6 +24,9 @@ vi.mock("@features/enrollment/repositories", () => ({
     // stand in for a class constructor here.
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
+    }),
+    OtpRepository: vi.fn(function () {
+        return otpRepoMock;
     }),
 }));
 
@@ -40,6 +47,7 @@ describe("EnrollmentService", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         challengeRepoMock.create.mockResolvedValue({ id: "challenge-row" });
+        otpRepoMock.issue.mockResolvedValue({ id: "otp-row" });
         service = new EnrollmentService();
     });
 
@@ -110,12 +118,67 @@ describe("EnrollmentService", () => {
         });
     });
 
+    describe("generateOTP", () => {
+        it("stores a 6-digit code expiring ENROLLMENT_OTP_TTL_SECONDS from now and returns it", async () => {
+            const before = Date.now();
+
+            const result = await service.generateOTP();
+
+            expect(result.code).toMatch(/^\d{6}$/);
+            expect(result.ttl).toBeGreaterThan(0);
+            expect(otpRepoMock.issue).toHaveBeenCalledTimes(1);
+            const { code, expiresAt } = otpRepoMock.issue.mock.calls[0][0];
+            expect(code).toBe(result.code);
+            // The expiry reported to the client is the one stored — not a window boundary, as with the old TOTP.
+            expect(result.expiresAt).toBe(expiresAt.toISOString());
+            expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + result.ttl * 1000);
+            expect(expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + result.ttl * 1000);
+        });
+
+        it("draws another code when the first ones are already pending", async () => {
+            otpRepoMock.issue
+                .mockResolvedValueOnce(undefined)
+                .mockResolvedValueOnce(undefined)
+                .mockResolvedValue({ id: "otp-row" });
+
+            const result = await service.generateOTP();
+
+            expect(otpRepoMock.issue).toHaveBeenCalledTimes(3);
+            // The code handed back is the one that was actually stored, not one of the rejected draws.
+            expect(result.code).toBe(otpRepoMock.issue.mock.calls[2][0].code);
+        });
+
+        it("answers 503 after MAX_OTP_ISSUE_ATTEMPTS collisions in a row", async () => {
+            otpRepoMock.issue.mockResolvedValue(undefined);
+
+            await expect(service.generateOTP()).rejects.toBeInstanceOf(HTTPServiceUnavailableException);
+            expect(otpRepoMock.issue).toHaveBeenCalledTimes(10);
+        });
+    });
+
     describe("verifyOTP", () => {
-        it("throws HTTPBadRequestException without minting a challenge when the OTP is invalid", async () => {
+        it("throws HTTPBadRequestException without minting a challenge when the OTP is unknown, expired or already used", async () => {
+            otpRepoMock.consume.mockResolvedValue(undefined);
+
             await expect(
                 service.verifyOTP({ otp: "000000", ttlSeconds: 120 }),
             ).rejects.toBeInstanceOf(HTTPBadRequestException);
             expect(challengeRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("consumes the OTP, then mints a challenge with the requested TTL", async () => {
+            otpRepoMock.consume.mockResolvedValue({ id: "otp-row", consumedAt: new Date() });
+
+            const result = await service.verifyOTP({ otp: "123456", ttlSeconds: 120 });
+
+            expect(otpRepoMock.consume).toHaveBeenCalledWith("123456");
+            expect(result.ttlSeconds).toBe(120);
+            expect(challengeRepoMock.create).toHaveBeenCalledWith(
+                expect.objectContaining({ challenge: result.challenge, consumedAt: null }),
+            );
+            // Consumed first: a failure while minting the challenge must never leave a reusable code behind.
+            expect(otpRepoMock.consume.mock.invocationCallOrder[0])
+                .toBeLessThan(challengeRepoMock.create.mock.invocationCallOrder[0]);
         });
     });
 

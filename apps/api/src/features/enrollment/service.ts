@@ -1,8 +1,8 @@
 import { ENV } from "@config/env";
-import { HTTPBadRequestException, HTTPNotFoundException } from "@core/exception";
+import { HTTPBadRequestException, HTTPNotFoundException, HTTPServiceUnavailableException } from "@core/exception";
 import { generateQrSVG } from "@features/qrcode/service";
-import { ChallengeRepository } from "./repositories";
-import { buildProvisioningPayload, generateRandomChallenge, OTPGenerator, OTPVerifier } from "./utils/generators";
+import { ChallengeRepository, OtpRepository } from "./repositories";
+import { buildProvisioningPayload, generateOtpCode, generateRandomChallenge } from "./utils/generators";
 import { enrollmentValidator } from "./dto/validation";
 import { CreateProvisioningPayloadInput } from "./dto/schema";
 import { WifiNetworkRepository } from "@features/wifi-network/repository";
@@ -11,30 +11,54 @@ import { decryptSecret } from "@lib/crypto";
 
 
 
+/**
+ * How many codes `generateOTP` draws before giving up. A draw only fails when the code is already pending, i.e. with
+ * k pending codes out of 10^6 each draw collides with probability k / 10^6: needing a second draw is rare and ten
+ * in a row means the code space is practically full — not something a retry fixes.
+ */
+const MAX_OTP_ISSUE_ATTEMPTS = 10;
+
 export class EnrollmentService {
     challengeRepo: ChallengeRepository
+    otpRepo: OtpRepository
 
-    constructor(challengeRepo: ChallengeRepository = new ChallengeRepository()) {
+    constructor(
+        challengeRepo: ChallengeRepository = new ChallengeRepository(),
+        otpRepo: OtpRepository = new OtpRepository(),
+    ) {
         this.challengeRepo = challengeRepo;
+        this.otpRepo = otpRepo;
     }
 
+    /** Issues a fresh single-use code, valid for `ENROLLMENT_OTP_TTL_SECONDS`. Every call returns a different one. */
     generateOTP = async () => {
         const ttl = ENV.ENROLLMENT_OTP_TTL_SECONDS
-        const { code, expiresAt } = await OTPGenerator(ttl);
-        return {
-            code,
-            expiresAt: expiresAt.toISOString(),
-            ttl,
+        const expiresAt = new Date(Date.now() + ttl * 1000);
+
+        for (let attempt = 0; attempt < MAX_OTP_ISSUE_ATTEMPTS; attempt++) {
+            const code = generateOtpCode();
+            // `undefined`: this code is already pending — draw another one.
+            const issued = await this.otpRepo.issue({ code, expiresAt });
+            if (issued) {
+                return {
+                    code,
+                    expiresAt: expiresAt.toISOString(),
+                    ttl,
+                }
+            }
         }
+        throw new HTTPServiceUnavailableException("Could not generate a unique OTP, try again");
     }
 
+    /**
+     * Exchanges a code for an enrollment challenge. The code is consumed on the way: it works once. Unknown, expired
+     * and already-used codes are indistinguishable from outside on purpose.
+     */
     verifyOTP = async ({ otp, ttlSeconds }: { otp: string, ttlSeconds?: number }) => {
-        const { valid } = await OTPVerifier(otp, ttlSeconds);
-        if (!valid) {
+        const consumed = await this.otpRepo.consume(otp);
+        if (!consumed) {
             throw new HTTPBadRequestException("Invalid OTP");
         }
-
-        // TODO: add consumed logic to db for otp and check otp
 
         return this.generateChallenge(ttlSeconds)
     }

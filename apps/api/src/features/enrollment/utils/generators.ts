@@ -1,13 +1,6 @@
-import { randomBytes } from "crypto";
-import { CreateProvisioningPayloadInput } from "../dto/schema";
+import { randomBytes, randomInt } from "crypto";
+import { CreateProvisioningPayloadInput, OTP_DIGITS } from "../dto/schema";
 import { ENV } from "@config/env";
-import { OTP } from "otplib";
-
-const OTP_CONFIG = { strategy: "totp", digits: 6, secret: ENV.MDM_OTP_SECRET } as {
-    strategy: "hotp" | "totp";
-    digits: number;
-    secret: string;
-};
 
 
 
@@ -83,29 +76,10 @@ export const buildProvisioningPayload = (input: CreateProvisioningPayloadInput) 
 
 
 
-export const OTPGenerator = async (ttl: number = 300) => {
-    const otp = new OTP({ strategy: OTP_CONFIG.strategy, });
-    // Generate a secret
-    const secret = OTP_CONFIG.secret;
-    // Generate a TOTP token
-    const code = await otp.generate({ secret, period: ttl, digits: OTP_CONFIG.digits });
-    const expiresAt = new Date(Date.now() + ttl * 1000);
-
-
-    return {
-        code,
-        ttl,
-        expiresAt,
-    }
-
-}
-
-
-export const OTPVerifier = async (token: string, ttl: number = 300) => {
-    const otp = new OTP({ strategy: OTP_CONFIG.strategy, });
-
-    const secret = OTP_CONFIG.secret;
-    const result = await otp.verify({ token, secret, digits: OTP_CONFIG.digits, });
-    return result
-
-}
+/**
+ * Draws a uniformly random [OTP_DIGITS]-digit code, leading zeros included ("004217").
+ *
+ * `randomInt` is a CSPRNG and rejects out-of-range draws instead of taking a modulo, so there is no bias towards
+ * low codes. Uniqueness among pending codes is not this function's job — see `OtpRepository.issue`.
+ */
+export const generateOtpCode = () => randomInt(0, 10 ** OTP_DIGITS).toString().padStart(OTP_DIGITS, "0");
