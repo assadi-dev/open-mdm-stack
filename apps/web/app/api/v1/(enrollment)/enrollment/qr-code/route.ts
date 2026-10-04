@@ -5,7 +5,7 @@ import { createEnrollmentQrBodySchema } from "../../schema";
 import { ENROLLMENT_ENDPOINTS } from "../endpoints";
 
 
-// POST /api/v1/enrollment/qr-code  { deviceName?, groupId?, policyId?, wifiId?, apkUrl? }
+// POST /api/v1/enrollment/qr-code  { name?, groupId?, policyId?, wifiId?, apkUrl? }
 // Génère un QR code d'enrôlement. L'API répond avec un document SVG : le proxy le renvoie dans un objet JSON, pour
 // que la réponse puisse porter d'autres champs plus tard.
 export const POST = async (request: NextRequest) => {

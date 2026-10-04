@@ -63,6 +63,16 @@ describe("POST /api/v1/enrollment", () => {
         expect(challengeRepoMock.create).not.toHaveBeenCalled();
     });
 
+    it("POST /display-provisioning carries the device name into the admin extras bundle", async () => {
+        const res = await request(app)
+            .post("/api/v1/enrollment/display-provisioning")
+            .send({ name: "Tablette {n}" })
+            .expect(200);
+
+        const extras = res.body["android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"];
+        expect(extras.name).toBe("Tablette {n}");
+    });
+
     it("POST /display-provisioning rejects an invalid body with a 400 instead of a raw 500", async () => {
         await request(app)
             .post("/api/v1/enrollment/display-provisioning")

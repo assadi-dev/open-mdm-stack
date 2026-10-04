@@ -25,9 +25,9 @@ export type EnrollmentOption = {
 };
 
 // Ce que l'API reçoit pour générer un QR code ou enrôler un appareil : un champ absent laisse la valeur par défaut du
-// serveur. `deviceName` est le nom du formulaire tel quel, `{n}` compris.
+// serveur. `name` est le nom du formulaire tel quel, `{n}` compris.
 export type ProvisioningInput = {
-  deviceName: string;
+  name: string;
   groupId: string;
   policyId: string;
   wifiId?: string;

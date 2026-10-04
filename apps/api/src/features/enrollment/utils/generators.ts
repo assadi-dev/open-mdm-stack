@@ -55,7 +55,7 @@ export const buildProvisioningPayload = (input: CreateProvisioningPayloadInput) 
             serverBaseUrl: ENV.MDM_SERVER_BASE_URL,
             ...(input.policyId ? { policyId: input.policyId } : {}),
             ...(input.groupId ? { groupId: input.groupId } : {}),
-            ...(input.deviceName ? { deviceName: input.deviceName } : {}),
+            ...(input.name ? { name: input.name } : {}),
         },
         "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": input.skipEncryption,
     };

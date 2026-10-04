@@ -85,4 +85,14 @@ describe("buildProvisioningPayload", () => {
         expect(extras.policyId).toBe("policy-1");
         expect(extras.groupId).toBe("group-1");
     });
+
+    it("forwards the device name into the admin extras bundle when provided, and omits it otherwise", () => {
+        const bundle = (input: CreateProvisioningPayloadInput) =>
+            buildProvisioningPayload(input)[
+                "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
+            ] as Record<string, unknown>;
+
+        expect(bundle({ ...base, name: "Tablette {n}" }).name).toBe("Tablette {n}");
+        expect(bundle(base)).not.toHaveProperty("name");
+    });
 });
