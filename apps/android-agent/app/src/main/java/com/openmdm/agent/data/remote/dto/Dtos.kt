@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Wire contract shared with the MDM backend (pinned-key enrollment, see
  * apps/api/src/features/enrollment and apps/api/src/features/device):
- * GET enrollment/challenge, POST devices/enroll | heartbeat | inventory.
+ * GET enrollment/challenge, POST enrollment/otp-verify, POST devices/enroll | heartbeat | inventory.
  */
 
 /**
@@ -47,13 +47,23 @@ data class DeviceInfoDto(
 
 /**
  * Single-use, short-lived anti-replay nonce fetched right before enrolling
- * (never cached/reused — see [com.openmdm.agent.data.repository.DeviceRepository.enroll]).
+ * (never cached/reused — see [com.openmdm.agent.data.repository.DeviceRepository.autoEnroll]).
+ * Also the response of `POST enrollment/otp-verify`, which hands one out in exchange for a valid code.
  */
 @Serializable
 data class ChallengeResponse(
     val challenge: String,
     val ttlSeconds: Int,
     val expiresAt: String,
+)
+
+/**
+ * Body of `POST enrollment/otp-verify`: the short numeric [code] an administrator generated in the dashboard
+ * (`GET enrollment/otp-generate`) and read out to the person enrolling the device. Single-use.
+ */
+@Serializable
+data class OtpVerifyRequest(
+    val code: String,
 )
 
 /**

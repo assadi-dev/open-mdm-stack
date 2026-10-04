@@ -5,8 +5,10 @@ import com.openmdm.agent.data.DeviceName
 import com.openmdm.agent.data.local.DeviceKeyStore
 import com.openmdm.agent.data.local.SecureDeviceStore
 import com.openmdm.agent.data.remote.DeviceApi
+import com.openmdm.agent.data.remote.dto.ChallengeResponse
 import com.openmdm.agent.data.remote.dto.EnrollRequest
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
+import com.openmdm.agent.data.remote.dto.OtpVerifyRequest
 import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import com.openmdm.agent.inventory.InventoryCollector
 import com.openmdm.agent.security.CanonicalMessage
@@ -41,6 +43,10 @@ class DeviceRepository(
      * enrollment. There is no admin-issued enrollment token to pass in: the
      * challenge itself is the sole authorization.
      *
+     * Only meant for the QR provisioning path, where nobody is there to type a code — the challenge is handed out
+     * to whoever asks. A person enrolling by hand goes through [enroll], which asks for the code an administrator
+     * generated first.
+     *
      * [enrollmentMethod] is opaque to this method beyond being echoed into
      * the signed message and the request body — the server expects one of
      * "qr" | "manual" | "usb".
@@ -53,6 +59,46 @@ class DeviceRepository(
         baseUrl: String?,
         enrollmentMethod: String = "manual",
         name: String? = null,
+    ): Result<Unit> = performEnrollment(baseUrl, enrollmentMethod, name) { api.challenge() }
+
+    /**
+     * Same handshake as [autoEnroll], the one difference being where the challenge comes from: instead of being
+     * handed out freely, it is obtained by exchanging [code] — the short code an administrator generated in the
+     * dashboard and read out to the person enrolling the device — at `POST enrollment/otp-verify`. The code is
+     * single-use: it is consumed by that exchange, even if the enrollment then fails.
+     *
+     * A failure of the code step is reported as an [OtpVerifyException] in the returned [Result], so the caller can
+     * tell a wrong/expired/used code ([OtpVerifyException.InvalidCode]) from a server or network problem. A [code]
+     * that is not [OTP_LENGTH] digits (once trimmed) fails the same way without any request being sent. Failures of
+     * the later steps (signature, `devices/enroll`) are not wrapped, as with [autoEnroll].
+     */
+    suspend fun enroll(
+        baseUrl: String?,
+        code: String,
+        enrollmentMethod: String = "manual",
+        name: String? = null,
+    ): Result<Unit> {
+        val otp = code.trim()
+        if (!OTP_FORMAT.matches(otp)) {
+            return Result.failure(OtpVerifyException.InvalidCode("The code must be $OTP_LENGTH digits"))
+        }
+        return performEnrollment(baseUrl, enrollmentMethod, name) { verifyOtp(otp) }
+    }
+
+    private suspend fun verifyOtp(code: String): ChallengeResponse = try {
+        api.verifyOtp(OtpVerifyRequest(code))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        throw e.toOtpVerifyException()
+    }
+
+    /** The handshake shared by [autoEnroll] and [enroll]; [fetchChallenge] is the only step that differs. */
+    private suspend fun performEnrollment(
+        baseUrl: String?,
+        enrollmentMethod: String,
+        name: String?,
+        fetchChallenge: suspend () -> ChallengeResponse,
     ): Result<Unit> = runCatching {
         baseUrl?.let { store.serverBaseUrl = it }
 
@@ -64,7 +110,7 @@ class DeviceRepository(
 
         val enrolledName = DeviceName.normalize(name)
 
-        val challenge = api.challenge()
+        val challenge = fetchChallenge()
         val timestamp = Instant.now().toString()
         val device = inventory.deviceInfo(
             publicKey = publicKey,
@@ -172,7 +218,11 @@ class DeviceRepository(
         return heartbeat.exceptionOrNull()?.let { Result.failure(it) } ?: telemetry
     }
 
-    private companion object {
-        const val TAG = "DeviceRepository"
+    companion object {
+        /** Digits in an enrollment code — what `OTP_DIGITS` is in apps/api/src/features/enrollment/dto/schema.ts. */
+        const val OTP_LENGTH = 6
+
+        private val OTP_FORMAT = Regex("^\\d{$OTP_LENGTH}$")
+        private const val TAG = "DeviceRepository"
     }
 }
