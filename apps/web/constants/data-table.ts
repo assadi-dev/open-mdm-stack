@@ -3,6 +3,16 @@ export const DATA_TABLE = {
     placeholder: "Rechercher…",
     label: "Rechercher",
   },
+  filter: {
+    title: "Filtres",
+    apply: "Appliquer les filtres",
+    reset: "Réinitialiser",
+    active: { one: "filtre actif", many: "filtres actifs" },
+  },
+  columns: {
+    button: "Colonnes",
+    title: "Afficher les colonnes",
+  },
   empty: "Aucun résultat.",
   selection: {
     all: "Tout sélectionner",

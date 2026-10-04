@@ -48,3 +48,47 @@ export class HTTPInternalServerErrorException implements ExceptionResponse {
         this.name = "HTTPInternalServerErrorException";
     }
 }
+
+export class HTTPConflictException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 409;
+        this.name = "HTTPConflictException";
+    }
+}
+
+export class HTTPBadGatewayException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 502;
+        this.name = "HTTPBadGatewayException";
+    }
+}
+
+export class HTTPServiceUnavailableException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 503;
+        this.name = "HTTPServiceUnavailableException";
+    }
+}
+
+export class HTTPGatewayTimeoutException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 504;
+        this.name = "HTTPGatewayTimeoutException";
+    }
+}

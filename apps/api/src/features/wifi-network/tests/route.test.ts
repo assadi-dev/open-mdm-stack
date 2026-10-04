@@ -13,6 +13,7 @@ const { repoMock, authRepoMock, verifyJWTMock } = vi.hoisted(() => ({
         findById: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        deleteMany: vi.fn(),
     },
     authRepoMock: {
         getUserSession: vi.fn(),
@@ -83,6 +84,33 @@ describe("wifi-network routes", () => {
                 .expect(400);
 
             expect(repoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("rejects a protected network sent without a password", async () => {
+            authenticate();
+
+            await request(app)
+                .post("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ssid: "office-ssid", security: "WPA2" })
+                .expect(400);
+
+            expect(repoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("creates an open network (security NONE) without a password, storing none", async () => {
+            authenticate();
+            repoMock.create.mockResolvedValue(wifiNetworkRow({ security: "NONE", password: null }));
+
+            const res = await request(app)
+                .post("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ssid: "guest-ssid", security: "NONE" })
+                .expect(201);
+
+            expect(repoMock.create).toHaveBeenCalledTimes(1);
+            expect(repoMock.create.mock.calls[0][0]).toMatchObject({ ssid: "guest-ssid", security: "NONE", password: null });
+            expect(res.body).not.toHaveProperty("password");
         });
 
         it("creates a wifi network, storing the password encrypted and never echoing it back", async () => {
@@ -278,6 +306,59 @@ describe("wifi-network routes", () => {
                 .delete(`/api/v1/wifi-networks/${NETWORK_ID}`)
                 .set("Authorization", "Bearer valid-jwt")
                 .expect(204);
+        });
+    });
+
+    describe("DELETE /api/v1/wifi-networks", () => {
+        const IDS = [NETWORK_ID, "0b8f4d2c-6a1e-4f3b-9c7d-5e2a1b3c4d5e"];
+
+        it("rejects a request with no bearer token", async () => {
+            await request(app).delete("/api/v1/wifi-networks").send({ ids: IDS }).expect(401);
+
+            expect(repoMock.deleteMany).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["a body without ids", {}],
+            ["an empty list of ids", { ids: [] }],
+            ["an id that is not a UUID", { ids: ["not-a-uuid"] }],
+            ["more ids than a page can hold", { ids: Array.from({ length: 101 }, (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`) }],
+        ])("rejects %s", async (_label, body) => {
+            authenticate();
+
+            await request(app)
+                .delete("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send(body)
+                .expect(400);
+
+            expect(repoMock.deleteMany).not.toHaveBeenCalled();
+        });
+
+        it("deletes several wifi networks in one call", async () => {
+            authenticate();
+            repoMock.deleteMany.mockResolvedValue(undefined);
+
+            await request(app)
+                .delete("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ids: IDS })
+                .expect(204);
+
+            expect(repoMock.deleteMany).toHaveBeenCalledWith(IDS);
+        });
+
+        it("deletes a single wifi network when sent a list of one id, and collapses duplicates", async () => {
+            authenticate();
+            repoMock.deleteMany.mockResolvedValue(undefined);
+
+            await request(app)
+                .delete("/api/v1/wifi-networks")
+                .set("Authorization", "Bearer valid-jwt")
+                .send({ ids: [NETWORK_ID, NETWORK_ID] })
+                .expect(204);
+
+            expect(repoMock.deleteMany).toHaveBeenCalledWith([NETWORK_ID]);
         });
     });
 });

@@ -1,6 +1,8 @@
 package com.openmdm.agent.mqtt
 
 import com.openmdm.agent.device.DeviceCommandActions
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -8,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
@@ -16,23 +19,26 @@ import org.junit.Test
  * and dependencies/emqx/): [DeviceCommandActions] is faked so these run on
  * the JVM without a real [android.app.admin.DevicePolicyManager] — same
  * approach as [com.openmdm.agent.data.remote.MockDeviceApi] for [com.openmdm.agent.data.remote.DeviceApi].
+ * The `refresh` command's report to the server is faked the same way ([RecordingReport]).
  */
 class CommandExecutorTest {
 
     private lateinit var actions: RecordingDeviceCommandActions
+    private lateinit var reporter: RecordingReport
     private lateinit var executor: CommandExecutor
 
     @Before
     fun setUp() {
         actions = RecordingDeviceCommandActions()
-        executor = CommandExecutor(actions)
+        reporter = RecordingReport()
+        executor = CommandExecutor(actions, reporter::report)
     }
 
     private fun command(type: String, payload: JsonObject = JsonObject(emptyMap())) =
         IncomingCommand(id = "cmd-1", type = type, payload = payload)
 
     @Test
-    fun lock_callsLockNowAndSucceeds() {
+    fun lock_callsLockNowAndSucceeds() = runTest {
         val result = executor.execute(command("lock"))
 
         assertTrue(actions.lockNowCalled)
@@ -41,7 +47,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun lock_failurePropagatesAsResultFailure() {
+    fun lock_failurePropagatesAsResultFailure() = runTest {
         actions.lockNowError = SecurityException("not device owner")
 
         val result = executor.execute(command("lock"))
@@ -51,7 +57,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun reboot_callsRebootAndSucceeds() {
+    fun reboot_callsRebootAndSucceeds() = runTest {
         val result = executor.execute(command("reboot"))
 
         assertTrue(actions.rebootCalled)
@@ -59,7 +65,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun reboot_failurePropagatesAsResultFailure() {
+    fun reboot_failurePropagatesAsResultFailure() = runTest {
         actions.rebootError = SecurityException("not device owner")
 
         val result = executor.execute(command("reboot"))
@@ -68,7 +74,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun unlock_callsRequestUnlockAndSucceeds() {
+    fun unlock_callsRequestUnlockAndSucceeds() = runTest {
         val result = executor.execute(command("unlock"))
 
         assertTrue(actions.requestUnlockCalled)
@@ -76,7 +82,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun setLockMessage_passesMessageFromPayload() {
+    fun setLockMessage_passesMessageFromPayload() = runTest {
         val payload = buildJsonObject { put("message", JsonPrimitive("Propriété ACME")) }
 
         val result = executor.execute(command("set_lock_message", payload))
@@ -87,7 +93,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun setLockMessage_withNoMessageField_clearsWithNull() {
+    fun setLockMessage_withNoMessageField_clearsWithNull() = runTest {
         val result = executor.execute(command("set_lock_message"))
 
         assertTrue(actions.setLockScreenMessageCalled)
@@ -96,7 +102,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun setLockMessage_ignoresNonStringMessageField() {
+    fun setLockMessage_ignoresNonStringMessageField() = runTest {
         val payload = buildJsonObject { put("message", JsonPrimitive(42)) }
 
         val result = executor.execute(command("set_lock_message", payload))
@@ -109,7 +115,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun removeDeviceOwner_callsRemoveDeviceOwnerAndSucceeds() {
+    fun removeDeviceOwner_callsRemoveDeviceOwnerAndSucceeds() = runTest {
         val result = executor.execute(command("remove_device_owner"))
 
         assertTrue(actions.removeDeviceOwnerCalled)
@@ -117,7 +123,7 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun removeDeviceOwner_failurePropagatesAsResultFailure() {
+    fun removeDeviceOwner_failurePropagatesAsResultFailure() = runTest {
         actions.removeDeviceOwnerError = IllegalStateException("Failed to clear device owner")
 
         val result = executor.execute(command("remove_device_owner"))
@@ -127,11 +133,64 @@ class CommandExecutorTest {
     }
 
     @Test
-    fun unknownType_failsWithoutCallingAnyAction() {
+    fun refresh_reportsToTheServerAndSucceeds() = runTest {
+        val result = executor.execute(command("refresh"))
+
+        assertEquals(1, reporter.calls)
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow().containsKey("executedAt"))
+        assertFalse(actions.anyActionCalled())
+    }
+
+    @Test
+    fun refresh_failsWhenTheReportFails() = runTest {
+        reporter.result = Result.failure(IllegalStateException("telemetry rejected"))
+
+        val result = executor.execute(command("refresh"))
+
+        assertEquals(1, reporter.calls)
+        assertTrue(result.isFailure)
+        assertEquals("telemetry rejected", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun refresh_doesNotSwallowACancellation() = runTest {
+        reporter.error = CancellationException("service stopped")
+
+        try {
+            executor.execute(command("refresh"))
+            fail("the cancellation should have propagated")
+        } catch (expected: CancellationException) {
+            assertEquals("service stopped", expected.message)
+        }
+    }
+
+    @Test
+    fun otherCommands_neverReport() = runTest {
+        executor.execute(command("lock"))
+        executor.execute(command("factory_reset"))
+
+        assertEquals(0, reporter.calls)
+    }
+
+    @Test
+    fun unknownType_failsWithoutCallingAnyAction() = runTest {
         val result = executor.execute(command("factory_reset"))
 
         assertTrue(result.isFailure)
         assertFalse(actions.anyActionCalled())
+    }
+
+    private class RecordingReport {
+        var calls = 0
+        var result: Result<Unit> = Result.success(Unit)
+        var error: Throwable? = null
+
+        suspend fun report(): Result<Unit> {
+            calls++
+            error?.let { throw it }
+            return result
+        }
     }
 
     private class RecordingDeviceCommandActions : DeviceCommandActions {

@@ -20,6 +20,11 @@ export class CommandRepository {
         return row;
     }
 
+    async findById(id: string) {
+        const [row] = await this.db.select().from(deviceCommands).where(eq(deviceCommands.id, id)).limit(1);
+        return row;
+    }
+
     async listByDevice(deviceId: string, limit = 50) {
         return this.db
             .select()
@@ -97,6 +102,20 @@ export class CommandRepository {
             ))
             .returning();
         return row;
+    }
+
+    /**
+     * Gives up on a command nobody waits for any more (a refresh that got no answer in time) before its
+     * `expiresAt`, so a reconnecting device is not handed it. A command that already completed is left alone.
+     */
+    async expire(id: string) {
+        await this.db
+            .update(deviceCommands)
+            .set({ status: "expired" })
+            .where(and(
+                eq(deviceCommands.id, id),
+                inArray(deviceCommands.status, ["pending", "sent", "acknowledged"]),
+            ));
     }
 
     async expireOverdue(deviceId?: string) {

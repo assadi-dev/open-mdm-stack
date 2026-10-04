@@ -1,5 +1,6 @@
 import {
   columnFilteringFeature,
+  columnVisibilityFeature,
   createColumnHelper,
   createFilteredRowModel,
   createPaginatedRowModel,
@@ -17,6 +18,7 @@ import {
 
 export const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
+  columnVisibilityFeature,
   globalFilteringFeature,
   rowSortingFeature,
   rowPaginationFeature,

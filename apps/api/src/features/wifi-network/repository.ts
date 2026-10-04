@@ -1,6 +1,6 @@
 import { db as defaultDb } from "@drizzle/instance";
 import { wifiNetworks, wifiSecurityType } from "@drizzle/schemas/wifi-network-schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { wifiNetworkRepositoryFactory } from "./factory/repositories";
 import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
@@ -62,5 +62,9 @@ export class WifiNetworkRepository {
     async delete(id: string) {
         const [row] = await this.db.delete(wifiNetworks).where(eq(wifiNetworks.id, id)).returning();
         return row;
+    }
+
+    async deleteMany(ids: string[]) {
+        await this.db.delete(wifiNetworks).where(inArray(wifiNetworks.id, ids));
     }
 }

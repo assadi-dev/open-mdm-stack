@@ -1,10 +1,27 @@
 import { ENV } from "@config/env";
-import { HTTPNotFoundException } from "@core/exception";
+import {
+    HTTPBadGatewayException,
+    HTTPConflictException,
+    HTTPGatewayTimeoutException,
+    HTTPNotFoundException,
+    HTTPServiceUnavailableException,
+} from "@core/exception";
 import { mqttGateway, mqttTopics, DeviceMessageKind } from "@lib/mqtt";
 import { DeviceCommandSqlInferSelect } from "@drizzle/schemas/command-schema";
 import { DeviceRepository } from "@features/device/repository";
 import { CommandRepository } from "./repository";
 import { commandDecoder, CreateCommandInput } from "./dto/schema";
+
+/**
+ * How long an admin request waits for a device to answer a `refresh`. The command itself stays deliverable a
+ * little longer than that, and no longer: a refresh replayed hours later, when the device reconnects, would only
+ * be noise (the default `COMMAND_TTL_SECONDS` is for commands that must land eventually).
+ */
+export const REFRESH_TIMEOUT_MS = 15_000;
+const REFRESH_TTL_MS = REFRESH_TIMEOUT_MS + 5_000;
+const REFRESH_POLL_MS = 500;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * Remote commands over MQTT. Delivery is at-least-once: a command is
@@ -45,6 +62,45 @@ export class CommandService {
 
     async list(deviceId: string) {
         return this.repository.listByDevice(deviceId);
+    }
+
+    /**
+     * Asks a device to push its heartbeat and telemetry now (command `refresh`) and waits for its answer, so the
+     * caller can read fresh data right after. The device writes through its usual endpoints; the ack only says it
+     * is done.
+     *
+     *   404  the device doesn't exist or is no longer listed (revoked, unenrolled)
+     *   409  it is offline (or still pending): it can't answer, so nothing is sent
+     *   503  the broker is unreachable
+     *   502  the device answered `failed` (e.g. an agent too old to know `refresh`)
+     *   504  no answer within `REFRESH_TIMEOUT_MS`
+     *
+     * A silent device is reported, never marked offline: `online` belongs to the MQTT status alone (see
+     * `handleStatus`), and writing it here would stick until the device reconnects, even though it may be fine.
+     */
+    async refresh(deviceId: string) {
+        const device = await this.deviceRepository.findDeviceById(deviceId);
+        if (!device || device.enrollmentStatus === "revoked" || device.enrollmentStatus === "unenrolled") {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        if (device.enrollmentStatus === "pending" || !device.online) {
+            throw new HTTPConflictException("Device is offline");
+        }
+
+        const command = await this.repository.create({
+            deviceId,
+            type: "refresh",
+            payload: {},
+            expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+        });
+
+        if (!(await this.publish(command))) {
+            await this.repository.expire(command.id);
+            throw new HTTPServiceUnavailableException("Message broker unreachable");
+        }
+        await this.repository.markSent(command.id);
+
+        await this.waitForCompletion(command.id);
     }
 
     /** Entry point for every device message received by the backend MQTT client. */
@@ -125,6 +181,23 @@ export class CommandService {
                 await this.repository.markSent(command.id);
             }
         }
+    }
+
+    /** Polls the command until the device completes it. Gives up (and expires it) after `REFRESH_TIMEOUT_MS`. */
+    private async waitForCompletion(commandId: string) {
+        const deadline = Date.now() + REFRESH_TIMEOUT_MS;
+        for (;;) {
+            const command = await this.repository.findById(commandId);
+            if (command?.status === "succeeded") return;
+            if (command?.status === "failed") {
+                throw new HTTPBadGatewayException(command.error ?? "Device failed to refresh");
+            }
+            if (Date.now() >= deadline) break;
+            await sleep(REFRESH_POLL_MS);
+        }
+
+        await this.repository.expire(commandId);
+        throw new HTTPGatewayTimeoutException("Device did not answer");
     }
 
     private publish(command: DeviceCommandSqlInferSelect) {

@@ -41,6 +41,7 @@ export const WifiNetworkFormFields = ({ form, isEditing }: WifiNetworkFormFields
         </FieldLabel>
         <Input
           id={`${fieldId}-name`}
+          placeholder={name.placeholder}
           autoComplete="off"
           aria-describedby={`${fieldId}-name-description`}
           {...register("name")}
@@ -51,7 +52,7 @@ export const WifiNetworkFormFields = ({ form, isEditing }: WifiNetworkFormFields
         <FieldLabel htmlFor={`${fieldId}-ssid`}>{ssid.label}</FieldLabel>
         <Input
           id={`${fieldId}-ssid`}
-          placeholder={ssid.placeholder}
+
           autoComplete="off"
           aria-invalid={!!errors.ssid}
           {...register("ssid")}

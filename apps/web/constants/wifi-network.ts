@@ -52,12 +52,17 @@ export const WIFI_NETWORK = {
       placeholder: "Rechercher un réseau",
       label: "Rechercher un réseau",
     },
+    security: {
+      label: "Sécurité",
+      placeholder: "Tous les types",
+      showAll: "Afficher tout",
+    },
   },
   results: { one: "résultat", many: "résultats" },
   pagination: { items: "réseaux" },
   form: {
-    name: { label: "Nom", optional: "(optionnel)", description: "Nom personnalisé du réseau" },
-    ssid: { label: "Nom du réseau (SSID)", placeholder: "ex. Terrain-Lyon" },
+    name: { label: "Nom", optional: "(optionnel)", description: "Nom personnalisé du réseau", placeholder: "ex. Terrain-Lyon" },
+    ssid: { label: "Nom du réseau (SSID)", placeholder: "ex. Terrain-Lyon", description: "Le nom du réseau tel qu’il apparaîtra dans les réseaux disponibles sur l’appareil." },
     security: { label: "Type de sécurité" },
     password: {
       label: "Mot de passe",

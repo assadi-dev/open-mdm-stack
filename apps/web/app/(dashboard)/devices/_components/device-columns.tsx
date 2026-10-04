@@ -1,41 +1,50 @@
 import { createDataTableColumnHelper } from "@/components/data-table/data-table-features";
 import { BatteryMeter } from "@/components/devices/BatteryMeter";
-import { DeviceRowActions } from "@/components/devices/DeviceRowActions";
 import { DeviceStatusBadge } from "@/components/devices/DeviceStatusBadge";
 import { DEVICE } from "@/constants/device";
-import { STATUS } from "@/constants/status";
-import { formatDeviceName, formatRelativeTime } from "@/lib/format";
+import { toDeviceName, toLastContactLabel, toLastSeenTime } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
+import { DeviceTableRowActions } from "./table/DeviceTableRowActions";
 
 const helper = createDataTableColumnHelper<Device>();
 
 const SECONDARY_LINE = "text-xs leading-4.5 text-muted-foreground";
 
-// La recherche et le tri portent sur la valeur d'accesseur : l'appareil expose son nom et son n° de série, le statut son libellé,
-// la batterie un nombre (−1 sans mesure, pour reléguer ces lignes en fin de tri) et le contact sa date.
+// L'API trie, cherche et filtre : chaque id de colonne triable est un champ qu'elle sait trier
+// (`displayName`, `model`, `assignedToName`, `battery`, `lastHeartbeatAt`). Le statut ne se trie pas ; il se filtre par les onglets.
+// La colonne « Dernier contact » trie aussi sur `presenceChangedAt` (voir `useDevicesTable`).
 export const deviceColumns = [
-  helper.accessor((device) => `${formatDeviceName(device.model, device.serial)} ${device.serial}`, {
-    id: "device",
+  // Le nom de l'appareil (sinon son modèle), et son n° de série dessous.
+  helper.accessor((device) => toDeviceName(device), {
+    id: "displayName",
     header: DEVICE.table.device,
+    // L'identité de la ligne : la seule colonne de données qu'on ne masque pas (comme « Réseau » au Wi-Fi).
+    enableHiding: false,
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-medium">{formatDeviceName(row.original.model, row.original.serial)}</span>
-        <span className={SECONDARY_LINE}>{`${DEVICE.serialPrefix} ${row.original.serial}`}</span>
+        <span className="font-medium">{toDeviceName(row.original)}</span>
+        {row.original.displayName && <span className={SECONDARY_LINE}>{`Android ID : ${row.original.androidId}`}</span>}
       </div>
     ),
   }),
-  helper.accessor("user", { header: DEVICE.table.user }),
-  helper.accessor("group", {
-    header: DEVICE.table.group,
+  // Le modèle, et sa marque dessous.
+  helper.accessor((device) => device.model ?? "", {
+    id: "model",
+    header: DEVICE.table.model,
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span>{row.original.group}</span>
-        <span className={SECONDARY_LINE}>{row.original.policy}</span>
+        <span>{row.original.model ?? DEVICE.noModel}</span>
+        {row.original.brand && <span className={SECONDARY_LINE}>{row.original.brand}</span>}
       </div>
     ),
   }),
-  helper.accessor((device) => STATUS[device.status].label, {
-    id: "status",
+  helper.accessor((device) => device.assignedToName ?? "", {
+    id: "assignedToName",
+    header: DEVICE.table.user,
+    cell: ({ row }) =>
+      row.original.assignedToName ?? <span className="text-muted-foreground">{DEVICE.unassigned}</span>,
+  }),
+  helper.accessor("status", {
     header: DEVICE.table.status,
     enableSorting: false,
     cell: ({ row }) => <DeviceStatusBadge status={row.original.status} />,
@@ -43,20 +52,17 @@ export const deviceColumns = [
   helper.accessor((device) => device.battery ?? -1, {
     id: "battery",
     header: DEVICE.table.battery,
-    enableGlobalFilter: false,
     cell: ({ row }) => <BatteryMeter value={row.original.battery} />,
   }),
-  helper.accessor((device) => new Date(device.lastSeenAt).getTime(), {
-    id: "lastSeenAt",
+  helper.accessor((device) => toLastSeenTime(device) ?? 0, {
+    id: "lastHeartbeatAt",
     header: DEVICE.table.lastContact,
-    enableGlobalFilter: false,
-    cell: (info) => <span className="text-muted-foreground">{formatRelativeTime(info.getValue())}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground">{toLastContactLabel(row.original)}</span>,
   }),
   helper.display({
     id: "actions",
     header: () => <span className="sr-only">{DEVICE.table.actions}</span>,
-    cell: ({ row }) => (
-      <DeviceRowActions deviceName={formatDeviceName(row.original.model, row.original.serial)} />
-    ),
+    enableHiding: false,
+    cell: ({ row }) => <DeviceTableRowActions device={row.original} />,
   }),
 ];

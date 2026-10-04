@@ -16,7 +16,7 @@ const MAIN_ITEMS: NavigationItem[] = [
   { label: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard, enabled: true },
   { label: "Appareils", href: "/devices", icon: Smartphone, enabled: true, badge: "alerts" },
   { label: "Politiques", href: "/policies", icon: ShieldCheck, enabled: false },
-  { label: "Enrôlement", href: "/enrollment", icon: QrCode, enabled: false },
+  { label: "Enrôlement", href: "/enrollment", icon: QrCode, enabled: true },
   { label: "Applications", href: "/applications", icon: Package, enabled: false },
   { label: "Commandes", href: "/commands", icon: Send, enabled: false },
 ];

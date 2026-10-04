@@ -99,6 +99,41 @@
       "when": 1790502256075,
       "tag": "0013_bent_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790956462516,
+      "tag": "0014_add_device_overview_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790982142699,
+      "tag": "0015_add_device_name_and_display_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790984364083,
+      "tag": "0016_add_android_id_to_device_overview",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791025303526,
+      "tag": "0017_add_name_to_device_overview",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791035333947,
+      "tag": "0018_add_refresh_command_type",
+      "breakpoints": true
     }
   ]
 }

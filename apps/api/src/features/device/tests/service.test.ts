@@ -262,6 +262,7 @@ describe("DeviceService", () => {
             ts: Date.now(),
             screenOn: true,
             sdkVersion: 34,
+            release: "14",
             ipAddress: "192.168.1.10",
             agentVersionName: "1.2.0",
             agentVersionCode: 12,
@@ -271,6 +272,7 @@ describe("DeviceService", () => {
         expect(repoMock.recordHeartbeat).toHaveBeenCalledWith("device-1", {
             isScreenOn: true,
             sdkVersion: 34,
+            release: "14",
             ipAddress: "192.168.1.10",
             agentVersionName: "1.2.0",
             agentVersionCode: 12,

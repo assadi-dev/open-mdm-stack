@@ -1,4 +1,7 @@
+import { deviceOverviewStatus } from "@drizzle/schemas/device-overview-view";
 import { enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
+import { MAX_LIMIT } from "@features/paginations/domain/paginations";
+import { createCollectionQuerySchema } from "@features/paginations/dto/schema";
 import z from "zod";
 
 
@@ -49,6 +52,10 @@ export const heartbeatSchema = z.object({
     // real-time report on mdm/devices/{id}/screen (see ScreenStateReporter.kt).
     screenOn: z.boolean(),
     sdkVersion: z.number().int().optional(),
+    // Android version name (`Build.VERSION.RELEASE`, e.g. "14"), so a refresh keeps the list's "Android" column
+    // right. Lenient on purpose: a blank value is "not reported" (it never clears the stored one, and it must not
+    // make the whole heartbeat fail).
+    release: z.string().transform((value) => value.trim() || undefined).optional(),
     ipAddress: z.string().optional(),
     agentVersionName: z.string().optional(),
     agentVersionCode: z.number().optional(),
@@ -119,10 +126,71 @@ export const telemetryPatchSchema = z.object({
     { message: "At least one of network, memory, storage, battery, location is required" },
 );
 
+// Admin -> API on GET /devices?page=1&limit=20&search=pixel&sort=-createdAt,model&status=offline,pending&sdkVersion=34,33&brand=Google,samsung&model=Pixel 8
+// Sort and filter names are the API field names (see DeviceRepository.collection).
+export const deviceCollectionQuerySchema = createCollectionQuerySchema({
+    sortable: [
+        "displayName",
+        "model",
+        "serial",
+        "assignedToName",
+        "sdkVersion",
+        "battery",
+        "lastHeartbeatAt",
+        "presenceChangedAt",
+        "createdAt",
+    ],
+    filters: {
+        status: z.enum(deviceOverviewStatus),
+        sdkVersion: z.coerce.number<string>().int(),
+        // The brands and models the fleet reports (`GET /devices/summary` lists them), matched exactly. A value with a
+        // comma can't be filtered on: the comma separates the values of a filter.
+        brand: z.string().min(1),
+        model: z.string().min(1),
+    },
+});
+
+const NAME_MAX_LENGTH = 100;
+const ANDROID_VERSION_MAX_LENGTH = 32;
+const ANDROID_ID_MAX_LENGTH = 64;
+const SDK_VERSION_MAX = 99;
+
+// A blank text is "no value": it clears the field, like an explicit `null`.
+const clearableText = (maxLength: number) =>
+    z.string().trim().max(maxLength).transform((value) => value || null).nullable();
+
+// Admin -> API on PATCH /devices/:id. Every field is optional but at least one is required; a field left out is
+// untouched, `null` (or a blank text) clears it. `androidVersion` is the `release` column.
+export const updateDeviceSchema = z.object({
+    name: clearableText(NAME_MAX_LENGTH).optional(),
+    androidVersion: clearableText(ANDROID_VERSION_MAX_LENGTH).optional(),
+    sdkVersion: z.number().int().min(1).max(SDK_VERSION_MAX).nullable().optional(),
+    androidId: clearableText(ANDROID_ID_MAX_LENGTH).optional(),
+}).refine(
+    (data) => Object.keys(data).length > 0,
+    { message: "At least one of name, androidVersion, sdkVersion, androidId is required" },
+);
+
+// A list of devices to act on. Duplicated ids are collapsed.
+const deviceIdsSchema = z.object({
+    ids: z.array(z.uuid()).min(1, "at least one id is required").max(MAX_LIMIT).transform((ids) => [...new Set(ids)]),
+});
+
+// Admin -> API on DELETE /devices. Unenrolling one device is a list of one id: single and bulk unenrollment share
+// this endpoint.
+export const deleteDevicesSchema = deviceIdsSchema;
+
+// Admin -> API on POST /devices/refresh. The single-device refresh is POST /devices/:id/refresh, which has no body.
+export const refreshDevicesSchema = deviceIdsSchema;
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
 export type TelemetryPatchInput = z.infer<typeof telemetryPatchSchema>;
+export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
+export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
+export type DeleteDevicesInput = z.infer<typeof deleteDevicesSchema>;
+export type RefreshDevicesInput = z.infer<typeof refreshDevicesSchema>;
 
 
 export const deviceDecoder = {
@@ -130,4 +198,8 @@ export const deviceDecoder = {
     heartbeat: (data: unknown) => heartbeatSchema.safeParse(data),
     inventory: (data: unknown) => inventorySchema.safeParse(data),
     telemetryPatch: (data: unknown) => telemetryPatchSchema.safeParse(data),
+    collection: (data: unknown) => deviceCollectionQuerySchema.safeParse(data),
+    update: (data: unknown) => updateDeviceSchema.safeParse(data),
+    deleteMany: (data: unknown) => deleteDevicesSchema.safeParse(data),
+    refreshMany: (data: unknown) => refreshDevicesSchema.safeParse(data),
 };

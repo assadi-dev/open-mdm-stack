@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
+import type { z } from "zod";
 import {
+    BadGateway,
     BadRequest,
     Conflict,
     Forbidden,
+    GatewayTimeout,
     InternalError,
     LimitExceeded,
     NotFound,
     NotImplemented,
+    ServiceUnavailable,
     Unauthorized,
     UnprocessableEntity,
     createHttpError,
 } from "./intefaces/http-errors";
+import { HTTP_ERROR } from "./intefaces/http-status";
 import { DefaultErrorStrategy } from "./strategy/default-error-strategy";
 import { ErrorContextStrategy } from "./strategy/error-strategy";
 import { InstanceErrorStrategy } from "./strategy/instance-error-strategy";
@@ -30,6 +35,9 @@ const errorContext = new ErrorContextStrategy(
         new InstanceErrorStrategy(UnprocessableEntity),
         new InstanceErrorStrategy(LimitExceeded),
         new InstanceErrorStrategy(NotImplemented),
+        new InstanceErrorStrategy(BadGateway),
+        new InstanceErrorStrategy(ServiceUnavailable),
+        new InstanceErrorStrategy(GatewayTimeout),
         new InstanceErrorStrategy(InternalError),
     ],
     new DefaultErrorStrategy(),
@@ -59,6 +67,28 @@ export const handleResponse = async <T>(response: Response): Promise<T> => {
         throw new InternalError("Invalid response from server");
     }
     return body as T;
+}
+
+
+// Le corps d'une écriture (POST, PATCH) : un objet JSON. Son contenu n'est pas validé ici, c'est l'API qui le fait.
+export const readJsonBody = async (request: Request): Promise<Record<string, unknown>> => {
+    const body: unknown = await request.json().catch(() => undefined);
+    if (typeof body !== "object" || body === null || Array.isArray(body)) {
+        throw new BadRequest(HTTP_ERROR.BAD_REQUEST.message);
+    }
+    return body as Record<string, unknown>;
+}
+
+
+// Valide le corps d'une écriture avec le schéma Zod de la ressource et renvoie les données reconnues (les clés inconnues sont retirées).
+// Un corps invalide répond 400 avant tout appel à l'API.
+export const validateBody = <TSchema extends z.ZodType>(schema: TSchema, body: unknown): z.output<TSchema> => {
+    const result = schema.safeParse(body);
+    if (!result.success) {
+        const issues = result.error.issues.map(({ path, message }) => (path.length ? `${path.join(".")}: ${message}` : message));
+        throw new BadRequest(issues.join(", "));
+    }
+    return result.data;
 }
 
 

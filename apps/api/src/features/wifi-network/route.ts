@@ -12,6 +12,7 @@ wifiNetworkRouter.query("/", requireAuth, controller.collections);
 wifiNetworkRouter.get("/lists", requireAuth, controller.list);
 wifiNetworkRouter.get("/:id", requireAuth, controller.getById);
 wifiNetworkRouter.patch("/:id", requireAuth, controller.update);
+wifiNetworkRouter.delete("/", requireAuth, controller.removeMany);
 wifiNetworkRouter.delete("/:id", requireAuth, controller.remove);
 
 export default wifiNetworkRouter;

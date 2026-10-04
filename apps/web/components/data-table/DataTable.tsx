@@ -89,7 +89,7 @@ export const DataTable = <TData extends RowData>({
           {rows.length ? (
             rows.map((row) => (
               <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                {row.getAllCells().map((cell) => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="first:pl-6 last:pr-6">
                     <table.FlexRender cell={cell} />
                   </TableCell>
@@ -98,7 +98,7 @@ export const DataTable = <TData extends RowData>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={table.getAllLeafColumns().length} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
                 {emptyMessage}
               </TableCell>
             </TableRow>

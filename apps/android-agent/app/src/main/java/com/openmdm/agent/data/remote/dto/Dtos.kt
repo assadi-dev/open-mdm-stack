@@ -88,6 +88,9 @@ data class HeartbeatRequest(
     // real-time counterpart on mdm/devices/{id}/screen.
     val screenOn: Boolean,
     val sdkVersion: Int? = null,
+    // Android version name (`Build.VERSION.RELEASE`, e.g. "14"): lets a heartbeat — and so the dashboard's
+    // "Actualiser" — keep the Android version of the devices list up to date.
+    val release: String? = null,
     val ipAddress: String? = null,
     val agentVersionName: String? = null,
     val agentVersionCode: Int? = null,

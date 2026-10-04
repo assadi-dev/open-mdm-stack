@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   useTable,
   type ColumnFiltersState,
+  type ColumnVisibilityState,
   type OnChangeFn,
   type PaginationState,
   type RowData,
@@ -38,6 +39,11 @@ type UseDataTableOptions<TData extends RowData> = {
   server?: DataTableServerOptions;
 };
 
+const NO_FILTERS: ColumnFiltersState = [];
+
+// Un filtre à choix multiple compte une unité par valeur cochée (WPA2 + WPA3 = 2).
+const countFilterValues = (value: unknown) => (Array.isArray(value) ? value.length : 1);
+
 export const useDataTable = <TData extends RowData>({
   data,
   columns,
@@ -51,6 +57,7 @@ export const useDataTable = <TData extends RowData>({
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
   const [search, setSearch] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
 
   const tableColumns = useMemo(
     () => (enableSelection ? [createSelectionColumn<TData>(), ...columns] : columns),
@@ -71,14 +78,14 @@ export const useDataTable = <TData extends RowData>({
         manualSorting: true,
         manualFiltering: true,
         rowCount: server.rowCount,
-        state: { ...server.state, rowSelection },
+        state: { ...server.state, rowSelection, columnVisibility },
         onPaginationChange: clearingSelection(server.onPaginationChange),
         onSortingChange: clearingSelection(server.onSortingChange),
         onGlobalFilterChange: clearingSelection(server.onGlobalFilterChange),
         onColumnFiltersChange: clearingSelection(server.onColumnFiltersChange),
       }
     : {
-        state: { sorting, pagination, globalFilter: search, rowSelection },
+        state: { sorting, pagination, globalFilter: search, rowSelection, columnVisibility },
         onSortingChange: setSorting,
         onPaginationChange: setPagination,
         onGlobalFilterChange: setSearch,
@@ -92,10 +99,13 @@ export const useDataTable = <TData extends RowData>({
     enableRowSelection: enableSelection,
     globalFilterFn: "includesString",
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setColumnVisibility,
     ...stateOptions,
   });
 
   const { state } = stateOptions;
+  // Les filtres de colonne n'existent qu'en mode serveur : leur état vient de l'URL.
+  const columnFilters = server?.state.columnFilters ?? NO_FILTERS;
   // Seules les lignes visibles comptent : une action groupée ne doit jamais toucher une ligne masquée par la recherche.
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
 
@@ -116,6 +126,28 @@ export const useDataTable = <TData extends RowData>({
       next: () => table.nextPage(),
       goTo: (pageIndex: number) => table.setPageIndex(pageIndex),
       setPageSize: (size: number) => table.setPageSize(size),
+    },
+    filters: {
+      activeCount: columnFilters.reduce((count, filter) => count + countFilterValues(filter.value), 0),
+      // Le type de la valeur est celui du parser nuqs déclaré par la page pour cette colonne.
+      getValue: <TValue>(columnId: string) =>
+        columnFilters.find((filter) => filter.id === columnId)?.value as TValue | undefined,
+      // Une valeur vide retire le filtre : l'URL ne garde pas de paramètre vide.
+      setValue: (columnId: string, value: unknown[]) =>
+        table.getColumn(columnId)?.setFilterValue(value.length > 0 ? value : undefined),
+      reset: () => table.resetColumnFilters(true),
+    },
+    columnVisibility: {
+      // Les colonnes que l'utilisateur peut masquer : celles de données, pas la sélection ni les actions (`enableHiding: false`).
+      columns: table
+        .getAllLeafColumns()
+        .filter((column) => column.getCanHide())
+        .map((column) => ({
+          id: column.id,
+          label: typeof column.columnDef.header === "string" ? column.columnDef.header : column.id,
+          isVisible: column.getIsVisible(),
+          toggle: (visible: boolean) => column.toggleVisibility(visible),
+        })),
     },
     selection: {
       enabled: enableSelection,

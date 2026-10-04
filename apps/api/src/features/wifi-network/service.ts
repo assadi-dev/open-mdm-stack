@@ -55,6 +55,11 @@ export class WifiNetworkService {
         return this.toPublic(deleted);
     }
 
+    /** Idempotent: ids that no longer exist are ignored, so a stale selection can't make the request fail. */
+    async deleteMany(ids: string[]) {
+        await this.repository.deleteMany(ids);
+    }
+
     /** Write-only from the admin's point of view: never hand the (encrypted) password back over the API. */
     private toPublic(wifiNetwork: WifiNetworkSqlInferSelect) {
         const { password, ...rest } = wifiNetwork;

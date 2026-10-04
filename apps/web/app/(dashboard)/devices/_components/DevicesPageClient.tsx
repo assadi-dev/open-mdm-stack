@@ -1,46 +1,38 @@
 "use client";
 
-import { DEVICE } from "@/constants/device";
-import type { Device } from "../_types/device.types";
-import { useDeviceFilters } from "../_hooks/useDeviceFilters";
-import { useFetchDeviceCollection } from "../_hooks/useFetchDeviceCollection";
+import { useDevicesTable } from "../_hooks/useDevicesTable";
+import { useFetchDeviceSummary } from "../_hooks/useFetchDeviceSummary";
+import { toTabCounts } from "../_services/devices.utils";
 import { DevicesActionsBar } from "./DevicesActionsBar";
-import { DevicesFilterSelect } from "./DevicesFilterSelect";
 import { DevicesHeader } from "./DevicesHeader";
+import { DevicesFilter } from "./table/DevicesFilter";
 import { DevicesTableCard } from "./DevicesTableCard";
 
-// Référence stable : `data ?? []` créerait un nouveau tableau à chaque rendu tant que la requête charge.
-const NO_DEVICES: Device[] = [];
-
 export const DevicesPageClient = () => {
-  const { data, isPending, isError, refetch } = useFetchDeviceCollection();
-  const filters = useDeviceFilters(data ?? NO_DEVICES);
-  const counts = data ? filters.counts : undefined;
+  const { devices, server, filters, isPending, isError, refetch } = useDevicesTable();
+  // Les compteurs, les versions d'Android, les marques et les modèles décrivent tout le parc : une requête à part, que le
+  // tableau ne fait pas bouger.
+  const { data: summary } = useFetchDeviceSummary();
+  const counts = summary ? toTabCounts(summary) : undefined;
 
   return (
     <>
       <DevicesHeader counts={counts} />
       <DevicesActionsBar tab={filters.tab} onTabChange={filters.setTab} counts={counts} />
       <DevicesTableCard
-        devices={filters.filteredDevices}
+        devices={devices}
+        server={server}
         isPending={isPending}
         isError={isError}
         onRetry={() => refetch()}
         filters={
-          <>
-            <DevicesFilterSelect
-              label={DEVICE.filters.group.label}
-              value={filters.group}
-              options={filters.groupOptions}
-              onValueChange={filters.setGroup}
-            />
-            <DevicesFilterSelect
-              label={DEVICE.filters.android.label}
-              value={filters.androidVersion}
-              options={filters.androidOptions}
-              onValueChange={filters.setAndroidVersion}
-            />
-          </>
+          <DevicesFilter
+            summary={summary}
+            applied={filters.applied}
+            activeCount={filters.activeCount}
+            onApply={filters.apply}
+            onReset={filters.reset}
+          />
         }
       />
     </>

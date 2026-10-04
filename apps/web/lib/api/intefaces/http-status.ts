@@ -45,4 +45,19 @@ export const HTTP_ERROR = {
         code: 422,
         name: "UnprocessableEntity"
     },
+    BAD_GATEWAY: {
+        message: "Bad Gateway",
+        code: 502,
+        name: "BadGateway"
+    },
+    SERVICE_UNAVAILABLE: {
+        message: "Service Unavailable",
+        code: 503,
+        name: "ServiceUnavailable"
+    },
+    GATEWAY_TIMEOUT: {
+        message: "Gateway Timeout",
+        code: 504,
+        name: "GatewayTimeout"
+    },
 }

@@ -5,18 +5,32 @@ import { ENV } from "@config/env";
 import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
+    HTTPConflictException,
+    HTTPGatewayTimeoutException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
 } from "@core/exception";
 
 import { DeviceRepository } from "./repository";
-import { EnrollDeviceInput, HeartbeatInput, InventoryInput, TelemetryPatchInput } from "./dto/schema";
+import { deviceOverviewStatus, type DeviceOverviewStatus } from "@drizzle/schemas/device-overview-view";
+import {
+    DeviceCollectionQuery,
+    EnrollDeviceInput,
+    HeartbeatInput,
+    InventoryInput,
+    TelemetryPatchInput,
+    UpdateDeviceInput,
+} from "./dto/schema";
 import { ChallengeRepository } from "@features/enrollment/repositories";
 import { EnrollmentService } from "@features/enrollment/service";
+import { CommandService } from "@features/command/service";
 import { generateCanonicalMessage } from "@features/enrollment/utils/canonical-message";
 import { verifyDeviceSignature } from "./utils/keys";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
+
+/** What happened to one device of a bulk refresh. */
+export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "failed";
 
 // Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
 const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -33,22 +47,27 @@ function generateEnrollmentCode(): string {
     return code;
 }
 
-/** Postgres unique-violation (e.g. a code/token collision). */
+/**
+ * Postgres unique-violation (e.g. a code/token collision). Drizzle wraps the driver error in a
+ * DrizzleQueryError, so the SQLSTATE sits on `cause`; a raw driver error carries it directly.
+ */
 function isUniqueViolation(error: unknown): boolean {
-    return (
-        typeof error === "object" &&
-        error !== null &&
-        (error as { code?: string }).code === "23505"
-    );
+    if (typeof error !== "object" || error === null) {
+        return false;
+    }
+    const { code, cause } = error as { code?: string; cause?: { code?: string } };
+    return (code ?? cause?.code) === "23505";
 }
 
 export class DeviceService {
     private repository: DeviceRepository;
     private enrollmentService: EnrollmentService;
+    private commandService: CommandService;
 
     constructor() {
         this.repository = new DeviceRepository();
         this.enrollmentService = new EnrollmentService();
+        this.commandService = new CommandService();
     }
 
 
@@ -176,6 +195,7 @@ export class DeviceService {
         await this.repository.recordHeartbeat(deviceId, {
             isScreenOn: input.screenOn,
             sdkVersion: input.sdkVersion,
+            release: input.release,
             ipAddress: input.ipAddress,
             agentVersionName: input.agentVersionName,
             agentVersionCode: input.agentVersionCode,
@@ -206,5 +226,101 @@ export class DeviceService {
 
     async patchTelemetry(deviceId: string, patch: TelemetryPatchInput) {
         await this.repository.patchTelemetry(deviceId, patch);
+    }
+
+    async collection(query: DeviceCollectionQuery) {
+        return this.repository.collection(query);
+    }
+
+    /**
+     * "Deleting" devices from the list unenrolls them: they leave the list, `requireDeviceAuth` and the command
+     * service turn them away (they only serve `enrolled` devices), and a re-enrollment with the pinned key brings
+     * them back (see `create`). Idempotent: ids that don't exist or are already unenrolled are ignored, so a stale
+     * selection can't make the request fail.
+     */
+    async unenroll(ids: string[]) {
+        await this.repository.unenroll(ids);
+    }
+
+    /**
+     * Admin edit from the devices list: the label and the facts a device reports. Answers with the updated
+     * list row. Only listed devices can be edited (see `device_overview`). Note that a heartbeat or a
+     * re-enrollment re-reports `sdkVersion` / `release`, and overwrites what an admin typed.
+     */
+    async update(id: string, input: UpdateDeviceInput) {
+        if (!(await this.repository.findOverviewById(id))) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+
+        try {
+            await this.repository.update(id, {
+                name: input.name,
+                release: input.androidVersion,
+                sdkVersion: input.sdkVersion,
+                androidId: input.androidId,
+            });
+        } catch (error) {
+            if (isUniqueViolation(error)) {
+                throw new HTTPConflictException("Android ID already used by another device");
+            }
+            throw error;
+        }
+
+        const updated = await this.repository.findOverviewById(id);
+        if (!updated) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return updated;
+    }
+
+    /**
+     * Asks the device to report now, then answers with its (fresh) list row. Throws what the command service
+     * throws: 404 unknown device, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
+     */
+    async refresh(id: string) {
+        await this.commandService.refresh(id);
+
+        const device = await this.repository.findOverviewById(id);
+        if (!device) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return device;
+    }
+
+    /**
+     * The same for several devices at once, in parallel (the whole call lasts as long as the slowest device, at most
+     * `REFRESH_TIMEOUT_MS`). One outcome per device rather than failing as a whole: some answer, some don't.
+     */
+    async refreshMany(ids: string[]) {
+        return Promise.all(ids.map(async (id) => ({ id, outcome: await this.refreshOutcome(id) })));
+    }
+
+    private async refreshOutcome(id: string): Promise<RefreshOutcome> {
+        try {
+            await this.commandService.refresh(id);
+            return "refreshed";
+        } catch (error) {
+            if (error instanceof HTTPNotFoundException) return "notFound";
+            if (error instanceof HTTPConflictException) return "offline";
+            if (error instanceof HTTPGatewayTimeoutException) return "timeout";
+            console.error(`Refresh failed for device ${id}`, error);
+            return "failed";
+        }
+    }
+
+    /**
+     * Counts and values behind the list's tabs, subtitle and filters (Android version, brand, model). Every status
+     * is present (0 when no device has it), so the front never has to guess.
+     */
+    async summary() {
+        const { byStatus, androidVersions, brands, models } = await this.repository.summary();
+
+        const counts = Object.fromEntries(deviceOverviewStatus.map((status) => [status, 0])) as Record<DeviceOverviewStatus, number>;
+        for (const row of byStatus) {
+            counts[row.status] = row.count;
+        }
+        const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+
+        return { total, byStatus: counts, androidVersions, brands, models };
     }
 }

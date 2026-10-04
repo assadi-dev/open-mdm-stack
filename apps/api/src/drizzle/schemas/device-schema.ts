@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean, uuid, index, pgEnum } from "drizzle-orm/pg-core";
+import { user } from "@repo/db/schemas/auth-schema";
 import { updatedAndCreatedAt } from "../timestampable";
 import { integer } from "drizzle-orm/pg-core";
 
@@ -40,6 +41,9 @@ export const devices = pgTable("devices", {
     // `publicKey` against what's already pinned for a given `androidId`
     // (see DeviceRepository.findByAndroidId/reEnrollDevice).
     enrollmentIdentity: text("enrollment_identity").notNull(),
+    // Label given by an admin (e.g. "Tablette entrepôt 3"); NULL until one is set.
+    // The devices list falls back to the model (see device_overview.display_name).
+    name: text("name"),
     serial: text("serial"),
     androidId: text("android_id").unique(),
     brand: text("brand"),
@@ -60,6 +64,9 @@ export const devices = pgTable("devices", {
     // Last known screen power state (on/off), reported by the device
     // whenever it changes (see CommandService.handleScreen).
     isScreenOn: boolean("is_screen_on").default(false).notNull(),
+    // Account the device is assigned to, shown as "Utilisateur" in the devices
+    // list (see device_overview). Cleared if the account is deleted.
+    assignedToUserId: text("assigned_to_user_id").references(() => user.id, { onDelete: "set null" }),
     //policyId: uuid("policy_id"),
     //groupId: uuid("group_id"),
     agentVersionCode: integer("agent_version_code"),
@@ -71,5 +78,6 @@ export const devices = pgTable("devices", {
     index("device_android_id_idx").on(table.androidId),
     index("device_enrollment_method_idx").on(table.enrollmentMethod),
     index("device_enrollment_identity_idx").on(table.enrollmentIdentity),
+    index("device_assigned_to_user_idx").on(table.assignedToUserId),
 
 ]);

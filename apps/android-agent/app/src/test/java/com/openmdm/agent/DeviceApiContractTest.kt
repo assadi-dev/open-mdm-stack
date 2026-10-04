@@ -136,4 +136,23 @@ class DeviceApiContractTest {
         val recorded = server.takeRequest()
         assertEquals("/api/v1/devices/dev-1/heartbeat", recorded.path)
     }
+
+    @Test
+    fun heartbeat_sendsTheAndroidVersionWhenKnownAndOmitsItOtherwise() = runTest {
+        repeat(2) {
+            server.enqueue(
+                MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody("""{"ok":true}""")
+            )
+        }
+        val heartbeat = HeartbeatRequest(battery = 80, storageFreeBytes = 1024L, online = true, ts = 1L, screenOn = true)
+
+        api.heartbeat(deviceId = "dev-1", body = heartbeat.copy(release = "14"))
+        api.heartbeat(deviceId = "dev-1", body = heartbeat)
+
+        assertTrue(server.takeRequest().body.readUtf8().contains(""""release":"14""""))
+        // Omitted, not an explicit `null`: the server validates `release` with zod's `.optional()`.
+        assertFalse(server.takeRequest().body.readUtf8().contains("release"))
+    }
 }

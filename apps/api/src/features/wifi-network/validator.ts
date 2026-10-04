@@ -3,6 +3,7 @@ import { HTTPNotFoundException } from "@core/exception";
 import {
     wifiNetworkDecoder,
     CreateWifiNetworkInput,
+    DeleteWifiNetworksInput,
     UpdateWifiNetworkInput,
     WifiNetworkCollectionQuery,
 } from "./dto/schema";
@@ -17,6 +18,14 @@ export const validateCreateWifiNetworkInput = (body: unknown): CreateWifiNetwork
 
 export const validateUpdateWifiNetworkInput = (body: unknown): UpdateWifiNetworkInput => {
     const result = wifiNetworkDecoder.update(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateDeleteWifiNetworksInput = (body: unknown): DeleteWifiNetworksInput => {
+    const result = wifiNetworkDecoder.deleteMany(body);
     if (!result.success) {
         throw result.error;
     }

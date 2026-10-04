@@ -1,4 +1,5 @@
 import { db as defaultDb } from "@drizzle/instance";
+import { deviceOverview } from "@drizzle/schemas/device-overview-view";
 import { devices, enrollmentMethod, enrollmentStatus } from "@drizzle/schemas/device-schema";
 import {
     deviceTelemetry,
@@ -12,8 +13,11 @@ import {
     DEFAULT_BATTERY_TELEMETRY,
     DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
-import { eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, max, ne } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
+import type { DeviceCollectionQuery } from "./dto/schema";
+import { deviceRepositoryFactory } from "./factory/repositories";
 
 export class DeviceRepository {
 
@@ -131,7 +135,7 @@ export class DeviceRepository {
 
     /**
      * Refreshes the facts carried on every heartbeat — screen state, IP,
-     * SDK/agent version — alongside the last-seen timestamp. The optional
+     * Android/SDK/agent version — alongside the last-seen timestamp. The optional
      * fields are omitted by Drizzle when `undefined` (left unchanged), not
      * set to NULL, so a heartbeat that couldn't determine e.g. `ipAddress`
      * doesn't wipe out the last known value.
@@ -139,6 +143,7 @@ export class DeviceRepository {
     async recordHeartbeat(id: string, data: {
         isScreenOn: boolean;
         sdkVersion?: number;
+        release?: string;
         ipAddress?: string;
         agentVersionName?: string;
         agentVersionCode?: number;
@@ -149,6 +154,7 @@ export class DeviceRepository {
             .set({
                 isScreenOn: data.isScreenOn,
                 sdkVersion: data.sdkVersion,
+                release: data.release,
                 ipAddress: data.ipAddress,
                 agentVersionName: data.agentVersionName,
                 agentVersionCode: data.agentVersionCode,
@@ -219,5 +225,85 @@ export class DeviceRepository {
                 updatedAt: new Date(),
             })
             .where(eq(deviceTelemetry.deviceId, deviceId));
+    }
+
+    /** One row of the devices list (see `device_overview`), or undefined when the device doesn't exist or isn't listed. */
+    async findOverviewById(id: string) {
+        const selection = deviceRepositoryFactory.toSelectCollection(deviceOverview);
+        const [row] = await this.db.select(selection).from(deviceOverview).where(eq(deviceOverview.id, id)).limit(1);
+        return row;
+    }
+
+    /**
+     * Admin edit of the label and of the identity facts a device reports. A key left `undefined` leaves its column
+     * unchanged (Drizzle omits it), `null` clears it.
+     */
+    async update(id: string, patch: {
+        name?: string | null;
+        release?: string | null;
+        sdkVersion?: number | null;
+        androidId?: string | null;
+    }) {
+        await this.db.update(devices).set(patch).where(eq(devices.id, id));
+    }
+
+    /** Marks the listed (pending or enrolled) devices among `ids` as unenrolled. Any other id is left alone. */
+    async unenroll(ids: string[]) {
+        await this.db
+            .update(devices)
+            .set({ enrollmentStatus: "unenrolled" })
+            .where(and(inArray(devices.id, ids), inArray(devices.enrollmentStatus, ["pending", "enrolled"])));
+    }
+
+    /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */
+    async collection(collectionQuery: DeviceCollectionQuery) {
+        const selection = deviceRepositoryFactory.toSelectCollection(deviceOverview);
+        const config = deviceRepositoryFactory.toCollectionConfig(deviceOverview);
+        const { where, orderBy, limit, offset } = toCollectionClauses(collectionQuery, config);
+
+        const [data, total] = await Promise.all([
+            this.db.select(selection).from(deviceOverview).where(where).orderBy(...orderBy).limit(limit).offset(offset),
+            this.db.$count(deviceOverview, where),
+        ]);
+        return buildPaginatedData(data, { page: collectionQuery.page, limit, total });
+    }
+
+    /**
+     * Counts over the whole listed fleet, never narrowed by search or filters:
+     * how many devices per status, and per Android version (newest first).
+     */
+    async summary() {
+        const [byStatus, androidVersions, brands, models] = await Promise.all([
+            this.db
+                .select({ status: deviceOverview.status, count: count() })
+                .from(deviceOverview)
+                .groupBy(deviceOverview.status),
+            this.db
+                .select({
+                    sdkVersion: deviceOverview.sdkVersion,
+                    androidVersion: max(deviceOverview.release),
+                    count: count(),
+                })
+                .from(deviceOverview)
+                .where(isNotNull(deviceOverview.sdkVersion))
+                .groupBy(deviceOverview.sdkVersion)
+                .orderBy(desc(deviceOverview.sdkVersion)),
+            this.db
+                .selectDistinct({ value: deviceOverview.brand })
+                .from(deviceOverview)
+                .where(and(isNotNull(deviceOverview.brand), ne(deviceOverview.brand, "")))
+                .orderBy(asc(deviceOverview.brand)),
+            this.db
+                .selectDistinct({ value: deviceOverview.model })
+                .from(deviceOverview)
+                .where(and(isNotNull(deviceOverview.model), ne(deviceOverview.model, "")))
+                .orderBy(asc(deviceOverview.model)),
+        ]);
+        return {
+            byStatus,
+            androidVersions,
+            brands: brands.flatMap(({ value }) => (value ? [value] : [])),
+            models: models.flatMap(({ value }) => (value ? [value] : [])),
+        };
     }
 }

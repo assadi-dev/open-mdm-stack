@@ -1,10 +1,9 @@
 "use client";
 
-import { ListFilter } from "lucide-react";
-import { Button } from "@/components/buttons/Button";
 import { Card } from "@/components/cards/Card";
 import { CardQueryState } from "@/components/cards/CardQueryState";
 import { DataTable } from "@/components/data-table/DataTable";
+import { DataTableColumnVisibility } from "@/components/data-table/DataTableColumnVisibility";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { WIFI_NETWORK } from "@/constants/wifi-network";
@@ -13,6 +12,7 @@ import { toResultsLabel } from "../../_services/wifi-networks.utils";
 import type { WifiNetwork } from "../../_types/wifi-network.types";
 import { RemoveWifiNetworksAction } from "../selection-actions/RemoveWifiNetworksAction";
 import { wifiNetworkColumns } from "./wifi-network-columns";
+import { WifiNetworksFilter } from "./WifiNetworksFilter";
 
 type WifiNetworksTableCardProps = {
   // La page courante seulement : l'API trie, filtre et pagine.
@@ -44,11 +44,9 @@ export const WifiNetworksTableCard = ({ networks, server, isPending, isError, on
           />
 
         </div>
-        <div>
-          <Button variant="secondary" size="sm">
-            <ListFilter />
-            {WIFI_NETWORK.button.filter}
-          </Button>
+        <div className="flex items-center gap-2">
+          <WifiNetworksFilter dataTable={dataTable} />
+          <DataTableColumnVisibility dataTable={dataTable} />
         </div>
       </div>
       <CardQueryState isPending={isPending} isError={isError} onRetry={onRetry} skeletonClassName="mb-6 h-56">

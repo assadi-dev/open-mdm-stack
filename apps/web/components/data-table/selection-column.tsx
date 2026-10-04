@@ -23,4 +23,5 @@ export const createSelectionColumn = <TData extends RowData>(): DataTableColumnD
   ),
   enableSorting: false,
   enableGlobalFilter: false,
+  enableHiding: false,
 });
