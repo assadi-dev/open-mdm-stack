@@ -6,7 +6,7 @@ import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 export const ENROLLMENT_METHOD_KEYS = ["qr", "manual"] as const;
 
 // La limite du nom d'un appareil côté API (`updateDeviceSchema`).
-const NAME_PATTERN_MAX_LENGTH = 100;
+const NAME_MAX_LENGTH = 100;
 
 const httpUrlSchema = z.url({ protocol: /^https?$/ });
 
@@ -23,7 +23,7 @@ export const enrollmentOptionsSchema = z.object({
   wifiNetworks: z.array(enrollmentWifiNetworkSchema),
   agent: z.object({ version: z.string(), apkUrl: z.url() }),
   // Ce que le formulaire propose à l'ouverture et retrouve après « Réinitialiser ».
-  defaults: z.object({ namePattern: z.string(), groupId: z.string(), policyId: z.string() }),
+  defaults: z.object({ name: z.string(), groupId: z.string(), policyId: z.string() }),
 });
 
 // Le QR code de provisioning : le document SVG que l'API génère. Elle ne renvoie ni lien ni date d'expiration : le QR
@@ -55,11 +55,11 @@ export const usbEnrollmentSchema = z.object({
 
 // Le formulaire manipule des textes : un réseau Wi-Fi absent vaut `NO_WIFI`, une URL vide laisse l'APK par défaut.
 export const enrollmentConfigFormSchema = z.object({
-  namePattern: z
+  name: z
     .string()
     .trim()
-    .min(1, ENROLLMENT.validation.namePatternRequired)
-    .max(NAME_PATTERN_MAX_LENGTH, ENROLLMENT.validation.namePatternTooLong),
+    .min(1, ENROLLMENT.validation.nameRequired)
+    .max(NAME_MAX_LENGTH, ENROLLMENT.validation.nameTooLong),
   groupId: z.string().min(1, ENROLLMENT.validation.groupRequired),
   policyId: z.string().min(1, ENROLLMENT.validation.policyRequired),
   wifiId: z.string(),

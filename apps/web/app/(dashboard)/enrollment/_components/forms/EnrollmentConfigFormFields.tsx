@@ -31,21 +31,21 @@ export const EnrollmentConfigFormFields = ({ form, method, options }: Enrollment
   const { errors } = formState;
   const apkUrl = useWatch({ control, name: "apkUrl" }) ?? "";
   const fieldId = useId();
-  const { namePattern, group, policy, wifi, apkUrl: apkUrlText } = ENROLLMENT.config;
+  const { name: nameText, group, policy, wifi, apkUrl: apkUrlText } = ENROLLMENT.config;
 
   return (
     <FieldGroup>
-      <Field data-invalid={!!errors.namePattern}>
-        <FieldLabel htmlFor={`${fieldId}-name`}>{namePattern.label}</FieldLabel>
+      <Field data-invalid={!!errors.name}>
+        <FieldLabel htmlFor={`${fieldId}-name`}>{nameText.label}</FieldLabel>
         <Input
           id={`${fieldId}-name`}
           autoComplete="off"
-          aria-invalid={!!errors.namePattern}
+          aria-invalid={!!errors.name}
           aria-describedby={`${fieldId}-name-description`}
-          {...register("namePattern")}
+          {...register("name")}
         />
-        <FieldDescription id={`${fieldId}-name-description`}>{namePattern.description}</FieldDescription>
-        <FieldError errors={[errors.namePattern]} />
+        <FieldDescription id={`${fieldId}-name-description`}>{nameText.description}</FieldDescription>
+        <FieldError errors={[errors.name]} />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">

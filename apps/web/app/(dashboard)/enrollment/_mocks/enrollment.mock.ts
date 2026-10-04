@@ -19,7 +19,7 @@ export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = 
     { id: "kio", name: "Kiosque — entrepôt", version: 3 },
   ],
   agent: { version: "0.4.2", apkUrl: AGENT_APK_URL },
-  defaults: { namePattern: "Terrain-Lyon-{n}", groupId: "lyon", policyId: "std" },
+  defaults: { name: "Terrain-Lyon", groupId: "lyon", policyId: "std" },
 };
 
 // Le premier code est celui de la maquette ; un nouveau code est tiré au hasard, comme le ferait le serveur.

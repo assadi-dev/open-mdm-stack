@@ -18,7 +18,7 @@ test.describe("enrôlement", () => {
     await expect(page.getByRole("img", { name: ENROLLMENT.qr.alt })).toHaveCount(0);
     // Le pied du formulaire ne propose de régénérer qu'un QR code déjà affiché.
     await expect(page.getByRole("button", { name: ENROLLMENT.button.regenerateQr })).toHaveCount(0);
-    await expect(page.getByLabel(ENROLLMENT.config.namePattern.label)).toHaveValue("Terrain-Lyon-{n}");
+    await expect(page.getByLabel(ENROLLMENT.config.name.label)).toHaveValue("Terrain-Lyon");
     await expect(page.getByLabel(ENROLLMENT.config.group.label)).toContainText("Terrain Lyon");
     await expect(page.getByLabel(new RegExp(ENROLLMENT.config.wifi.label))).toContainText(ENROLLMENT.config.wifi.none);
   });

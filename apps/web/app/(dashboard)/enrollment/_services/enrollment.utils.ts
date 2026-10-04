@@ -58,10 +58,9 @@ export const toConfigFormValues = ({ defaults }: EnrollmentOptions): EnrollmentC
   apkUrl: "",
 });
 
-// Les valeurs du formulaire sont déjà rognées par le schéma : le nom devient `name` (le champ de l'API), « Aucun »
-// et une URL vide laissent le serveur décider.
-export const toProvisioningInput = ({ namePattern, groupId, policyId, wifiId, apkUrl }: EnrollmentConfigFormValues): ProvisioningInput => ({
-  name: namePattern,
+// Les valeurs du formulaire sont déjà rognées par le schéma : « Aucun » et une URL vide laissent le serveur décider.
+export const toProvisioningInput = ({ name, groupId, policyId, wifiId, apkUrl }: EnrollmentConfigFormValues): ProvisioningInput => ({
+  name,
   groupId,
   policyId,
   ...(wifiId !== NO_WIFI && { wifiId }),

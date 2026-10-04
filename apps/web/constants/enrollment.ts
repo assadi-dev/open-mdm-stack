@@ -59,9 +59,9 @@ export const ENROLLMENT = {
       manual: "Ces réglages sont appliqués à l’appareil lors de l’enrôlement.",
     },
     optional: "facultatif",
-    namePattern: {
-      label: "Nom des appareils",
-      description: "{n} est remplacé par un numéro incrémental.",
+    name: {
+      label: "Nom de l’appareil",
+      description: "Ce nom sera attribué à l’appareil une fois enrôlé.",
     },
     group: { label: "Groupe" },
     policy: { label: "Politique" },
@@ -161,8 +161,8 @@ export const ENROLLMENT = {
     },
   },
   validation: {
-    namePatternRequired: "Saisissez le nom des appareils.",
-    namePatternTooLong: "Le nom des appareils ne peut pas dépasser 100 caractères.",
+    nameRequired: "Saisissez le nom de l’appareil.",
+    nameTooLong: "Le nom de l’appareil ne peut pas dépasser 100 caractères.",
     groupRequired: "Choisissez un groupe.",
     policyRequired: "Choisissez une politique.",
     apkUrlInvalid: "Saisissez une URL valide, commençant par https:// ou http://.",
