@@ -3,6 +3,7 @@ import z from "zod";
 
 
 export const createProvisioningPayloadSchema = z.object({
+    deviceName: z.string().optional(),
     apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),

@@ -317,7 +317,9 @@
       "Bash(sed 's#const PAGE_URL = \"/enrollment\";#const PAGE_URL = \"/enrollment-preview\";#' e2e/authenticated/enrollment.spec.ts)",
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/enrollment-tmp.spec.ts)",
       "Bash(PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 npx playwright test --project=public e2e/public/enrollment-tmp.spec.ts -g \"par défaut\")",
-      "Bash(perl -0pi -e 's/toHaveText\\\\\\(\"Terrain Lyon\"\\\\\\)/toContainText\\(\"Terrain Lyon\"\\)/; s/\\\\\\)\\\\\\)\\\\.toHaveText\\\\\\(ENROLLMENT\\\\.config\\\\.wifi\\\\.none\\\\\\)/\\)\\).toContainText\\(ENROLLMENT.config.wifi.none\\)/; s/getByText\\\\\\(ENROLLMENT\\\\.usb\\\\.enrolled\\\\.title\\\\\\)/getByText\\(ENROLLMENT.usb.enrolled.title, { exact: true }\\)/' e2e/authenticated/enrollment.spec.ts)"
+      "Bash(perl -0pi -e 's/toHaveText\\\\\\(\"Terrain Lyon\"\\\\\\)/toContainText\\(\"Terrain Lyon\"\\)/; s/\\\\\\)\\\\\\)\\\\.toHaveText\\\\\\(ENROLLMENT\\\\.config\\\\.wifi\\\\.none\\\\\\)/\\)\\).toContainText\\(ENROLLMENT.config.wifi.none\\)/; s/getByText\\\\\\(ENROLLMENT\\\\.usb\\\\.enrolled\\\\.title\\\\\\)/getByText\\(ENROLLMENT.usb.enrolled.title, { exact: true }\\)/' e2e/authenticated/enrollment.spec.ts)",
+      "Bash(npx shadcn@latest add empty)",
+      "Bash(perl -0pi -e ' *)"
     ],
     "additionalDirectories": [
       "/Users/assadi/Projects/turbo/open-mdm-stack/.claude/rules",
