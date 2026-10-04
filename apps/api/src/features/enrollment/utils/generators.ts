@@ -88,12 +88,12 @@ export const OTPGenerator = async (ttl: number = 300) => {
     // Generate a secret
     const secret = OTP_CONFIG.secret;
     // Generate a TOTP token
-    const token = await otp.generate({ secret, period: ttl, digits: OTP_CONFIG.digits });
+    const code = await otp.generate({ secret, period: ttl, digits: OTP_CONFIG.digits });
     const expiresAt = new Date(Date.now() + ttl * 1000);
 
 
     return {
-        token,
+        code,
         ttl,
         expiresAt,
     }
@@ -105,7 +105,7 @@ export const OTPVerifier = async (token: string, ttl: number = 300) => {
     const otp = new OTP({ strategy: OTP_CONFIG.strategy, });
 
     const secret = OTP_CONFIG.secret;
-    const result = await otp.verify({ token, secret, digits: OTP_CONFIG.digits, period: ttl });
+    const result = await otp.verify({ token, secret, digits: OTP_CONFIG.digits, });
     return result
 
 }

@@ -20,7 +20,7 @@ export class EnrollmentService {
 
     generateOTP = async () => {
         const ttl = ENV.ENROLLMENT_OTP_TTL_SECONDS
-        const { token: code, expiresAt } = await OTPGenerator(ttl);
+        const { code, expiresAt } = await OTPGenerator(ttl);
         return {
             code,
             expiresAt: expiresAt.toISOString(),
