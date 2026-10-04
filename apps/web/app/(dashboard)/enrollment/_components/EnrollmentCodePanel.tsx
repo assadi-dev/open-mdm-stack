@@ -1,13 +1,13 @@
 "use client";
 
 import { Copy, KeyRound, LoaderCircle, RefreshCw } from "lucide-react";
+import { ExpiryBadge } from "@/components/badges/ExpiryBadge";
 import { Button } from "@/components/buttons/Button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/empty/Empty";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { useCopyText } from "../_hooks/useCopyText";
 import { useEnrollmentCode } from "../_hooks/useEnrollmentCode";
 import { useEnrollmentMutation } from "../_hooks/useEnrollmentMutation";
-import { ExpiryBadge } from "./ExpiryBadge";
 
 // Le code à 6 chiffres que l'agent demande à l'ouverture, avec de quoi le copier ou en générer un nouveau.
 export const EnrollmentCodePanel = () => {
@@ -42,7 +42,7 @@ export const EnrollmentCodePanel = () => {
       <div className="flex flex-col items-center gap-1.5 text-center">
         <span className="text-[0.8125rem] font-medium text-muted-foreground">{code.label}</span>
         <span className="text-[2rem] leading-9.5 font-semibold tracking-[6px] tabular-nums">{enrollmentCode.code}</span>
-        <ExpiryBadge expiresAt={enrollmentCode.expiresAt} />
+        <ExpiryBadge expiresAt={enrollmentCode.expiresAt} expiredLabel={code.expired} />
       </div>
       <div className="absolute top-3 right-3 flex gap-1">
         <Button

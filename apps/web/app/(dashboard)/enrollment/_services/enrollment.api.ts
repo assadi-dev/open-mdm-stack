@@ -4,17 +4,16 @@ import {
   ENROLLMENT_OPTIONS_MOCK,
   USB_DEVICE_MOCK,
   USB_ENROLLMENT_MOCK,
-  buildEnrollmentCodeMock,
-  randomEnrollmentCodeMock,
   simulateLatency,
 } from "../_mocks/enrollment.mock";
 import type { ProvisioningInput, UsbEnrollmentInput } from "../_types/enrollment.types";
 
-// Le QR code et les réseaux Wi-Fi passent par le proxy Next (`app/api/v1/(enrollment)` et `(wifi-networks)`) vers l'API.
-// Le reste vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes, politiques et agent par défaut
-// (l'API n'en expose pas), code à saisir dans l'agent (`GET /enrollment/otp-generate`) et WebUSB.
+// Le QR code, le code à saisir dans l'agent et les réseaux Wi-Fi passent par le proxy Next (`app/api/v1/(enrollment)` et
+// `(wifi-networks)`) vers l'API. Le reste vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes,
+// politiques et agent par défaut (l'API n'en expose pas) et WebUSB.
 // Passer au réel : remplacer chaque mock par l'appel au proxy ou à l'ADB du navigateur, le parsing Zod reste identique.
 const QR_CODE_URL = "/api/v1/enrollment/qr-code";
+const CODE_URL = "/api/v1/enrollment/code";
 const WIFI_NETWORKS_URL = "/api/v1/wifi-networks";
 const JSON_HEADERS = { "Content-Type": "application/json" };
 // Le plafond de l'API (`MAX_LIMIT`) : le formulaire propose tous les réseaux enregistrés, sans pagination.
@@ -40,10 +39,11 @@ export const createEnrollmentQrApi = async (input: ProvisioningInput) => {
   return EnrollmentDto.parseQr(await response.json());
 };
 
-// `GET /enrollment/otp-generate`. Chaque appel génère un nouveau code.
+// Chaque appel génère un nouveau code (`GET /enrollment/otp-generate` côté API), à usage unique.
 export const generateEnrollmentCodeApi = async () => {
-  await simulateLatency();
-  return EnrollmentDto.parseCode(buildEnrollmentCodeMock(randomEnrollmentCodeMock()));
+  const response = await fetch(CODE_URL, { method: "POST" });
+  if (!response.ok) throw createHttpError(response.status);
+  return EnrollmentDto.parseCode(await response.json());
 };
 
 // WebUSB : le navigateur demande quel appareil utiliser, puis l'appareil doit autoriser ce poste (empreinte ADB).

@@ -80,10 +80,6 @@ export const ENROLLMENT = {
       description: "Vide : l’APK par défaut du serveur est utilisé (version {version}), téléchargeable avec le bouton.",
     },
   },
-  expiry: {
-    in: "Expire dans",
-    expired: "Expiré",
-  },
   qr: {
     title: "QR code d’enrôlement",
     alt: "QR code d’enrôlement",
@@ -145,10 +141,11 @@ export const ENROLLMENT = {
     },
   },
   noUsb: {
-    title: "Sans USB",
+    title: "Installation avec code",
     description: "Installation depuis l’appareil, en mode restreint (sans Device Owner)",
     code: {
       label: "Code à saisir dans l’agent",
+      expired: "Code expiré",
       empty: {
         title: "Aucun code généré",
         description: "Générez le code à 6 chiffres à saisir dans l’agent, sur l’appareil.",

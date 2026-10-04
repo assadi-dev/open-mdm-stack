@@ -15,8 +15,6 @@ import type {
 } from "../_types/enrollment.types";
 
 const PAGE_HREF = "/enrollment";
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
 
 // La valeur du choix « Aucun » du réseau Wi-Fi : une liste déroulante ne porte que des textes.
 export const NO_WIFI = "none";
@@ -75,17 +73,6 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
 
 // L'URL saisie, sinon l'APK par défaut du serveur : le bouton de téléchargement sert toujours un fichier.
 export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
-
-export const isExpired = (expiresAt: string, now: number) => new Date(expiresAt).getTime() <= now;
-
-// « Expire dans 23 h 52 », « Expire dans 8 min » : le temps restant, arrondi à la minute inférieure.
-export const toRemainingLabel = (expiresAt: string, now: number) => {
-  const remaining = new Date(expiresAt).getTime() - now;
-  const hours = Math.floor(remaining / HOUR);
-  const minutes = Math.floor((remaining % HOUR) / MINUTE);
-  const duration = hours > 0 ? `${hours} h ${String(minutes).padStart(2, "0")}` : `${Math.max(minutes, 1)} min`;
-  return `${ENROLLMENT.expiry.in} ${duration}`;
-};
 
 // « Google Pixel 8 »
 export const toUsbDeviceName = ({ brand, model }: UsbDevice) => (brand ? `${brand} ${model}` : model);

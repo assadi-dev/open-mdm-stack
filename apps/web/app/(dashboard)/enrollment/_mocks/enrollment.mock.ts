@@ -1,10 +1,6 @@
-import type { EnrollmentCode, EnrollmentOptions, UsbDevice, UsbEnrollment } from "../_types/enrollment.types";
+import type { EnrollmentOptions, UsbDevice, UsbEnrollment } from "../_types/enrollment.types";
 
-// La durée de vie d'un code de l'API (`ENROLLMENT_OTP_TTL_SECONDS`).
-const TTL_SECONDS = 24 * 3600;
 const AGENT_APK_URL = "https://mdm.entreprise.fr/agent/openmdm-agent.apk";
-
-const fromNow = (duration: number) => new Date(Date.now() + duration).toISOString();
 
 // Les réseaux Wi-Fi ne sont pas fictifs : ils viennent de `GET /wifi-networks` (`fetchEnrollmentOptionsApi`).
 export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = {
@@ -21,16 +17,6 @@ export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = 
   agent: { version: "0.4.2", apkUrl: AGENT_APK_URL },
   defaults: { name: "Terrain-Lyon", groupId: "lyon", policyId: "std" },
 };
-
-// Tiré au hasard, comme le ferait le serveur.
-export const randomEnrollmentCodeMock = () => String(Math.floor(Math.random() * 1_000_000)).padStart(6, "0");
-
-// Fonction et non constante : l'expiration part de l'instant de l'appel, comme un code tout juste généré.
-export const buildEnrollmentCodeMock = (code: string): EnrollmentCode => ({
-  code,
-  expiresAt: fromNow(TTL_SECONDS * 1000),
-  ttl: TTL_SECONDS,
-});
 
 export const USB_DEVICE_MOCK: UsbDevice = {
   brand: "Google",
