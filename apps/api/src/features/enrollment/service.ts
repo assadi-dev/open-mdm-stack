@@ -20,16 +20,16 @@ export class EnrollmentService {
 
     generateOTP = async () => {
         const ttl = ENV.ENROLLMENT_OTP_TTL_SECONDS
-        const { token, expiresAt } = await OTPGenerator(ttl);
+        const { token: code, expiresAt } = await OTPGenerator(ttl);
         return {
-            token,
+            code,
             expiresAt: expiresAt.toISOString(),
             ttl,
         }
     }
 
     verifyOTP = async ({ otp, ttlSeconds }: { otp: string, ttlSeconds?: number }) => {
-        const { valid } = await OTPVerifier(otp);
+        const { valid } = await OTPVerifier(otp, ttlSeconds);
         if (!valid) {
             throw new HTTPBadRequestException("Invalid OTP");
         }
