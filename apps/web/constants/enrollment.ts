@@ -31,6 +31,8 @@ export const ENROLLMENT = {
     enroll: "Enrôler",
     downloadAgent: "Télécharger l’agent",
     downloadApk: "Télécharger l’APK de l’agent",
+    installWithCode: "Installer avec un code",
+    installWithUsb: "Installer par USB",
     applyDeviceOwner: "Appliquer le mode sans restriction",
     confirmDeviceOwner: "Appliquer",
   },
@@ -138,7 +140,7 @@ export const ENROLLMENT = {
     chromiumOnly: {
       title: "Navigateurs basés sur Chromium uniquement",
       description:
-        "Firefox et Safari ne prennent pas en charge WebUSB : utilisez l’installation sans USB ci-dessous. Si ADB tourne sur ce poste, arrêtez-le (« adb kill-server ») : il bloque l’accès à l’appareil.",
+        "Firefox et Safari ne prennent pas en charge WebUSB : utilisez l’installation avec un code. Si ADB tourne sur ce poste, arrêtez-le (« adb kill-server ») : il bloque l’accès à l’appareil.",
     },
   },
   noUsb: {

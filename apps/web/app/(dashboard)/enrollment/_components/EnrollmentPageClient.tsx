@@ -3,6 +3,7 @@
 import { useEnrollmentConfigForm } from "../_hooks/useEnrollmentConfigForm";
 import { useEnrollmentMethod } from "../_hooks/useEnrollmentMethod";
 import { useFetchEnrollmentOptions } from "../_hooks/useFetchEnrollmentOptions";
+import { useManualInstall } from "../_hooks/useManualInstall";
 import { EnrollmentHeader } from "./EnrollmentHeader";
 import { EnrollmentMethodTabs } from "./EnrollmentMethodTabs";
 import { EnrollmentQrCard } from "./EnrollmentQrCard";
@@ -15,6 +16,7 @@ export const EnrollmentPageClient = () => {
   const { data: options, isPending, isError, refetch } = useFetchEnrollmentOptions();
   // Le formulaire est partagé : le QR code s'y génère, l'enrôlement par USB en lit les réglages.
   const { form, qr, onGenerateQr, onReset, isGeneratingQr } = useEnrollmentConfigForm(options);
+  const { withoutUsb, showWithoutUsb, showUsb } = useManualInstall();
 
   return (
     <>
@@ -35,11 +37,10 @@ export const EnrollmentPageClient = () => {
         />
         {method === "qr" ? (
           <EnrollmentQrCard qr={qr} isGenerating={isGeneratingQr} canGenerate={!!options} onGenerate={onGenerateQr} />
+        ) : withoutUsb ? (
+          <NoUsbEnrollmentCard agentApkUrl={options?.agent.apkUrl} onUseUsb={showUsb} />
         ) : (
-          <div className="flex min-w-0 flex-col gap-5">
-            <UsbEnrollmentCard form={form} agentVersion={options?.agent.version} />
-            <NoUsbEnrollmentCard agentApkUrl={options?.agent.apkUrl} />
-          </div>
+          <UsbEnrollmentCard form={form} agentVersion={options?.agent.version} onInstallWithCode={showWithoutUsb} />
         )}
       </div>
     </>

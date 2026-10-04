@@ -1,4 +1,4 @@
-import { Download, KeyRound, type LucideIcon } from "lucide-react";
+import { ChevronLeft, Download, KeyRound, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
 import { CardContent } from "@/components/cards/Card";
 import { SectionCard } from "@/components/cards/SectionCard";
@@ -14,9 +14,11 @@ const STEPS: { icon: LucideIcon; text: string }[] = [
 type NoUsbEnrollmentCardProps = {
   // Absent tant que les choix du serveur se chargent.
   agentApkUrl?: string;
+  // Revient à la connexion USB.
+  onUseUsb: () => void;
 };
 
-export const NoUsbEnrollmentCard = ({ agentApkUrl }: NoUsbEnrollmentCardProps) => (
+export const NoUsbEnrollmentCard = ({ agentApkUrl, onUseUsb }: NoUsbEnrollmentCardProps) => (
   <SectionCard
     title={ENROLLMENT.noUsb.title}
     description={ENROLLMENT.noUsb.description}
@@ -40,6 +42,10 @@ export const NoUsbEnrollmentCard = ({ agentApkUrl }: NoUsbEnrollmentCardProps) =
         ))}
       </ol>
       <DeviceOwnerDialog />
+      <Button variant="ghost" size="sm" className="self-start" onClick={onUseUsb}>
+        <ChevronLeft aria-hidden="true" />
+        {ENROLLMENT.button.installWithUsb}
+      </Button>
     </CardContent>
   </SectionCard>
 );
