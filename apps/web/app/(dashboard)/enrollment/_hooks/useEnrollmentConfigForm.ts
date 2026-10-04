@@ -7,10 +7,10 @@ import { useEnrollmentMutation } from "./useEnrollmentMutation";
 
 const EMPTY_CONFIG: EnrollmentConfigFormValues = { namePattern: "", groupId: "", policyId: "", wifiId: NO_WIFI, apkUrl: "" };
 
-// Le formulaire « Configuration » sert les deux méthodes : sa soumission régénère le QR code ; l'enrôlement par USB
+// Le formulaire « Configuration » sert les deux méthodes : sa soumission génère le QR code ; l'enrôlement par USB
 // le valide et lit ses valeurs (`useUsbEnrollment`).
 export const useEnrollmentConfigForm = (options?: EnrollmentOptions) => {
-  const { regenerateQr } = useEnrollmentMutation();
+  const { generateQr } = useEnrollmentMutation();
 
   // Les valeurs par défaut arrivent avec les choix du serveur ; d'ici là, `EMPTY_CONFIG` garde les listes déroulantes
   // contrôlées (sinon elles ignoreraient les valeurs arrivées ensuite). Pas de `resetOptions.keepDirtyValues` : React Hook
@@ -21,11 +21,12 @@ export const useEnrollmentConfigForm = (options?: EnrollmentOptions) => {
     values: options ? toConfigFormValues(options) : undefined,
   });
 
-  const onRegenerateQr = form.handleSubmit((values) => regenerateQr.mutate(toProvisioningInput(values)));
+  // Aucun QR code à l'ouverture : il est généré à la demande, avec les réglages validés du formulaire.
+  const onGenerateQr = form.handleSubmit((values) => generateQr.mutate(toProvisioningInput(values)));
 
   const onReset = () => {
     if (options) form.reset(toConfigFormValues(options));
   };
 
-  return { form, onRegenerateQr, onReset, isRegeneratingQr: regenerateQr.isPending };
+  return { form, qr: generateQr.data, onGenerateQr, onReset, isGeneratingQr: generateQr.isPending };
 };

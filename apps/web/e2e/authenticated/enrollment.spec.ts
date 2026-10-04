@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { ENROLLMENT } from "@/constants/enrollment";
 
-// Les données viennent des mocks de la page (`enrollment/_mocks`) : QR code, code « 482 913 » et Pixel 8 branché en USB.
+// Les données viennent des mocks de la page (`enrollment/_mocks`) : QR code généré à la demande, code « 482 913 » et
+// Pixel 8 branché en USB.
 const PAGE_URL = "/enrollment";
 
 test.describe("enrôlement", () => {
@@ -10,27 +11,41 @@ test.describe("enrôlement", () => {
     await expect(page.getByRole("heading", { level: 1, name: ENROLLMENT.page.title })).toBeVisible();
   });
 
-  test("ouvre la méthode QR code par défaut, avec les réglages du serveur", async ({ page }) => {
+  test("ouvre la méthode QR code par défaut, sans QR code, avec les réglages du serveur", async ({ page }) => {
     await expect(page.getByRole("tab", { name: ENROLLMENT.methods.qr.tab })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByText(ENROLLMENT.methods.qr.subtitle)).toBeVisible();
-    await expect(page.getByRole("img", { name: ENROLLMENT.qr.alt })).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.qr.empty.title)).toBeVisible();
+    await expect(page.getByRole("img", { name: ENROLLMENT.qr.alt })).toHaveCount(0);
+    // Le pied du formulaire ne propose de régénérer qu'un QR code déjà affiché.
+    await expect(page.getByRole("button", { name: ENROLLMENT.button.regenerateQr })).toHaveCount(0);
     await expect(page.getByLabel(ENROLLMENT.config.namePattern.label)).toHaveValue("Terrain-Lyon-{n}");
     await expect(page.getByLabel(ENROLLMENT.config.group.label)).toContainText("Terrain Lyon");
     await expect(page.getByLabel(new RegExp(ENROLLMENT.config.wifi.label))).toContainText(ENROLLMENT.config.wifi.none);
   });
 
-  test("refuse une URL d'agent invalide, puis régénère le QR code après réinitialisation", async ({ page }) => {
+  test("génère le QR code à la demande, puis le régénère", async ({ page }) => {
+    await page.getByRole("button", { name: ENROLLMENT.button.generateQr }).click();
+    await expect(page.getByRole("img", { name: ENROLLMENT.qr.alt })).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.success.generateQr)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.qr.empty.title)).toHaveCount(0);
+
+    await page.getByRole("button", { name: ENROLLMENT.button.regenerateQr }).click();
+    await expect(page.getByText(ENROLLMENT.success.generateQr)).toHaveCount(2);
+  });
+
+  test("refuse une URL d'agent invalide, puis génère le QR code après réinitialisation", async ({ page }) => {
     const apkUrl = page.getByLabel(new RegExp(ENROLLMENT.config.apkUrl.label));
-    const regenerate = page.getByRole("button", { name: ENROLLMENT.button.regenerateQr });
+    const generate = page.getByRole("button", { name: ENROLLMENT.button.generateQr });
 
     await apkUrl.fill("pas-une-url");
-    await regenerate.click();
+    await generate.click();
     await expect(page.getByText(ENROLLMENT.validation.apkUrlInvalid)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.qr.empty.title)).toBeVisible();
 
     await page.getByRole("button", { name: ENROLLMENT.button.reset }).click();
     await expect(apkUrl).toHaveValue("");
-    await regenerate.click();
-    await expect(page.getByText(ENROLLMENT.success.regenerateQr)).toBeVisible();
+    await generate.click();
+    await expect(page.getByRole("img", { name: ENROLLMENT.qr.alt })).toBeVisible();
   });
 
   test("garde la méthode manuelle dans l'URL", async ({ page }) => {

@@ -1,6 +1,6 @@
 export const ENROLLMENT = {
   success: {
-    regenerateQr: "QR code régénéré.",
+    generateQr: "QR code généré.",
     regenerateCode: "Nouveau code généré.",
     downloadQr: "QR code téléchargé.",
     copyLink: "Lien copié.",
@@ -10,7 +10,7 @@ export const ENROLLMENT = {
     applyDeviceOwner: "Mode sans restriction appliqué.",
   },
   error: {
-    regenerateQr: "Impossible de régénérer le QR code. Réessayez.",
+    generateQr: "Impossible de générer le QR code. Réessayez.",
     regenerateCode: "Impossible de générer un nouveau code. Réessayez.",
     downloadQr: "Impossible de télécharger le QR code. Réessayez.",
     printQr: "Impossible d’imprimer le QR code. Réessayez.",
@@ -22,6 +22,7 @@ export const ENROLLMENT = {
   },
   button: {
     reset: "Réinitialiser",
+    generateQr: "Générer le QR code",
     regenerateQr: "Régénérer le QR code",
     regenerateCode: "Générer un nouveau code",
     downloadQr: "Télécharger",
@@ -87,6 +88,10 @@ export const ENROLLMENT = {
   qr: {
     title: "QR code d’enrôlement",
     alt: "QR code d’enrôlement",
+    empty: {
+      title: "Aucun QR code généré",
+      description: "Vérifiez la configuration, puis générez le QR code à scanner sur l’appareil.",
+    },
     fileName: "qr-code-enrolement.svg",
     instructions: {
       title: "Sur l’appareil",

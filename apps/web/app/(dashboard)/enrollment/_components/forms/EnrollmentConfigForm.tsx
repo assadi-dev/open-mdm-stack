@@ -18,9 +18,11 @@ type EnrollmentConfigFormProps = {
   isPending: boolean;
   isError: boolean;
   onRetry: () => void;
-  onRegenerateQr: (event?: FormEvent) => void;
+  // Un QR code est déjà affiché : le pied propose de le régénérer. Sinon, la carte du QR code porte le bouton « Générer ».
+  hasQr: boolean;
+  onGenerateQr: (event?: FormEvent) => void;
   onReset: () => void;
-  isRegeneratingQr: boolean;
+  isGeneratingQr: boolean;
 };
 
 export const EnrollmentConfigForm = ({
@@ -30,15 +32,16 @@ export const EnrollmentConfigForm = ({
   isPending,
   isError,
   onRetry,
-  onRegenerateQr,
+  hasQr,
+  onGenerateQr,
   onReset,
-  isRegeneratingQr,
+  isGeneratingQr,
 }: EnrollmentConfigFormProps) => {
   const isQr = method === "qr";
 
   // En mode manuel, le formulaire n'a pas de bouton d'envoi : « Entrée » dans un champ ne déclenche rien.
   const onSubmit = (event: FormEvent) => {
-    if (isQr) onRegenerateQr(event);
+    if (isQr) onGenerateQr(event);
     else event.preventDefault();
   };
 
@@ -55,9 +58,9 @@ export const EnrollmentConfigForm = ({
               <Button type="button" variant="secondary" onClick={onReset}>
                 {ENROLLMENT.button.reset}
               </Button>
-              {isQr && (
-                <Button type="submit" disabled={isRegeneratingQr}>
-                  <RefreshCw aria-hidden="true" className={isRegeneratingQr ? "animate-spin" : undefined} />
+              {isQr && hasQr && (
+                <Button type="submit" disabled={isGeneratingQr}>
+                  <RefreshCw aria-hidden="true" className={isGeneratingQr ? "animate-spin" : undefined} />
                   {ENROLLMENT.button.regenerateQr}
                 </Button>
               )}

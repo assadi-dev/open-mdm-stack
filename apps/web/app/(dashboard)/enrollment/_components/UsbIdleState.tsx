@@ -1,5 +1,6 @@
 import { Check, LoaderCircle, Usb } from "lucide-react";
 import { Button } from "@/components/buttons/Button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/empty/Empty";
 import { ENROLLMENT } from "@/constants/enrollment";
 
 type UsbIdleStateProps = {
@@ -13,19 +14,21 @@ export const UsbIdleState = ({ isConnecting, onConnect }: UsbIdleStateProps) => 
 
   return (
     <>
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-strong px-4 py-5 text-center">
-        <span className="flex size-12 items-center justify-center rounded-full bg-card-strong text-primary-text">
-          <Usb aria-hidden="true" className="size-5.5" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">{idle.title}</span>
-          <span className="text-[0.8125rem] leading-4.5 text-muted-foreground">{idle.description}</span>
-        </div>
-        <Button onClick={onConnect} disabled={isConnecting}>
-          {isConnecting ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Usb aria-hidden="true" />}
-          {ENROLLMENT.button.connect}
-        </Button>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Usb aria-hidden="true" />
+          </EmptyMedia>
+          <EmptyTitle>{idle.title}</EmptyTitle>
+          <EmptyDescription>{idle.description}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button onClick={onConnect} disabled={isConnecting}>
+            {isConnecting ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Usb aria-hidden="true" />}
+            {ENROLLMENT.button.connect}
+          </Button>
+        </EmptyContent>
+      </Empty>
       <div className="flex flex-col gap-2">
         <span className="text-[0.8125rem] font-medium text-muted-foreground">{prerequisites.title}</span>
         <ul className="flex flex-col gap-2">

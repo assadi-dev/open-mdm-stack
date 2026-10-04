@@ -13,8 +13,8 @@ import { EnrollmentConfigForm } from "./forms/EnrollmentConfigForm";
 export const EnrollmentPageClient = () => {
   const { method, setMethod } = useEnrollmentMethod();
   const { data: options, isPending, isError, refetch } = useFetchEnrollmentOptions();
-  // Le formulaire est partagé : le QR code s'y régénère, l'enrôlement par USB en lit les réglages.
-  const { form, onRegenerateQr, onReset, isRegeneratingQr } = useEnrollmentConfigForm(options);
+  // Le formulaire est partagé : le QR code s'y génère, l'enrôlement par USB en lit les réglages.
+  const { form, qr, onGenerateQr, onReset, isGeneratingQr } = useEnrollmentConfigForm(options);
 
   return (
     <>
@@ -28,12 +28,13 @@ export const EnrollmentPageClient = () => {
           isPending={isPending}
           isError={isError}
           onRetry={() => refetch()}
-          onRegenerateQr={onRegenerateQr}
+          hasQr={!!qr}
+          onGenerateQr={onGenerateQr}
           onReset={onReset}
-          isRegeneratingQr={isRegeneratingQr}
+          isGeneratingQr={isGeneratingQr}
         />
         {method === "qr" ? (
-          <EnrollmentQrCard />
+          <EnrollmentQrCard qr={qr} isGenerating={isGeneratingQr} canGenerate={!!options} onGenerate={onGenerateQr} />
         ) : (
           <div className="flex min-w-0 flex-col gap-5">
             <UsbEnrollmentCard form={form} agentVersion={options?.agent.version} />

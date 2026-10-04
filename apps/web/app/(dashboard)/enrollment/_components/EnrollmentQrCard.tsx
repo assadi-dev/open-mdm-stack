@@ -1,24 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { Copy, Download, Info, Printer } from "lucide-react";
+import { Copy, Download, Info, LoaderCircle, Printer, QrCode } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/alerts/Alert";
 import { Button } from "@/components/buttons/Button";
 import { CardContent } from "@/components/cards/Card";
-import { CardQueryState } from "@/components/cards/CardQueryState";
 import { SectionCard } from "@/components/cards/SectionCard";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/empty/Empty";
 import { ENROLLMENT } from "@/constants/enrollment";
+import { cn } from "@/lib/utils";
 import { useEnrollmentQrActions } from "../_hooks/useEnrollmentQrActions";
-import { useFetchEnrollmentQr } from "../_hooks/useFetchEnrollmentQr";
 import { toExpiryDate, toSvgDataUrl } from "../_services/enrollment.utils";
+import type { EnrollmentQr } from "../_types/enrollment.types";
 import { ExpiryBadge } from "./ExpiryBadge";
 
 const QR_SIZE = 232;
 
-export const EnrollmentQrCard = () => {
-  const { data: qr, isPending, isError, refetch } = useFetchEnrollmentQr();
+type EnrollmentQrCardProps = {
+  // Absent tant qu'aucun QR code n'a été généré.
+  qr?: EnrollmentQr;
+  isGenerating: boolean;
+  // Faux tant que les choix du serveur, donc le formulaire, se chargent.
+  canGenerate: boolean;
+  onGenerate: () => void;
+};
+
+export const EnrollmentQrCard = ({ qr, isGenerating, canGenerate, onGenerate }: EnrollmentQrCardProps) => {
   const { download, print, copyLink } = useEnrollmentQrActions(qr);
-  const { instructions } = ENROLLMENT.qr;
+  const { instructions, empty } = ENROLLMENT.qr;
 
   return (
     <SectionCard
@@ -27,11 +36,15 @@ export const EnrollmentQrCard = () => {
       action={qr && <ExpiryBadge expiresAt={qr.expiresAt} />}
       className="min-w-0"
     >
-      <CardQueryState isPending={isPending} isError={isError} onRetry={() => refetch()} skeletonClassName="h-96">
-        {qr && (
-          <CardContent className="flex flex-col items-center gap-6">
-            {/* Le QR code est une des rares surfaces opaques de la charte : un fond blanc franc, lisible par tout lecteur. */}
-            <div className="rounded-lg bg-(--sand-0) p-3">
+      <CardContent className="flex flex-col items-center gap-6">
+        {qr ? (
+          <>
+            {/* Le QR code est une des rares surfaces opaques de la charte : un fond blanc franc, lisible par tout lecteur.
+                Pendant la régénération, l'ancien reste affiché, estompé. */}
+            <div
+              aria-busy={isGenerating}
+              className={cn("rounded-lg bg-(--sand-0) p-3 transition-opacity", isGenerating && "opacity-50")}
+            >
               <Image
                 src={toSvgDataUrl(qr.svg)}
                 alt={ENROLLMENT.qr.alt}
@@ -55,22 +68,39 @@ export const EnrollmentQrCard = () => {
                 {ENROLLMENT.button.copyLink}
               </Button>
             </div>
-            <Alert variant="info" role="note">
-              <Info aria-hidden="true" />
-              <AlertTitle>{instructions.title}</AlertTitle>
-              <AlertDescription className="text-[0.8125rem] leading-4.5">
-                <ol className="flex flex-col gap-1">
-                  {instructions.steps.map((step, index) => (
-                    <li key={step}>
-                      {index + 1}. {step}
-                    </li>
-                  ))}
-                </ol>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
+          </>
+        ) : (
+          // Rien n'est généré à l'ouverture : chaque QR code crée un jeton côté serveur, avec les réglages du formulaire.
+          <Empty className="py-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <QrCode aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>{empty.title}</EmptyTitle>
+              <EmptyDescription>{empty.description}</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={onGenerate} disabled={!canGenerate || isGenerating}>
+                {isGenerating ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <QrCode aria-hidden="true" />}
+                {ENROLLMENT.button.generateQr}
+              </Button>
+            </EmptyContent>
+          </Empty>
         )}
-      </CardQueryState>
+        <Alert variant="info" role="note">
+          <Info aria-hidden="true" />
+          <AlertTitle>{instructions.title}</AlertTitle>
+          <AlertDescription className="text-[0.8125rem] leading-4.5">
+            <ol className="flex flex-col gap-1">
+              {instructions.steps.map((step, index) => (
+                <li key={step}>
+                  {index + 1}. {step}
+                </li>
+              ))}
+            </ol>
+          </AlertDescription>
+        </Alert>
+      </CardContent>
     </SectionCard>
   );
 };

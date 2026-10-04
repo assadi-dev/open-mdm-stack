@@ -18,10 +18,10 @@ import type { ProvisioningInput, UsbEnrollmentInput } from "../_types/enrollment
 // Les groupes et les politiques n'existent pas encore côté API ; les réseaux Wi-Fi viendront de `GET /wifi-networks`.
 export const fetchEnrollmentOptionsApi = async () => EnrollmentDto.parseOptions(ENROLLMENT_OPTIONS_MOCK);
 
-// `POST /enrollment/display-provisioning?format=svg`. Chaque appel génère un nouveau QR code ; sans `input`, le serveur
-// applique sa configuration par défaut.
-export const fetchEnrollmentQrApi = async (input?: ProvisioningInput) => {
-  if (input) await simulateLatency();
+// `POST /enrollment/display-provisioning?format=svg`. Chaque appel génère un nouveau QR code, avec la configuration reçue.
+export const createEnrollmentQrApi = async (input: ProvisioningInput) => {
+  void input;
+  await simulateLatency();
   return EnrollmentDto.parseQr(buildEnrollmentQrMock());
 };
 
