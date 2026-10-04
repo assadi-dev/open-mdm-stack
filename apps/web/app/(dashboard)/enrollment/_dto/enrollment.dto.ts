@@ -34,7 +34,7 @@ export const enrollmentQrSchema = z.object({
 
 // Ce que `GET /enrollment/otp-generate` renvoie : le code à 6 chiffres que l'agent saisit, et sa durée de vie.
 export const enrollmentCodeSchema = z.object({
-  token: z.string().regex(/^\d{6}$/),
+  code: z.string().regex(/^\d{6}$/),
   expiresAt: z.iso.datetime(),
   ttl: z.number().int().positive(),
 });

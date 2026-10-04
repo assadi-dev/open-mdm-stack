@@ -77,7 +77,7 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
 export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
 
 // « 482 913 » : deux groupes de trois chiffres, plus faciles à recopier.
-export const formatEnrollmentCode = (token: string) => `${token.slice(0, 3)} ${token.slice(3)}`;
+export const formatEnrollmentCode = (code: string) => `${code.slice(0, 3)} ${code.slice(3)}`;
 
 export const isExpired = (expiresAt: string, now: number) => new Date(expiresAt).getTime() <= now;
 

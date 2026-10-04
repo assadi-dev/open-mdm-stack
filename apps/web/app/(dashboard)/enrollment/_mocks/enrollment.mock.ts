@@ -27,8 +27,8 @@ export const INITIAL_ENROLLMENT_CODE_MOCK = "482913";
 export const randomEnrollmentCodeMock = () => String(Math.floor(Math.random() * 1_000_000)).padStart(6, "0");
 
 // Fonction et non constante : l'expiration part de l'instant de l'appel, comme un code tout juste généré.
-export const buildEnrollmentCodeMock = (token: string): EnrollmentCode => ({
-  token,
+export const buildEnrollmentCodeMock = (code: string): EnrollmentCode => ({
+  code,
   expiresAt: fromNow(TTL_SECONDS * 1000),
   ttl: TTL_SECONDS,
 });
