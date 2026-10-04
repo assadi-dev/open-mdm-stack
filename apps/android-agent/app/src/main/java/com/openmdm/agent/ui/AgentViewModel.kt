@@ -1,12 +1,15 @@
 package com.openmdm.agent.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.openmdm.agent.MdmAgentApp
+import com.openmdm.agent.data.repository.OtpVerifyException
 import com.openmdm.agent.di.AppContainer
+import com.openmdm.agent.mqtt.MqttConnectionService
 import com.openmdm.agent.mqtt.MqttConnectionState
 import com.openmdm.agent.work.MdmWork
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +35,16 @@ data class AgentUiState(
     val message: String? = null,
     val mqttState: MqttConnectionState = MqttConnectionState.DISCONNECTED,
 )
+
+/** What the screen says once an enrollment attempt ended: [failure] is `null` when it succeeded. */
+internal fun enrollmentMessage(failure: Throwable?): String = when (failure) {
+    null -> "Enrolled"
+    is OtpVerifyException.InvalidCode -> "Code invalide, expiré ou déjà utilisé"
+    is OtpVerifyException.Rejected -> "Demande refusée par le serveur (HTTP ${failure.status})"
+    is OtpVerifyException.Server -> "Erreur du serveur (HTTP ${failure.status}), réessaie plus tard"
+    is OtpVerifyException.Network -> "Serveur injoignable, vérifie la connexion"
+    else -> "Enrollment failed"
+}
 
 class AgentViewModel(
     app: Application,
@@ -69,23 +82,36 @@ class AgentViewModel(
     }
 
     /**
-     * Self-service enrollment: no token/code required, only an optional
-     * server base URL override. Used both from the manual UI fallback and
-     * after scanning a QR (see [EnrollmentQrParser], which extracts a
-     * `serverBaseUrl` and the optional device [name]).
+     * Manual enrollment: [code] is the one an administrator generated in the dashboard and read out, exchanged for a
+     * challenge by [DeviceRepository.enroll]. [baseUrl] is an optional server base URL override. Each way the code
+     * step can fail gets its own message (see [enrollmentMessage]).
      */
-    fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL, name: String? = null) {
+    fun enroll(baseUrl: String, code: String) = runEnrollment {
+        repository.enroll(baseUrl.trim().ifBlank { null }, code, MdmWork.METHOD_MANUAL)
+    }
+
+    /**
+     * Enrollment after scanning the server's QR (see [EnrollmentQrParser], which extracts a `serverBaseUrl` and the
+     * optional device [name]): the QR itself is the authorization, so no code is asked for, as with the provisioning
+     * QR ([DeviceRepository.autoEnroll]).
+     */
+    fun enrollFromQr(baseUrl: String, name: String?) = runEnrollment {
+        repository.autoEnroll(baseUrl.trim().ifBlank { null }, MdmWork.METHOD_QR, name)
+    }
+
+    private fun runEnrollment(enrollment: suspend () -> Result<Unit>) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.autoEnroll(baseUrl.trim().ifBlank { null }, method, name)
+            val result = enrollment()
             result.onSuccess {
                 MdmWork.schedulePeriodicHeartbeat(getApplication())
+                // A refused start (e.g. the app went to the background meanwhile) must not leave the screen stuck on
+                // "busy": enrollment itself did succeed, and MdmAgentApp/BootReceiver start the service again later.
+                runCatching { MqttConnectionService.start(getApplication()) }
+                    .onFailure { Log.w(TAG, "Could not start MqttConnectionService after enrollment", it) }
             }
             _state.update {
-                it.copy(
-                    busy = false,
-                    message = if (result.isSuccess) "Enrolled" else "Enrollment failed",
-                )
+                it.copy(busy = false, message = enrollmentMessage(result.exceptionOrNull()))
             }
             refresh()
         }
@@ -141,6 +167,8 @@ class AgentViewModel(
     }
 
     companion object {
+        private const val TAG = "AgentViewModel"
+
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : androidx.lifecycle.ViewModel> create(

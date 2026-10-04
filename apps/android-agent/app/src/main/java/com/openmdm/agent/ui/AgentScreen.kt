@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.material3.Button
@@ -27,13 +28,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.mqtt.MqttConnectionState
-import com.openmdm.agent.work.MdmWork
 import java.text.DateFormat
 import java.util.Date
 
@@ -54,12 +56,13 @@ fun AgentScreen(
     ) {
         Text("Open MDM Agent", style = MaterialTheme.typography.headlineSmall)
 
-        StatusCard(state)
-
-        if (!state.isEnrolled) {
+        if (state.isEnrolled) {
+            StatusCard(state)
+        } else {
             ManualEnrollmentCard(
                 busy = state.busy,
                 onEnroll = viewModel::enroll,
+                onScanned = viewModel::enrollFromQr,
             )
         }
 
@@ -136,15 +139,17 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ManualEnrollmentCard(
     busy: Boolean,
-    onEnroll: (baseUrl: String, method: String, name: String?) -> Unit,
+    onEnroll: (baseUrl: String, code: String) -> Unit,
+    onScanned: (baseUrl: String, name: String?) -> Unit,
 ) {
+    var code by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("") }
     var showAdvanced by remember { mutableStateOf(false) }
 
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         val contents = result.contents ?: return@rememberLauncherForActivityResult
         EnrollmentQrParser.parse(contents)?.let { parsed ->
-            onEnroll(parsed.baseUrl ?: baseUrl, MdmWork.METHOD_QR, parsed.name)
+            onScanned(parsed.baseUrl ?: baseUrl, parsed.name)
         }
     }
 
@@ -155,8 +160,20 @@ private fun ManualEnrollmentCard(
         ) {
             Text("Enrôlement", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Aucun code requis : appuie sur Enrôler, ou scanne le QR du serveur.",
+                "Saisis le code à ${DeviceRepository.OTP_LENGTH} chiffres affiché dans le dashboard, " +
+                    "ou scanne le QR du serveur.",
                 style = MaterialTheme.typography.bodySmall,
+            )
+
+            OutlinedTextField(
+                value = code,
+                // Digits only, capped at the code length: what is typed can never be a malformed code.
+                onValueChange = { code = it.filter(Char::isDigit).take(DeviceRepository.OTP_LENGTH) },
+                label = { Text("Code d'enrôlement") },
+                singleLine = true,
+                enabled = !busy,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                modifier = Modifier.fillMaxWidth(),
             )
 
             if (showAdvanced) {
@@ -171,8 +188,8 @@ private fun ManualEnrollmentCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { onEnroll(baseUrl, MdmWork.METHOD_MANUAL, null) },
-                    enabled = !busy,
+                    onClick = { onEnroll(baseUrl, code) },
+                    enabled = !busy && code.length == DeviceRepository.OTP_LENGTH,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(if (busy) "Enrôlement…" else "Enrôler")
