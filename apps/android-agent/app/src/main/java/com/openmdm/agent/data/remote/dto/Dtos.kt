@@ -70,6 +70,12 @@ data class EnrollRequest(
     val timestamp: String,
     val signature: String,
     val device: DeviceInfoDto,
+    /**
+     * The name the administrator typed in the dashboard's enrollment form (QR provisioning's `name` extra), already
+     * cleaned up by [com.openmdm.agent.data.DeviceName.normalize]. Not a device fact and not part of the signed
+     * canonical message, hence outside [device]. Omitted from the JSON when absent.
+     */
+    val name: String? = null,
 )
 
 @Serializable

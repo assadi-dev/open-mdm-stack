@@ -22,6 +22,7 @@ object MdmWork {
 
     const val KEY_ENROLLMENT_METHOD = "enrollment_method"
     const val KEY_BASE_URL = "base_url"
+    const val KEY_DEVICE_NAME = "device_name"
 
     /** Values accepted by the server's `device.enrollmentMethod`. */
     const val METHOD_MANUAL = "manual"
@@ -39,10 +40,18 @@ object MdmWork {
      * token to carry here: the worker fetches its own single-use challenge
      * from the server right before enrolling (see
      * [com.openmdm.agent.data.repository.DeviceRepository.enroll]) — this
-     * only transports the server [baseUrl] (if provisioned) and the
-     * [enrollmentMethod] to report/sign.
+     * only transports the server [baseUrl] (if provisioned), the
+     * [enrollmentMethod] to report/sign and the device [name] (if the QR
+     * carried one). They travel in the work's input data rather than being
+     * read from the provisioning intent later: WorkManager re-runs a retried
+     * enrollment with the same input, so the name survives a failed attempt.
      */
-    fun enqueueEnrollment(context: Context, baseUrl: String?, enrollmentMethod: String = METHOD_MANUAL) {
+    fun enqueueEnrollment(
+        context: Context,
+        baseUrl: String?,
+        enrollmentMethod: String = METHOD_MANUAL,
+        name: String? = null,
+    ) {
         val request = OneTimeWorkRequestBuilder<EnrollWorker>()
             .setConstraints(networkConstraints)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
@@ -51,6 +60,7 @@ object MdmWork {
                 Data.Builder()
                     .putString(KEY_ENROLLMENT_METHOD, enrollmentMethod)
                     .putString(KEY_BASE_URL, baseUrl)
+                    .putString(KEY_DEVICE_NAME, name)
                     .build()
             )
             .build()

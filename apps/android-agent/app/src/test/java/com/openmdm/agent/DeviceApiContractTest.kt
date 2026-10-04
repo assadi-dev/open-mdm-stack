@@ -120,6 +120,44 @@ class DeviceApiContractTest {
     }
 
     @Test
+    fun enroll_sendsTheDeviceNameFromTheProvisioningQrWhenThereIsOneAndOmitsItOtherwise() = runTest {
+        repeat(2) {
+            server.enqueue(
+                MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody("""{"deviceId":"dev-1","deviceToken":"jwt-1"}""")
+            )
+        }
+        val request = EnrollRequest(
+            challenge = "chal-1",
+            timestamp = "2026-01-01T00:00:00.000Z",
+            signature = "c2lnbmF0dXJl",
+            device = DeviceInfoDto(
+                brand = "Google",
+                model = "Pixel",
+                manufacturer = "Google",
+                osVersion = "Android 16",
+                release = "16",
+                sdkVersion = 36,
+                enrollmentMethod = "qr",
+                publicKey = "cHVibGljS2V5",
+            ),
+        )
+
+        api.enroll(request.copy(name = "Terrain-Lyon"))
+        api.enroll(request)
+
+        // The name is a sibling of `device` (an administrator's label, not an identity fact), never inside it.
+        val withName = server.takeRequest().body.readUtf8()
+        assertTrue(withName.contains("\"name\":\"Terrain-Lyon\""))
+        val deviceObject = withName.substringAfter("\"device\":{").substringBefore("}")
+        assertFalse(deviceObject.contains("\"name\""))
+        val withoutName = server.takeRequest().body.readUtf8()
+        assertFalse(withoutName.contains("\"name\""))
+        assertFalse(withoutName.contains("null"))
+    }
+
+    @Test
     fun heartbeat_usesDeviceIdInPathAndParsesOk() = runTest {
         server.enqueue(
             MockResponse()

@@ -1,6 +1,7 @@
 package com.openmdm.agent.data.repository
 
 import android.util.Log
+import com.openmdm.agent.data.DeviceName
 import com.openmdm.agent.data.local.DeviceKeyStore
 import com.openmdm.agent.data.local.SecureDeviceStore
 import com.openmdm.agent.data.remote.DeviceApi
@@ -27,6 +28,9 @@ class DeviceRepository(
 
     val deviceId: String? get() = store.deviceId
 
+    /** The name received from the provisioning QR and saved at enrollment, `null` when there was none. */
+    val deviceName: String? get() = store.deviceName
+
     val lastHeartbeatAt: Long get() = store.lastHeartbeatAt
 
     /**
@@ -40,8 +44,16 @@ class DeviceRepository(
      * [enrollmentMethod] is opaque to this method beyond being echoed into
      * the signed message and the request body — the server expects one of
      * "qr" | "manual" | "usb".
+     *
+     * [name] is the device name received from the provisioning QR, if any; it is cleaned up by
+     * [DeviceName.normalize] and sent along, outside the signed message (it is an administrator's label, not an
+     * identity fact).
      */
-    suspend fun enroll(baseUrl: String?, enrollmentMethod: String = "manual"): Result<Unit> = runCatching {
+    suspend fun enroll(
+        baseUrl: String?,
+        enrollmentMethod: String = "manual",
+        name: String? = null,
+    ): Result<Unit> = runCatching {
         baseUrl?.let { store.serverBaseUrl = it }
 
         // Generated once and reused for the app's lifetime: the server pins
@@ -49,6 +61,8 @@ class DeviceRepository(
         // a different key on re-enrollment.
         deviceKeyStore.ensureKeyPair()
         val publicKey = deviceKeyStore.publicKeyBase64()
+
+        val enrolledName = DeviceName.normalize(name)
 
         val challenge = api.challenge()
         val timestamp = Instant.now().toString()
@@ -77,9 +91,13 @@ class DeviceRepository(
                 timestamp = timestamp,
                 signature = signature,
                 device = device,
+                name = enrolledName,
             )
         )
         store.saveEnrollment(response.deviceId, response.deviceToken)
+        // Saved only once the server accepted the enrollment: a failed attempt (retried later with the same name)
+        // leaves no name behind on a device that is not enrolled. `null` clears the one of a previous enrollment.
+        store.deviceName = enrolledName
         Log.i(TAG, "Enrolled as deviceId=${response.deviceId}")
         // Best-effort first telemetry report; failure here must not fail enrollment.
         sendTelemetry().onFailure { Log.w(TAG, "Initial telemetry report failed", it) }

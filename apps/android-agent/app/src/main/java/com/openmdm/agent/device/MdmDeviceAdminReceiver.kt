@@ -15,15 +15,17 @@ import com.openmdm.agent.work.MdmWork
  *
  * For QR (or NFC) provisioning, the management server embeds an admin-extras
  * bundle in the QR JSON under PROVISIONING_ADMIN_EXTRAS_BUNDLE carrying a
- * `challenge` + `serverBaseUrl` (see
+ * `challenge` + `serverBaseUrl` + the optional `name` (see
  * apps/api/src/features/enrollment/utils/generators.ts#buildProvisioningPayload),
  * delivered here in [onProfileProvisioningComplete] once the app becomes
  * Device Owner. The embedded `challenge` is deliberately NOT used: it is
  * short-lived (120s by default) and provisioning (wipe + DPC install + boot)
  * can easily outlast that TTL, so it would likely already be expired or
- * consumed by the time the agent starts. Only `serverBaseUrl` is read from
- * the extras; [MdmWork.enqueueEnrollment] fetches a fresh challenge itself
- * right before enrolling, exactly like the manual UI path.
+ * consumed by the time the agent starts. Only `serverBaseUrl` and `name` are
+ * read from the extras; [MdmWork.enqueueEnrollment] fetches a fresh challenge
+ * itself right before enrolling, exactly like the manual UI path. `name` is
+ * the device name typed in the dashboard's enrollment form: it is handed to
+ * the enrollment, which sends it to the server (see [EXTRA_NAME]).
  *
  * For the ADB dev path (`adb shell dpm set-device-owner ...`) no extras are
  * delivered; enrollment then falls back to the configured default server URL
@@ -54,8 +56,10 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
         val extras: PersistableBundle? =
             intent.getParcelableExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE)
         val baseUrl = extras?.getString(EXTRA_SERVER_BASE_URL)
+        // Optional: a QR generated without a name (or an older one) simply has none.
+        val name = extras?.getString(EXTRA_NAME)
 
-        MdmWork.enqueueEnrollment(context.applicationContext, baseUrl, MdmWork.METHOD_QR)
+        MdmWork.enqueueEnrollment(context.applicationContext, baseUrl, MdmWork.METHOD_QR, name)
 
     }
 
@@ -64,5 +68,8 @@ class MdmDeviceAdminReceiver : DeviceAdminReceiver() {
 
         /** Key expected inside PROVISIONING_ADMIN_EXTRAS_BUNDLE. */
         const val EXTRA_SERVER_BASE_URL = "serverBaseUrl"
+
+        /** Key expected inside PROVISIONING_ADMIN_EXTRAS_BUNDLE: the name to give the enrolled device (optional). */
+        const val EXTRA_NAME = "name"
     }
 }

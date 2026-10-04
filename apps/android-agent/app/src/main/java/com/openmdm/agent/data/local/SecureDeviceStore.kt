@@ -7,8 +7,8 @@ import androidx.security.crypto.MasterKey
 
 /**
  * Encrypted persistence for the device identity issued at enrollment
- * (deviceId + device JWT) plus the configured server base URL and enrollment
- * status. Backed by EncryptedSharedPreferences (Android Keystore).
+ * (deviceId + device JWT) plus the configured server base URL, the device
+ * name received from the provisioning QR (if any) and enrollment status. Backed by EncryptedSharedPreferences (Android Keystore).
  *
  * Room is intentionally not used in this first cut: the only state to persist
  * is a handful of scalars. A local command queue (the eventual Room use case)
@@ -41,6 +41,16 @@ class SecureDeviceStore(context: Context) {
         get() = prefs.getString(KEY_BASE_URL, null)
         set(value) = prefs.edit().putString(KEY_BASE_URL, value).apply()
 
+    /**
+     * The name the administrator gave this device in the dashboard, received
+     * from the provisioning QR and saved once the enrollment succeeded. `null`
+     * when the QR carried none (the UI then shows nothing). Not a secret, kept
+     * here with the rest of the device's identity.
+     */
+    var deviceName: String?
+        get() = prefs.getString(KEY_DEVICE_NAME, null)
+        set(value) = prefs.edit().putString(KEY_DEVICE_NAME, value).apply()
+
     var lastHeartbeatAt: Long
         get() = prefs.getLong(KEY_LAST_HEARTBEAT, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_HEARTBEAT, value).apply()
@@ -63,6 +73,7 @@ class SecureDeviceStore(context: Context) {
         const val KEY_DEVICE_ID = "device_id"
         const val KEY_DEVICE_TOKEN = "device_token"
         const val KEY_BASE_URL = "server_base_url"
+        const val KEY_DEVICE_NAME = "device_name"
         const val KEY_LAST_HEARTBEAT = "last_heartbeat_at"
     }
 }

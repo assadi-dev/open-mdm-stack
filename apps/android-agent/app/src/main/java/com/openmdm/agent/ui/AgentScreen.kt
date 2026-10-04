@@ -108,6 +108,8 @@ private fun StatusCard(state: AgentUiState) {
             InfoRow("Admin active", if (state.isAdminActive) "yes" else "no")
             InfoRow("Enrolled", if (state.isEnrolled) "yes" else "no")
             InfoRow("Device id", state.deviceId ?: "—")
+            // No name (a QR generated without one, ADB or manual enrollment): no row at all, not an empty one.
+            state.deviceName?.let { InfoRow("Name", it) }
             InfoRow("MQTT", formatMqttState(state.mqttState))
             InfoRow("Last heartbeat", formatTimestamp(state.lastHeartbeatAt))
             InfoRow("Model", state.deviceModel)
@@ -134,7 +136,7 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ManualEnrollmentCard(
     busy: Boolean,
-    onEnroll: (baseUrl: String, method: String) -> Unit,
+    onEnroll: (baseUrl: String, method: String, name: String?) -> Unit,
 ) {
     var baseUrl by remember { mutableStateOf("") }
     var showAdvanced by remember { mutableStateOf(false) }
@@ -142,7 +144,7 @@ private fun ManualEnrollmentCard(
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         val contents = result.contents ?: return@rememberLauncherForActivityResult
         EnrollmentQrParser.parse(contents)?.let { parsed ->
-            onEnroll(parsed.baseUrl ?: baseUrl, MdmWork.METHOD_QR)
+            onEnroll(parsed.baseUrl ?: baseUrl, MdmWork.METHOD_QR, parsed.name)
         }
     }
 
@@ -169,7 +171,7 @@ private fun ManualEnrollmentCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { onEnroll(baseUrl, MdmWork.METHOD_MANUAL) },
+                    onClick = { onEnroll(baseUrl, MdmWork.METHOD_MANUAL, null) },
                     enabled = !busy,
                     modifier = Modifier.weight(1f),
                 ) {

@@ -22,6 +22,8 @@ data class AgentUiState(
     val isAdminActive: Boolean = false,
     val isEnrolled: Boolean = false,
     val deviceId: String? = null,
+    // The name received from the provisioning QR; `null` when there is none, and the screen shows nothing then.
+    val deviceName: String? = null,
     val lastHeartbeatAt: Long = 0L,
     val deviceModel: String = "",
     val osVersion: String = "",
@@ -57,6 +59,7 @@ class AgentViewModel(
                 isAdminActive = owner.isAdminActive,
                 isEnrolled = repository.isEnrolled,
                 deviceId = repository.deviceId,
+                deviceName = repository.deviceName,
                 lastHeartbeatAt = repository.lastHeartbeatAt,
                 deviceModel = "${info.manufacturer} ${info.model}",
                 osVersion = info.osVersion,
@@ -68,13 +71,13 @@ class AgentViewModel(
     /**
      * Self-service enrollment: no token/code required, only an optional
      * server base URL override. Used both from the manual UI fallback and
-     * after scanning a QR (see [EnrollmentQrParser], which only extracts a
-     * `serverBaseUrl`).
+     * after scanning a QR (see [EnrollmentQrParser], which extracts a
+     * `serverBaseUrl` and the optional device [name]).
      */
-    fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL) {
+    fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL, name: String? = null) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.enroll(baseUrl.trim().ifBlank { null }, method)
+            val result = repository.enroll(baseUrl.trim().ifBlank { null }, method, name)
             result.onSuccess {
                 MdmWork.schedulePeriodicHeartbeat(getApplication())
             }
