@@ -141,6 +141,9 @@ export class DeviceService {
                         agentVersionName: input.device.agentVersionName,
                         agentVersionCode: input.device.agentVersionCode,
                         agentPackage: input.device.agentPackage,
+                        // Left out, the current name is kept: a re-enrollment without one (manual, USB) must not wipe a
+                        // name an admin typed.
+                        name: input.name,
                     });
                 }
             }
@@ -161,6 +164,8 @@ export class DeviceService {
                     agentVersionName: input.device.agentVersionName,
                     agentVersionCode: input.device.agentVersionCode,
                     agentPackage: input.device.agentPackage,
+                    // No name given: `null` (the list then falls back on the model).
+                    name: input.name ?? null,
                 });
             } catch (error) {
                 if (isUniqueViolation(error)) {

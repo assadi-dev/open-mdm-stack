@@ -39,6 +39,8 @@ export class DeviceRepository {
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
+        /** The name given at enrollment (provisioning QR). Left out, the device has none: `null`. */
+        name?: string | null;
     }) {
         const [row] = await this.db
             .insert(devices)
@@ -57,6 +59,7 @@ export class DeviceRepository {
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,
+                name: input.name ?? null,
             })
             .returning();
         return row;
@@ -75,7 +78,9 @@ export class DeviceRepository {
     /**
      * Re-enrolls a device whose pinned public key matched (see
      * DeviceService.create): refreshes its reported metadata and the
-     * enrollmentIdentity audit stamp, without touching `publicKey`.
+     * enrollmentIdentity audit stamp, without touching `publicKey`. `name` follows the
+     * convention of an update: left out, the current name (possibly typed by an admin)
+     * is kept; a value replaces it; `null` clears it.
      */
     async reEnrollDevice(id: string, input: {
         enrollmentIdentity: string;
@@ -89,6 +94,7 @@ export class DeviceRepository {
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
+        name?: string | null;
     }) {
         const [row] = await this.db
             .update(devices)
@@ -105,6 +111,7 @@ export class DeviceRepository {
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,
+                name: input.name,
             })
             .where(eq(devices.id, id))
             .returning();

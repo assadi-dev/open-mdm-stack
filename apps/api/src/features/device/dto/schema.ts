@@ -6,6 +6,9 @@ import z from "zod";
 
 
 
+// The limit of a device name, shared by the enrollment (`name`) and the rename (PATCH /devices/:id).
+const NAME_MAX_LENGTH = 100;
+
 const deviceInfoSchema = z.object({
     androidId: z.string().optional(),
     brand: z.string().optional(),
@@ -41,6 +44,11 @@ export const enrollDeviceSchema = z.object({
     // challenge is consumed (see DeviceService.create).
     signature: z.string().min(1, "signature is required"),
     device: deviceInfoSchema,
+    // The name an administrator gave the device in the dashboard's enrollment form, carried by the provisioning QR
+    // (`name` in its admin-extras bundle) and sent back by the agent. Optional: absent, `null` or blank all mean "no
+    // name" (`undefined` once parsed). Not part of the signed canonical message: it is a label, not an identity fact.
+    // A name over the limit is refused (400), like a rename.
+    name: z.string().trim().max(NAME_MAX_LENGTH).nullable().transform((value) => value || undefined).optional(),
 });
 
 export const heartbeatSchema = z.object({
@@ -150,7 +158,6 @@ export const deviceCollectionQuerySchema = createCollectionQuerySchema({
     },
 });
 
-const NAME_MAX_LENGTH = 100;
 const ANDROID_VERSION_MAX_LENGTH = 32;
 const ANDROID_ID_MAX_LENGTH = 64;
 const SDK_VERSION_MAX = 99;
