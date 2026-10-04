@@ -1,16 +1,42 @@
+import type { Adb } from "@yume-chan/adb";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { useAdb } from "@/hooks/useAdb";
 import { closeAdbSession, isAdbSupported, isDeviceBusyError, openAdbSession } from "@/lib/adb/adb-session";
-import { enrollUsbDeviceApi } from "../_services/enrollment.api";
-import { toUsbDevice, toUsbEnrollmentInput } from "../_services/enrollment.utils";
-import type { EnrollmentConfigFormValues, UsbEnrollmentStatus } from "../_types/enrollment.types";
+import { activateUsbDeviceOwnerApi, enrollUsbDeviceApi, installAgentApi } from "../_services/enrollment.api";
+import {
+  USB_STEPS,
+  UsbStepError,
+  toCurrentUsbStep,
+  toUsbDevice,
+  toUsbEnrollmentInput,
+  toUsbStepStatuses,
+} from "../_services/enrollment.utils";
+import type { EnrollmentConfigFormValues, UsbEnrollmentInput, UsbEnrollmentStatus, UsbStep } from "../_types/enrollment.types";
 
 // Le temps de lire le message et de cliquer sur l'action : plus long qu'un toast ordinaire (4 s).
 const UNSUPPORTED_TOAST_DURATION = 8000;
+
+const runStep = (step: UsbStep, adb: Adb, input: UsbEnrollmentInput) => {
+  switch (step) {
+    case "install":
+      return installAgentApi(adb, input.apkUrl);
+    case "enroll":
+      return enrollUsbDeviceApi(input);
+    case "deviceOwner":
+      return activateUsbDeviceOwnerApi();
+  }
+};
+
+type EnrollmentRun = {
+  adb: Adb;
+  input: UsbEnrollmentInput;
+  // Les étapes à faire : celles déjà faites ne sont pas rejouées après un échec.
+  steps: UsbStep[];
+};
 
 // Le parcours de la carte « Connexion USB » : brancher l'appareil, l'enrôler avec les réglages du formulaire, se déconnecter.
 // L'appareil connecté n'est pas à la carte : sa session ADB vit dans `AdbProvider`, il reste branché quand on change de page.
@@ -18,6 +44,7 @@ const UNSUPPORTED_TOAST_DURATION = 8000;
 export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>, onInstallWithCode: () => void) => {
   const { session, setSession } = useAdb();
   const device = useMemo(() => (session ? toUsbDevice(session.usbDevice) : null), [session]);
+  const [doneSteps, setDoneSteps] = useState<UsbStep[]>([]);
 
   const connection = useMutation({
     mutationFn: openAdbSession,
@@ -40,28 +67,48 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
     onError: () => toast.error(ENROLLMENT.error.disconnect),
   });
 
+  // Les étapes se font l'une après l'autre ; chacune réussie est retenue, pour reprendre à celle qui a échoué.
   const enrollment = useMutation({
-    mutationFn: enrollUsbDeviceApi,
+    mutationFn: async ({ adb, input, steps }: EnrollmentRun) => {
+      for (const step of steps) {
+        try {
+          await runStep(step, adb, input);
+        } catch (error) {
+          throw new UsbStepError(step, error);
+        }
+        setDoneSteps((done) => [...done, step]);
+      }
+    },
     onSuccess: () => toast.success(ENROLLMENT.success.enroll),
-    onError: () => toast.error(ENROLLMENT.error.enroll),
+    onError: (error) => toast.error(ENROLLMENT.error[error instanceof UsbStepError ? error.step : "enroll"]),
   });
 
-  // Sans appareil (déconnecté, ou câble débranché), l'enrôlement précédent ne compte plus pour le prochain appareil.
+  // Sans appareil (déconnecté, ou câble débranché), ce qui a été fait ne compte plus pour le prochain appareil.
   const { reset: resetEnrollment } = enrollment;
   useEffect(() => {
-    if (!session) resetEnrollment();
+    if (session) return;
+    setDoneSteps([]);
+    resetEnrollment();
   }, [session, resetEnrollment]);
+
+  const steps = toUsbStepStatuses(doneSteps, enrollment.isPending);
+  const isEnrolled = doneSteps.length === USB_STEPS.length;
 
   const toStatus = (): UsbEnrollmentStatus => {
     if (!device) return "idle";
-    if (enrollment.isSuccess) return "enrolled";
+    if (isEnrolled) return "enrolled";
     if (enrollment.isPending) return "enrolling";
     return "connected";
   };
 
   // Les réglages sont validés avant l'envoi : une erreur s'affiche sous son champ, dans la carte « Configuration ».
   const enroll = form.handleSubmit((values) => {
-    if (device) enrollment.mutate(toUsbEnrollmentInput(values, device));
+    if (!session || !device) return;
+    enrollment.mutate({
+      adb: session.adb,
+      input: toUsbEnrollmentInput(values, device),
+      steps: USB_STEPS.filter((step) => !doneSteps.includes(step)),
+    });
   });
 
   // Le navigateur est vérifié avant toute demande d'accès : sans WebUSB, on l'explique et on propose le code à la place.
@@ -84,6 +131,8 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
   return {
     device,
     status: toStatus(),
+    steps,
+    currentStep: toCurrentUsbStep(doneSteps),
     isConnecting: connection.isPending,
     isDisconnecting: disconnection.isPending,
     connect,

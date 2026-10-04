@@ -38,9 +38,9 @@ export const EnrollmentPageClient = () => {
         {method === "qr" ? (
           <EnrollmentQrCard qr={qr} isGenerating={isGeneratingQr} canGenerate={!!options} onGenerate={onGenerateQr} />
         ) : withoutUsb ? (
-          <NoUsbEnrollmentCard agentApkUrl={options?.agent.apkUrl} onUseUsb={showUsb} />
+          <NoUsbEnrollmentCard onUseUsb={showUsb} />
         ) : (
-          <UsbEnrollmentCard form={form} agentVersion={options?.agent.version} onInstallWithCode={showWithoutUsb} />
+          <UsbEnrollmentCard form={form} onInstallWithCode={showWithoutUsb} />
         )}
       </div>
     </>

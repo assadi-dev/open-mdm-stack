@@ -4,14 +4,15 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import { Button } from "@/components/buttons/Button";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { toUsbDeviceMeta, toUsbDeviceName } from "../_services/enrollment.utils";
-import type { UsbDevice, UsbEnrollmentStatus } from "../_types/enrollment.types";
+import type { UsbDevice, UsbEnrollmentStatus, UsbStep, UsbStepStatuses } from "../_types/enrollment.types";
 import { UsbEnrollmentSteps } from "./UsbEnrollmentSteps";
 
 type UsbConnectedStateProps = {
   device: UsbDevice;
   status: UsbEnrollmentStatus;
+  steps: UsbStepStatuses;
+  currentStep: UsbStep | null;
   isDisconnecting: boolean;
-  agentVersion?: string;
   onEnroll: () => void;
   onDisconnect: () => void;
 };
@@ -20,8 +21,9 @@ type UsbConnectedStateProps = {
 export const UsbConnectedState = ({
   device,
   status,
+  steps,
+  currentStep,
   isDisconnecting,
-  agentVersion,
   onEnroll,
   onDisconnect,
 }: UsbConnectedStateProps) => {
@@ -42,7 +44,7 @@ export const UsbConnectedState = ({
         <StatusBadge tone="success">{usb.device.connected}</StatusBadge>
       </div>
 
-      <UsbEnrollmentSteps status={status} agentVersion={agentVersion} />
+      <UsbEnrollmentSteps statuses={steps} currentStep={currentStep} />
 
       {isEnrolled && (
         <Alert variant="success" role="status">

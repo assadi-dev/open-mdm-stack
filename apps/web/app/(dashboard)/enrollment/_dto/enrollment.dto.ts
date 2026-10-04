@@ -16,12 +16,11 @@ const enrollmentWifiNetworkSchema = z.object({ id: z.string(), ssid: z.string(),
 // Ce que `GET /wifi-networks` renvoie, réduit à ce que la liste déroulante lit.
 const enrollmentWifiNetworkCollectionSchema = toPaginatedSchema(enrollmentWifiNetworkSchema);
 
-// Les choix du formulaire « Configuration » : groupes, politiques, réseaux Wi-Fi enregistrés, et l'agent servi par défaut.
+// Les choix du formulaire « Configuration » : groupes, politiques et réseaux Wi-Fi enregistrés.
 export const enrollmentOptionsSchema = z.object({
   groups: z.array(z.object({ id: z.string(), name: z.string() })),
   policies: z.array(z.object({ id: z.string(), name: z.string(), version: z.number().int().positive() })),
   wifiNetworks: z.array(enrollmentWifiNetworkSchema),
-  agent: z.object({ version: z.string(), apkUrl: z.url() }),
   // Ce que le formulaire propose à l'ouverture et retrouve après « Réinitialiser ».
   defaults: z.object({ name: z.string(), groupId: z.string(), policyId: z.string() }),
 });

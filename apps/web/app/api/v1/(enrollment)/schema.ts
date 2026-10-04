@@ -10,3 +10,9 @@ export const createEnrollmentQrBodySchema = z.object({
     wifiId: z.uuid().optional(),
     apkUrl: z.string().min(1).optional(),
 });
+
+// `GET /api/v1/enrollment/agent` : l'URL de l'APK à relayer, facultative (le serveur a la sienne). Seuls HTTP et HTTPS sont
+// relayés : le proxy ne doit pas lire autre chose que des fichiers servis par un site.
+export const agentDownloadQuerySchema = z.object({
+    apkUrl: z.url({ protocol: /^https?$/ }).optional(),
+});

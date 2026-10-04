@@ -8,13 +8,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSepar
 import { Input } from "@/components/inputs/Input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/inputs/InputGroup";
 import { ENROLLMENT } from "@/constants/enrollment";
-import {
-  toAgentApkUrl,
-  toApkUrlDescription,
-  toGroupOptions,
-  toPolicyOptions,
-  toWifiOptions,
-} from "../../_services/enrollment.utils";
+import { toAgentDownloadUrl, toGroupOptions, toPolicyOptions, toWifiOptions } from "../../_services/enrollment.utils";
 import type { EnrollmentConfigFormValues, EnrollmentMethod, EnrollmentOptions } from "../../_types/enrollment.types";
 import { EnrollmentOptionSelect } from "./inputs/EnrollmentOptionSelect";
 
@@ -135,14 +129,14 @@ export const EnrollmentConfigFormFields = ({ form, method, options }: Enrollment
               variant="ghost"
               size="icon-sm"
               nativeButton={false}
-              render={<a href={toAgentApkUrl(apkUrl, options)} download />}
+              render={<a href={toAgentDownloadUrl(apkUrl)} download />}
               aria-label={ENROLLMENT.button.downloadApk}
             >
               <Download aria-hidden="true" />
             </Button>
           </InputGroupAddon>
         </InputGroup>
-        <FieldDescription id={`${fieldId}-apk-url-description`}>{toApkUrlDescription(options.agent.version)}</FieldDescription>
+        <FieldDescription id={`${fieldId}-apk-url-description`}>{apkUrlText.description}</FieldDescription>
         <FieldError errors={[errors.apkUrl]} />
       </Field>
     </FieldGroup>

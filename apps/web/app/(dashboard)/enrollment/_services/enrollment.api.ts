@@ -1,7 +1,10 @@
+import type { Adb } from "@yume-chan/adb";
+import { installApk } from "@/lib/adb/adb-package";
 import { createHttpError } from "@/lib/api/intefaces/http-errors";
 import { EnrollmentDto } from "../_dto/enrollment.dto";
 import { ENROLLMENT_OPTIONS_MOCK, USB_ENROLLMENT_MOCK, simulateLatency } from "../_mocks/enrollment.mock";
 import type { ProvisioningInput, UsbEnrollmentInput } from "../_types/enrollment.types";
+import { toAgentDownloadUrl } from "./enrollment.utils";
 
 // Le QR code, le code à saisir dans l'agent et les réseaux Wi-Fi passent par le proxy Next (`app/api/v1/(enrollment)` et
 // `(wifi-networks)`) vers l'API. Le reste vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes,
@@ -43,11 +46,25 @@ export const generateEnrollmentCodeApi = async (signal?: AbortSignal) => {
   return EnrollmentDto.parseCode(await response.json());
 };
 
-// Par ADB : installe l'agent, l'enrôle auprès du serveur (sans code), puis `dpm set-device-owner`.
+// Étape « Installer l'agent » : l'APK est téléchargé par le proxy Next (`toAgentDownloadUrl`), puis installé par ADB. Il est
+// lu en entier avant l'installation : la taille doit être connue de l'appareil, et une coupure en cours de route ne laisse
+// pas une installation à moitié faite.
+export const installAgentApi = async (adb: Adb, apkUrl?: string) => {
+  const response = await fetch(toAgentDownloadUrl(apkUrl));
+  if (!response.ok) throw createHttpError(response.status);
+  await installApk(adb, await response.blob());
+};
+
+// Étape « Enrôler auprès du serveur » : l'agent installé s'enrôle sans code. Fictive pour l'instant.
 export const enrollUsbDeviceApi = async (input: UsbEnrollmentInput) => {
   void input;
-  await simulateLatency(1500);
+  await simulateLatency();
   return EnrollmentDto.parseUsbEnrollment(USB_ENROLLMENT_MOCK);
+};
+
+// Étape « Activer le mode Device Owner » : `dpm set-device-owner`, par ADB. Fictive pour l'instant.
+export const activateUsbDeviceOwnerApi = async () => {
+  await simulateLatency();
 };
 
 export const applyDeviceOwnerApi = async () => {

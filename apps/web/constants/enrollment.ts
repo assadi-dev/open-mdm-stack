@@ -18,7 +18,9 @@ export const ENROLLMENT = {
     connect: "Impossible de se connecter à l’appareil. Réessayez.",
     deviceBusy: "L’appareil est utilisé par un autre programme. Arrêtez ADB (« adb kill-server »), puis réessayez.",
     disconnect: "Impossible de déconnecter l’appareil. Réessayez.",
+    install: "Impossible de télécharger et d’installer l’agent. Réessayez.",
     enroll: "Impossible d’enrôler l’appareil. Réessayez.",
+    deviceOwner: "Impossible d’activer le mode Device Owner. Réessayez.",
     applyDeviceOwner: "Impossible d’appliquer le mode sans restriction. Réessayez.",
   },
   button: {
@@ -80,7 +82,7 @@ export const ENROLLMENT = {
     apkUrl: {
       label: "URL de téléchargement de l’agent",
       placeholder: "https://mdm.entreprise.fr/agent/openmdm-agent.apk",
-      description: "Vide : l’APK par défaut du serveur est utilisé (version {version}), téléchargeable avec le bouton.",
+      description: "Vide : l’APK par défaut du serveur est utilisé, téléchargeable avec le bouton.",
     },
   },
   qr: {
@@ -131,7 +133,7 @@ export const ENROLLMENT = {
     },
     // L'ordre des clés est celui des étapes.
     steps: {
-      install: { title: "Installer l’agent", description: "APK par défaut du serveur · {version}" },
+      install: { title: "Installer l’agent", description: "Téléchargement de l’APK par le serveur, puis installation par ADB" },
       enroll: { title: "Enrôler auprès du serveur", description: "Automatique, aucun code à saisir" },
       deviceOwner: { title: "Activer le mode Device Owner", description: "dpm set-device-owner, exécuté par WebUSB" },
     },

@@ -43,6 +43,7 @@ export type UsbEnrollmentInput = Omit<ProvisioningInput, "wifiId"> & {
 export type UsbEnrollmentStatus = "idle" | "connected" | "enrolling" | "enrolled";
 export type UsbStep = keyof typeof ENROLLMENT.usb.steps;
 export type UsbStepStatus = keyof typeof ENROLLMENT.usb.stepStatus;
+export type UsbStepStatuses = Record<UsbStep, UsbStepStatus>;
 
 // Les actions de copie, qui partagent leur hook et leurs messages.
 export type CopyAction = "copyCode";

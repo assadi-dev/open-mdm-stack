@@ -14,8 +14,15 @@ export const USB_DEVICE = { manufacturer: "Google", product: "Pixel 8", serial: 
 export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
   page.addInitScript(
     ({ mode, usbDevice }) => {
+      // Les commandes du protocole ADB : leur nom, lu en octets (« CNXN », « OPEN »…).
       const CNXN = 0x4e584e43;
+      const OPEN = 0x4e45504f;
+      const OKAY = 0x59414b4f;
+      const CLSE = 0x45534c43;
+      const WRTE = 0x45545257;
       const HEADER_SIZE = 24;
+      const DEVICE_SOCKET_ID = 1;
+      const INSTALL_DURATION = 200;
       const log: string[] = [];
 
       const toResult = (bytes: Uint8Array) => ({ status: "ok", data: new DataView(bytes.slice().buffer) });
@@ -24,11 +31,10 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
       const incoming: Uint8Array[] = [];
       let waiting: { resolve: (result: ReturnType<typeof toResult>) => void; reject: (error: Error) => void } | null = null;
       const flush = () => {
-        const bytes = incoming.shift();
-        if (!waiting || !bytes) return;
+        if (!waiting || incoming.length === 0) return;
         const { resolve } = waiting;
         waiting = null;
-        resolve(toResult(bytes));
+        resolve(toResult(incoming.shift()!));
       };
       const send = (command: number, arg0: number, arg1: number, text: string) => {
         const payload = new TextEncoder().encode(text);
@@ -40,8 +46,40 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
         view.setUint32(12, payload.length, true);
         view.setUint32(16, payload.reduce((sum, byte) => sum + byte, 0), true);
         view.setUint32(20, (command ^ 0xffffffff) >>> 0, true);
-        incoming.push(header, payload);
+        // Sans charge, l'en-tête seul : le navigateur ne lit pas de second morceau.
+        incoming.push(...(payload.length ? [header, payload] : [header]));
         flush();
+      };
+
+      // L'installation de l'APK : le navigateur ouvre le service `abb_exec` (`-S` donne la taille de l'APK), lui envoie
+      // l'APK, et l'appareil répond « Success » une fois toute la taille reçue. Un APK se retrouve dans le journal.
+      const installs = new Map<number, { size: number; received: number }>();
+      const handle = (command: number, arg0: number, payload: Uint8Array) => {
+        // Le démon répond à la demande de connexion et ne réclame aucune autorisation.
+        if (command === CNXN) {
+          send(CNXN, 0x01000001, 0x100000, `device::ro.product.model=${usbDevice.product};features=shell_v2,cmd,stat_v2,abb_exec`);
+        }
+        if (command === OPEN) {
+          const size = /\0-S\0(\d+)\0/.exec(new TextDecoder().decode(payload))?.[1];
+          if (size === undefined) return send(CLSE, 0, arg0, "");
+          installs.set(arg0, { size: Number(size), received: 0 });
+          send(OKAY, DEVICE_SOCKET_ID, arg0, "");
+        }
+        if (command === WRTE) {
+          const install = installs.get(arg0);
+          send(OKAY, DEVICE_SOCKET_ID, arg0, "");
+          if (!install) return;
+          install.received += payload.length;
+          if (install.received < install.size) return;
+          log.push(`install:${install.received}`);
+          installs.delete(arg0);
+          // Une installation prend du temps : la réponse arrive après que le navigateur a fini d'envoyer, comme sur un
+          // vrai appareil (répondre aussitôt ferme la socket pendant l'envoi).
+          setTimeout(() => {
+            send(WRTE, DEVICE_SOCKET_ID, arg0, "Success\n");
+            send(CLSE, DEVICE_SOCKET_ID, arg0, "");
+          }, INSTALL_DURATION);
+        }
       };
 
       // Ce que le navigateur envoie : un paquet peut arriver en plusieurs morceaux.
@@ -52,10 +90,7 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
           const view = new DataView(pending.buffer, 0, HEADER_SIZE);
           const size = HEADER_SIZE + view.getUint32(12, true);
           if (pending.length < size) return;
-          // Le démon répond à la demande de connexion et ne réclame aucune autorisation.
-          if (view.getUint32(0, true) === CNXN) {
-            send(CNXN, 0x01000001, 0x100000, `device::ro.product.model=${usbDevice.product};features=shell_v2,cmd,stat_v2`);
-          }
+          handle(view.getUint32(0, true), view.getUint32(4, true), pending.slice(HEADER_SIZE, size));
           pending = pending.slice(size);
         }
       };
@@ -143,7 +178,7 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
     { mode: stub, usbDevice: USB_DEVICE },
   );
 
-// Ce que le faux appareil a reçu du navigateur, dans l'ordre : `open`, `claim`, `close`, `forget`.
+// Ce que le faux appareil a reçu du navigateur, dans l'ordre : `open`, `claim`, `install:<octets de l'APK>`, `close`, `forget`.
 export const readUsbLog = (page: Page) => page.evaluate(() => Reflect.get(window, "__usbLog") as string[]);
 
 // Le câble est débranché : le navigateur le signale à la page, sans que l'utilisateur ait cliqué sur « Déconnecter ».

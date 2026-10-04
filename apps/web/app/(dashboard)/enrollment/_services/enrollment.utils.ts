@@ -10,9 +10,9 @@ import type {
   ProvisioningInput,
   UsbDevice,
   UsbEnrollmentInput,
-  UsbEnrollmentStatus,
   UsbStep,
   UsbStepStatus,
+  UsbStepStatuses,
 } from "../_types/enrollment.types";
 
 const PAGE_HREF = "/enrollment";
@@ -30,12 +30,6 @@ export const toBreadcrumbs = (method: EnrollmentMethod): BreadcrumbEntry[] => [
   { label: ENROLLMENT.page.breadcrumb, href: PAGE_HREF },
   { label: ENROLLMENT.methods[method].breadcrumb, href: `${PAGE_HREF}?method=${method}` },
 ];
-
-// Remplace `{version}` d'un texte des constantes.
-const fillVersion = (template: string, version: string) => template.replace("{version}", version);
-
-export const toApkUrlDescription = (version: string) => fillVersion(ENROLLMENT.config.apkUrl.description, version);
-export const toInstallStepDescription = (version: string) => fillVersion(ENROLLMENT.usb.steps.install.description, version);
 
 export const toGroupOptions = ({ groups }: EnrollmentOptions): EnrollmentOption[] =>
   groups.map(({ id, name }) => ({ value: id, label: name }));
@@ -72,8 +66,15 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
   serial,
 });
 
-// L'URL saisie, sinon l'APK par défaut du serveur : le bouton de téléchargement sert toujours un fichier.
-export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
+// Le proxy Next qui sert l'APK de l'agent (`app/api/v1/(enrollment)/enrollment/agent`) : le navigateur ne télécharge jamais
+// l'APK directement.
+export const AGENT_DOWNLOAD_URL = "/api/v1/enrollment/agent";
+
+// L'URL saisie est transmise au proxy ; sans elle, il sert l'APK par défaut du serveur, qu'il est seul à connaître.
+export const toAgentDownloadUrl = (apkUrl = "") => {
+  const url = apkUrl.trim();
+  return url ? `${AGENT_DOWNLOAD_URL}?${new URLSearchParams({ apkUrl: url })}` : AGENT_DOWNLOAD_URL;
+};
 
 // L'appareil d'une session ADB, tel que son descripteur USB le décrit. Une session n'existe qu'une fois l'appareil
 // autorisé ; sa version d'Android n'est pas encore lue.
@@ -98,12 +99,28 @@ export const toUsbDeviceMeta = ({ serial, androidVersion, adbAuthorized }: UsbDe
   ].join(" · ");
 };
 
-// L'enrôlement par USB fait les trois étapes d'un seul appel : elles avancent ensemble.
-export const toUsbStepStatus = (status: UsbEnrollmentStatus): UsbStepStatus => {
-  if (status === "enrolled") return "done";
-  if (status === "enrolling") return "running";
-  return "todo";
+// Les étapes avancent l'une après l'autre : celles déjà faites, celle en cours quand l'enrôlement tourne, les autres à faire.
+export const toUsbStepStatuses = (doneSteps: readonly UsbStep[], isRunning: boolean): UsbStepStatuses => {
+  const current = toCurrentUsbStep(doneSteps);
+  const toStatus = (step: UsbStep): UsbStepStatus => {
+    if (doneSteps.includes(step)) return "done";
+    return isRunning && step === current ? "running" : "todo";
+  };
+  return Object.fromEntries(USB_STEPS.map((step) => [step, toStatus(step)])) as UsbStepStatuses;
 };
+
+// L'étape qui a le focus : celle en cours, ou la prochaine à faire. Aucune une fois toutes faites.
+export const toCurrentUsbStep = (doneSteps: readonly UsbStep[]) => USB_STEPS.find((step) => !doneSteps.includes(step)) ?? null;
+
+// L'étape de l'enrôlement par USB qui a échoué, pour dire laquelle dans le message ; l'erreur d'origine est dans `cause`.
+export class UsbStepError extends Error {
+  readonly step: UsbStep;
+
+  constructor(step: UsbStep, cause: unknown) {
+    super(`USB enrollment failed at step "${step}"`, { cause });
+    this.step = step;
+  }
+}
 
 // Le SVG renvoyé par l'API, affiché dans une balise `<img>` : aucun balisage injecté dans la page.
 export const toSvgDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

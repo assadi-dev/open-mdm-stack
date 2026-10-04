@@ -1,7 +1,5 @@
 import type { EnrollmentOptions, UsbEnrollment } from "../_types/enrollment.types";
 
-const AGENT_APK_URL = "https://mdm.entreprise.fr/agent/openmdm-agent.apk";
-
 // Les réseaux Wi-Fi ne sont pas fictifs : ils viennent de `GET /wifi-networks` (`fetchEnrollmentOptionsApi`).
 export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = {
   groups: [
@@ -14,7 +12,6 @@ export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = 
     { id: "std", name: "Terrain — standard", version: 7 },
     { id: "kio", name: "Kiosque — entrepôt", version: 3 },
   ],
-  agent: { version: "0.4.2", apkUrl: AGENT_APK_URL },
   defaults: { name: "Terrain-Lyon", groupId: "lyon", policyId: "std" },
 };
 

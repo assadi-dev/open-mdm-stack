@@ -7,6 +7,19 @@ import { USB_DEVICE, readUsbLog, stubWebUsb, unplugUsbDevice } from "../support/
 // (remplacé par un faux démon ADB dans `support/webusb`), et l'enrôlement par USB d'un mock de la page (`enrollment/_mocks`).
 const PAGE_URL = "/enrollment";
 
+// L'APK de l'agent passe par le proxy Next (`/api/v1/enrollment/agent`) : le test lui donne un faux fichier, que le faux
+// appareil doit recevoir en entier.
+const AGENT_PROXY = /\/api\/v1\/enrollment\/agent/;
+const AGENT_APK = Buffer.from("faux-apk-de-l-agent");
+
+const serveAgentApk = (page: Page) =>
+  page.route(AGENT_PROXY, (route) =>
+    route.fulfill({ contentType: "application/vnd.android.package-archive", body: AGENT_APK }),
+  );
+
+// L'étape qui a le focus : celle qui est en cours, ou la prochaine à faire.
+const currentStep = (page: Page) => page.locator('[aria-current="step"]');
+
 const navigationLink = (page: Page, href: string) =>
   page.getByRole("link", { name: NAVIGATION.main.find((item) => item.href === href)?.label });
 
@@ -66,6 +79,7 @@ test.describe("enrôlement", () => {
 
   test("enrôle un appareil branché en USB", async ({ page }) => {
     await stubWebUsb(page, "device");
+    await serveAgentApk(page);
     await page.goto(`${PAGE_URL}?method=manual`);
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
 
@@ -77,18 +91,65 @@ test.describe("enrôlement", () => {
     ).toBeVisible();
     await expect(page.getByText(ENROLLMENT.success.connect)).toBeVisible();
     await expect(page.getByText(ENROLLMENT.usb.stepStatus.todo)).toHaveCount(3);
+    // Une fois l'appareil connecté, « Installer l'agent » prend le focus.
+    await expect(currentStep(page)).toHaveCount(1);
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.install.title);
 
     const enroll = page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true });
     await enroll.click();
+    // Le focus suit les étapes : l'enrôlement auprès du serveur le prend quand l'agent est installé.
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.enroll.title);
     await expect(page.getByText(ENROLLMENT.usb.enrolled.title, { exact: true })).toBeVisible();
     await expect(page.getByText(ENROLLMENT.usb.stepStatus.done)).toHaveCount(3);
+    await expect(currentStep(page)).toHaveCount(0);
     await expect(enroll).toBeDisabled();
 
     await page.getByRole("button", { name: ENROLLMENT.button.disconnect }).click();
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
     await expect(page.getByText(ENROLLMENT.success.disconnect)).toBeVisible();
     // La déconnexion ferme la connexion, puis révoque l'accès du navigateur à l'appareil.
-    await expect.poll(() => readUsbLog(page)).toEqual(["open", "claim", "close", "forget"]);
+    // L'APK reçu par l'appareil est celui que Next a servi, en entier.
+    await expect.poll(() => readUsbLog(page)).toEqual(["open", "claim", `install:${AGENT_APK.length}`, "close", "forget"]);
+  });
+
+  test("reprend à l'installation de l'agent quand son téléchargement échoue", async ({ page }) => {
+    await stubWebUsb(page, "device");
+    let isAgentAvailable = false;
+    await page.route(AGENT_PROXY, (route) =>
+      isAgentAvailable
+        ? route.fulfill({ contentType: "application/vnd.android.package-archive", body: AGENT_APK })
+        : route.fulfill({ status: 502, json: { message: "Bad Gateway" } }),
+    );
+    await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.install.title);
+
+    const enroll = page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true });
+    await enroll.click();
+    await expect(page.getByText(ENROLLMENT.error.install)).toBeVisible();
+    // L'échec laisse le focus sur l'étape et le bouton disponible : rien n'est installé, la suite n'est pas tentée.
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.install.title);
+    await expect(page.getByText(ENROLLMENT.usb.stepStatus.todo)).toHaveCount(3);
+    await expect(enroll).toBeEnabled();
+    expect(await readUsbLog(page)).toEqual(["open", "claim"]);
+
+    isAgentAvailable = true;
+    await enroll.click();
+    await expect(page.getByText(ENROLLMENT.usb.enrolled.title, { exact: true })).toBeVisible();
+    expect(await readUsbLog(page)).toContain(`install:${AGENT_APK.length}`);
+  });
+
+  test("télécharge l'agent par Next, avec l'URL saisie quand il y en a une", async ({ page }) => {
+    const download = page.getByLabel(ENROLLMENT.button.downloadApk);
+    await expect(download).toHaveAttribute("href", "/api/v1/enrollment/agent");
+
+    await page.getByLabel(new RegExp(ENROLLMENT.config.apkUrl.label)).fill("https://exemple.fr/agent.apk");
+    await expect(download).toHaveAttribute("href", "/api/v1/enrollment/agent?apkUrl=https%3A%2F%2Fexemple.fr%2Fagent.apk");
+  });
+
+  test("refuse de relayer une URL d'agent qui n'est pas en HTTP", async ({ request }) => {
+    const response = await request.get("/api/v1/enrollment/agent?apkUrl=file:///etc/passwd");
+    expect(response.status()).toBe(400);
   });
 
   test("garde l'appareil connecté en changeant de page", async ({ page }) => {

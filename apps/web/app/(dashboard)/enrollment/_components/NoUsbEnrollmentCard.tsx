@@ -3,6 +3,7 @@ import { Button } from "@/components/buttons/Button";
 import { CardContent } from "@/components/cards/Card";
 import { SectionCard } from "@/components/cards/SectionCard";
 import { ENROLLMENT } from "@/constants/enrollment";
+import { AGENT_DOWNLOAD_URL } from "../_services/enrollment.utils";
 import { EnrollmentCodePanel } from "./EnrollmentCodePanel";
 import { DeviceOwnerDialog } from "./modals/DeviceOwnerDialog";
 
@@ -12,23 +13,19 @@ const STEPS: { icon: LucideIcon; text: string }[] = [
 ];
 
 type NoUsbEnrollmentCardProps = {
-  // Absent tant que les choix du serveur se chargent.
-  agentApkUrl?: string;
   // Revient à la connexion USB.
   onUseUsb: () => void;
 };
 
-export const NoUsbEnrollmentCard = ({ agentApkUrl, onUseUsb }: NoUsbEnrollmentCardProps) => (
+export const NoUsbEnrollmentCard = ({ onUseUsb }: NoUsbEnrollmentCardProps) => (
   <SectionCard
     title={ENROLLMENT.noUsb.title}
     description={ENROLLMENT.noUsb.description}
     action={
-      agentApkUrl && (
-        <Button variant="secondary" size="sm" nativeButton={false} render={<a href={agentApkUrl} download />}>
-          <Download aria-hidden="true" />
-          {ENROLLMENT.button.downloadAgent}
-        </Button>
-      )
+      <Button variant="secondary" size="sm" nativeButton={false} render={<a href={AGENT_DOWNLOAD_URL} download />}>
+        <Download aria-hidden="true" />
+        {ENROLLMENT.button.downloadAgent}
+      </Button>
     }
   >
     <CardContent className="flex flex-col gap-6">

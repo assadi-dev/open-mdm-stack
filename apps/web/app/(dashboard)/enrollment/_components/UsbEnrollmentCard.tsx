@@ -15,17 +15,13 @@ import { UsbIdleState } from "./UsbIdleState";
 
 type UsbEnrollmentCardProps = {
   form: UseFormReturn<EnrollmentConfigFormValues>;
-  // Absent tant que les choix du serveur se chargent.
-  agentVersion?: string;
   // Remplace cette carte par l'installation avec le code à saisir dans l'agent.
   onInstallWithCode: () => void;
 };
 
-export const UsbEnrollmentCard = ({ form, agentVersion, onInstallWithCode }: UsbEnrollmentCardProps) => {
-  const { device, status, isConnecting, isDisconnecting, connect, enroll, disconnect } = useUsbEnrollment(
-    form,
-    onInstallWithCode,
-  );
+export const UsbEnrollmentCard = ({ form, onInstallWithCode }: UsbEnrollmentCardProps) => {
+  const { device, status, steps, currentStep, isConnecting, isDisconnecting, connect, enroll, disconnect } =
+    useUsbEnrollment(form, onInstallWithCode);
   const { usb } = ENROLLMENT;
 
   return (
@@ -44,8 +40,9 @@ export const UsbEnrollmentCard = ({ form, agentVersion, onInstallWithCode }: Usb
           <UsbConnectedState
             device={device}
             status={status}
+            steps={steps}
+            currentStep={currentStep}
             isDisconnecting={isDisconnecting}
-            agentVersion={agentVersion}
             onEnroll={enroll}
             onDisconnect={disconnect}
           />
