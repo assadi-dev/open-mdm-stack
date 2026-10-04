@@ -11,7 +11,7 @@ export class MDMAgentController {
 
     downloadApk = async (req: Request, res: Response) => {
         const info = await this.agentService.apkInfo();
-        const stream = await this.agentService.streamApkFile();
+        const stream = this.agentService.streamApkFile();
         res.setHeader('Content-Type', 'application/vnd.android.package-archive');
         res.setHeader('Content-Disposition', `attachment; filename=agent-${Date.now()}.apk`);
         res.setHeader('Content-Length', info.size);

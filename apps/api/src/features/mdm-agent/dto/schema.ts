@@ -6,6 +6,6 @@ export const apkSchema = z.object({
     versionName: z.string(),
     versionCode: z.number(),
     packageName: z.string(),
-    label: z.string(),
+    name: z.string(),
     size: z.number()
 })
