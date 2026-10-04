@@ -22,7 +22,7 @@ type UsbEnrollmentCardProps = {
 };
 
 export const UsbEnrollmentCard = ({ form, agentVersion, onInstallWithCode }: UsbEnrollmentCardProps) => {
-  const { device, status, isConnecting, connect, enroll, disconnect } = useUsbEnrollment(form);
+  const { device, status, isConnecting, connect, enroll, disconnect } = useUsbEnrollment(form, onInstallWithCode);
   const { usb } = ENROLLMENT;
 
   return (

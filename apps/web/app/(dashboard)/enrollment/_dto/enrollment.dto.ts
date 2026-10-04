@@ -39,12 +39,13 @@ export const enrollmentCodeSchema = z.object({
   ttl: z.number().int().positive(),
 });
 
-// L'appareil branché en USB, tel que l'ADB du navigateur le décrit.
+// L'appareil branché en USB. Le descripteur USB donne la marque, le modèle et le numéro de série dès la sélection ;
+// la version d'Android et l'autorisation ADB n'arrivent qu'avec la connexion ADB (`null` et `false` d'ici là).
 export const usbDeviceSchema = z.object({
   brand: z.string().nullable(),
   model: z.string(),
   serial: z.string(),
-  androidVersion: z.string(),
+  androidVersion: z.string().nullable(),
   adbAuthorized: z.boolean(),
 });
 

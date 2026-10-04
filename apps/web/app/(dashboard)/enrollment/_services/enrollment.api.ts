@@ -1,16 +1,14 @@
+import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb";
 import { createHttpError } from "@/lib/api/intefaces/http-errors";
 import { EnrollmentDto } from "../_dto/enrollment.dto";
-import {
-  ENROLLMENT_OPTIONS_MOCK,
-  USB_DEVICE_MOCK,
-  USB_ENROLLMENT_MOCK,
-  simulateLatency,
-} from "../_mocks/enrollment.mock";
+import { ENROLLMENT_OPTIONS_MOCK, USB_ENROLLMENT_MOCK, simulateLatency } from "../_mocks/enrollment.mock";
 import type { ProvisioningInput, UsbEnrollmentInput } from "../_types/enrollment.types";
+import { toUsbDeviceInput } from "./enrollment.utils";
 
 // Le QR code, le code à saisir dans l'agent et les réseaux Wi-Fi passent par le proxy Next (`app/api/v1/(enrollment)` et
-// `(wifi-networks)`) vers l'API. Le reste vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes,
-// politiques et agent par défaut (l'API n'en expose pas) et WebUSB.
+// `(wifi-networks)`) vers l'API ; la sélection de l'appareil USB passe par l'ADB du navigateur (Tango, WebUSB). Le reste
+// vient de `_mocks/` tant que le dashboard n'est pas branché dessus : groupes, politiques et agent par défaut (l'API n'en
+// expose pas), et l'enrôlement par USB.
 // Passer au réel : remplacer chaque mock par l'appel au proxy ou à l'ADB du navigateur, le parsing Zod reste identique.
 const QR_CODE_URL = "/api/v1/enrollment/qr-code";
 const CODE_URL = "/api/v1/enrollment/code";
@@ -47,10 +45,15 @@ export const generateEnrollmentCodeApi = async (signal?: AbortSignal) => {
   return EnrollmentDto.parseCode(await response.json());
 };
 
-// WebUSB : le navigateur demande quel appareil utiliser, puis l'appareil doit autoriser ce poste (empreinte ADB).
+// WebUSB : le navigateur demande l'accès USB et fait choisir l'appareil dans sa fenêtre de sélection (seuls les appareils
+// qui exposent ADB y figurent). Fenêtre refermée sans choix : `null`, ce n'est pas une erreur.
+// L'autorisation de ce poste par l'appareil (empreinte ADB) viendra avec la connexion ADB, à l'étape suivante.
 export const connectUsbDeviceApi = async () => {
-  await simulateLatency();
-  return EnrollmentDto.parseUsbDevice(USB_DEVICE_MOCK);
+  const manager = AdbDaemonWebUsbDeviceManager.BROWSER;
+  if (!manager) throw new Error("WebUSB unavailable");
+
+  const device = await manager.requestDevice();
+  return device ? EnrollmentDto.parseUsbDevice(toUsbDeviceInput(device)) : null;
 };
 
 // Par ADB : installe l'agent, l'enrôle auprès du serveur (sans code), puis `dpm set-device-owner`.

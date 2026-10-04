@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { ENROLLMENT } from "@/constants/enrollment";
+import { USB_DEVICE, stubWebUsb } from "../support/webusb";
 
-// Le QR code et les réseaux Wi-Fi viennent de l'API ; le code « 482 913 » et le Pixel 8 branché en USB, des mocks de la
-// page (`enrollment/_mocks`).
+// Le QR code, le code à saisir et les réseaux Wi-Fi viennent de l'API ; la sélection de l'appareil USB vient de WebUSB
+// (remplacé par `support/webusb`), et l'enrôlement par USB d'un mock de la page (`enrollment/_mocks`).
 const PAGE_URL = "/enrollment";
 
 test.describe("enrôlement", () => {
@@ -60,11 +61,15 @@ test.describe("enrôlement", () => {
   });
 
   test("enrôle un appareil branché en USB", async ({ page }) => {
+    await stubWebUsb(page, "device");
     await page.goto(`${PAGE_URL}?method=manual`);
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
 
     await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
-    await expect(page.getByText("Google Pixel 8")).toBeVisible();
+    await expect(page.getByText(`${USB_DEVICE.manufacturer} ${USB_DEVICE.product}`)).toBeVisible();
+    // Le descripteur USB ne dit ni la version d'Android ni l'autorisation ADB : la ligne n'affiche que le numéro de série.
+    await expect(page.getByText(`${ENROLLMENT.usb.device.serial} ${USB_DEVICE.serial}`, { exact: true })).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.success.connect)).toBeVisible();
     await expect(page.getByText(ENROLLMENT.usb.stepStatus.todo)).toHaveCount(3);
 
     const enroll = page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true });
@@ -75,6 +80,33 @@ test.describe("enrôlement", () => {
 
     await page.getByRole("button", { name: ENROLLMENT.button.disconnect }).click();
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+  });
+
+  test("reste sur la connexion quand la sélection de l'appareil est refermée sans choix", async ({ page }) => {
+    await stubWebUsb(page, "cancel");
+    await page.goto(`${PAGE_URL}?method=manual`);
+
+    const connect = page.getByRole("button", { name: ENROLLMENT.button.connect });
+    await connect.click();
+    await expect(connect).toBeEnabled();
+    await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.success.connect)).toHaveCount(0);
+    await expect(page.getByText(ENROLLMENT.error.connect)).toHaveCount(0);
+  });
+
+  test("recommande l'installation avec un code quand le navigateur n'a pas WebUSB", async ({ page }) => {
+    await stubWebUsb(page, "unsupported");
+    await page.goto(`${PAGE_URL}?method=manual`);
+
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    const toast = page.locator("[data-sonner-toast]");
+    await expect(toast.getByText(ENROLLMENT.usb.unsupported.message)).toBeVisible();
+    await expect(toast.getByText(ENROLLMENT.usb.unsupported.recommendation)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
+
+    // L'action du toast mène à la carte du code, comme le bouton de l'encart sous la carte USB.
+    await toast.getByRole("button", { name: ENROLLMENT.button.installWithCode }).click();
+    await expect(page.getByText(ENROLLMENT.noUsb.code.empty.title)).toBeVisible();
   });
 
   test("génère le code à saisir dans l'agent à la demande, puis un nouveau", async ({ page }) => {

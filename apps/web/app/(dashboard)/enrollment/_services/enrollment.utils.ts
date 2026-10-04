@@ -1,3 +1,4 @@
+import { AdbDaemonWebUsbDeviceManager, type AdbDaemonWebUsbDevice } from "@yume-chan/adb-daemon-webusb";
 import type { BreadcrumbEntry } from "../../_types/page-header.types";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { ENROLLMENT_METHOD_KEYS } from "../_dto/enrollment.dto";
@@ -74,15 +75,31 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
 // L'URL saisie, sinon l'APK par défaut du serveur : le bouton de téléchargement sert toujours un fichier.
 export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
 
+// WebUSB n'existe que dans les navigateurs Chromium, sur une page sécurisée (HTTPS ou localhost) : sinon `navigator.usb`
+// est absent et le gestionnaire de la librairie aussi. À lire au clic, jamais au rendu (le serveur n'a pas de navigateur).
+export const isUsbSupported = () => AdbDaemonWebUsbDeviceManager.BROWSER !== undefined;
+
+// Ce que la sélection USB apprend de l'appareil : son identité, lue dans le descripteur USB. La version d'Android et
+// l'autorisation ADB demandent la connexion ADB, l'étape suivante.
+export const toUsbDeviceInput = ({ raw, serial }: AdbDaemonWebUsbDevice) => ({
+  brand: raw.manufacturerName ?? null,
+  model: raw.productName ?? ENROLLMENT.usb.device.unknownModel,
+  serial,
+  androidVersion: null,
+  adbAuthorized: false,
+});
+
 // « Google Pixel 8 »
 export const toUsbDeviceName = ({ brand, model }: UsbDevice) => (brand ? `${brand} ${model}` : model);
 
-// « N° 3A1B7K2P · Android 14 · ADB autorisé »
+// « N° 3A1B7K2P · Android 14 · ADB autorisé », sans ce que l'appareil n'a pas encore dit.
 export const toUsbDeviceMeta = ({ serial, androidVersion, adbAuthorized }: UsbDevice) => {
   const { device } = ENROLLMENT.usb;
-  return [`${device.serial} ${serial}`, `${device.android} ${androidVersion}`, ...(adbAuthorized ? [device.adbAuthorized] : [])].join(
-    " · ",
-  );
+  return [
+    `${device.serial} ${serial}`,
+    ...(androidVersion ? [`${device.android} ${androidVersion}`] : []),
+    ...(adbAuthorized ? [device.adbAuthorized] : []),
+  ].join(" · ");
 };
 
 // L'enrôlement par USB fait les trois étapes d'un seul appel : elles avancent ensemble.

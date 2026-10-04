@@ -118,6 +118,13 @@ export const ENROLLMENT = {
       android: "Android",
       adbAuthorized: "ADB autorisé",
       connected: "Connecté",
+      // Un appareil dont le descripteur USB n'a pas de nom de produit.
+      unknownModel: "Appareil Android",
+    },
+    // WebUSB absent (Firefox, Safari, page non sécurisée) : on le dit, et on oriente vers l'installation avec un code.
+    unsupported: {
+      message: "Ce navigateur ne prend pas en charge WebUSB.",
+      recommendation: "Installez plutôt l’agent avec un code.",
     },
     // L'ordre des clés est celui des étapes.
     steps: {
