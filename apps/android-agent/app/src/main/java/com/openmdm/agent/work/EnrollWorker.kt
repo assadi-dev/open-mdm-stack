@@ -65,7 +65,7 @@ class EnrollWorker(
             ?: MdmWork.METHOD_MANUAL
         val name = inputData.getString(MdmWork.KEY_DEVICE_NAME)
 
-        return repository.enroll(baseUrl, enrollmentMethod, name).fold(
+        return repository.autoEnroll(baseUrl, enrollmentMethod, name).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
                 MqttConnectionService.start(appContext)
