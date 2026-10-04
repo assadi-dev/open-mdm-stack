@@ -49,7 +49,7 @@ class DeviceRepository(
      * [DeviceName.normalize] and sent along, outside the signed message (it is an administrator's label, not an
      * identity fact).
      */
-    suspend fun enroll(
+    suspend fun autoEnroll(
         baseUrl: String?,
         enrollmentMethod: String = "manual",
         name: String? = null,

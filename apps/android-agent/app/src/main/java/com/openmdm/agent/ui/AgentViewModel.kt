@@ -77,7 +77,7 @@ class AgentViewModel(
     fun enroll(baseUrl: String, method: String = MdmWork.METHOD_MANUAL, name: String? = null) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            val result = repository.enroll(baseUrl.trim().ifBlank { null }, method, name)
+            val result = repository.autoEnroll(baseUrl.trim().ifBlank { null }, method, name)
             result.onSuccess {
                 MdmWork.schedulePeriodicHeartbeat(getApplication())
             }
