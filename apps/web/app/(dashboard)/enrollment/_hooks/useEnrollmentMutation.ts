@@ -1,7 +1,7 @@
 import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ENROLLMENT } from "@/constants/enrollment";
-import { applyDeviceOwnerApi, createEnrollmentQrApi, fetchEnrollmentCodeApi } from "../_services/enrollment.api";
+import { applyDeviceOwnerApi, createEnrollmentQrApi, generateEnrollmentCodeApi } from "../_services/enrollment.api";
 import { ENROLLMENTS } from "../_services/enrollment.queries";
 
 type EnrollmentAction = keyof typeof ENROLLMENT.success & keyof typeof ENROLLMENT.error;
@@ -9,8 +9,7 @@ type EnrollmentAction = keyof typeof ENROLLMENT.success & keyof typeof ENROLLMEN
 export const useEnrollmentMutation = () => {
   const queryClient = useQueryClient();
 
-  // Un nouveau code remplace l'ancien dans le cache : la carte l'affiche sans nouvel appel (un nouvel appel en
-  // générerait encore un autre).
+  // Le code généré est écrit dans le cache, d'où la carte le lit (`useEnrollmentCode`) : un nouveau remplace l'ancien.
   const afterMutation = (action: EnrollmentAction, queryKey?: QueryKey) => ({
     onSuccess: (data: unknown) => {
       if (queryKey) queryClient.setQueryData(queryKey, data);
@@ -25,9 +24,10 @@ export const useEnrollmentMutation = () => {
     ...afterMutation("generateQr"),
   });
 
-  const regenerateCode = useMutation({
-    mutationFn: () => fetchEnrollmentCodeApi({ isNew: true }),
-    ...afterMutation("regenerateCode", ENROLLMENTS.code),
+  // Le premier code comme les suivants : rien n'est généré à l'ouverture de la carte.
+  const generateCode = useMutation({
+    mutationFn: generateEnrollmentCodeApi,
+    ...afterMutation("generateCode", ENROLLMENTS.code),
   });
 
   const applyDeviceOwner = useMutation({
@@ -35,5 +35,5 @@ export const useEnrollmentMutation = () => {
     ...afterMutation("applyDeviceOwner"),
   });
 
-  return { generateQr, regenerateCode, applyDeviceOwner };
+  return { generateQr, generateCode, applyDeviceOwner };
 };

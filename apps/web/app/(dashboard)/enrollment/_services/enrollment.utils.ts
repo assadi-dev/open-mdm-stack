@@ -76,9 +76,6 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
 // L'URL saisie, sinon l'APK par défaut du serveur : le bouton de téléchargement sert toujours un fichier.
 export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
 
-// « 482 913 » : deux groupes de trois chiffres, plus faciles à recopier.
-export const formatEnrollmentCode = (code: string) => `${code.slice(0, 3)} ${code.slice(3)}`;
-
 export const isExpired = (expiresAt: string, now: number) => new Date(expiresAt).getTime() <= now;
 
 // « Expire dans 23 h 52 », « Expire dans 8 min » : le temps restant, arrondi à la minute inférieure.

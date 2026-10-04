@@ -22,8 +22,7 @@ export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = 
   defaults: { name: "Terrain-Lyon", groupId: "lyon", policyId: "std" },
 };
 
-// Le premier code est celui de la maquette ; un nouveau code est tiré au hasard, comme le ferait le serveur.
-export const INITIAL_ENROLLMENT_CODE_MOCK = "482913";
+// Tiré au hasard, comme le ferait le serveur.
 export const randomEnrollmentCodeMock = () => String(Math.floor(Math.random() * 1_000_000)).padStart(6, "0");
 
 // Fonction et non constante : l'expiration part de l'instant de l'appel, comme un code tout juste généré.

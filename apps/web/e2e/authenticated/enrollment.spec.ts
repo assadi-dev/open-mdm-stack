@@ -77,16 +77,23 @@ test.describe("enrôlement", () => {
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
   });
 
-  test("affiche le code sans USB et en génère un nouveau", async ({ page }) => {
+  test("génère le code à saisir dans l'agent à la demande, puis un nouveau", async ({ page }) => {
     await page.goto(`${PAGE_URL}?method=manual`);
-    await expect(page.getByText("482 913")).toBeVisible();
+    await page.getByRole("button", { name: ENROLLMENT.button.installWithCode }).click();
+    await expect(page.getByText(ENROLLMENT.noUsb.code.empty.title)).toBeVisible();
+
+    await page.getByRole("button", { name: ENROLLMENT.button.generateCode, exact: true }).click();
+    await expect(page.getByText(ENROLLMENT.success.generateCode)).toBeVisible();
+    // Les 6 chiffres d'un seul tenant, sans espace.
+    await expect(page.getByText(/^\d{6}$/)).toBeVisible();
 
     await page.getByRole("button", { name: ENROLLMENT.button.regenerateCode }).click();
-    await expect(page.getByText(ENROLLMENT.success.regenerateCode)).toBeVisible();
+    await expect(page.getByText(ENROLLMENT.success.generateCode).first()).toBeVisible();
   });
 
   test("confirme le mode sans restriction avant de l'appliquer", async ({ page }) => {
     await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByRole("button", { name: ENROLLMENT.button.installWithCode }).click();
     await page.getByRole("button", { name: ENROLLMENT.button.applyDeviceOwner }).click();
 
     const dialog = page.getByRole("alertdialog");

@@ -1,7 +1,7 @@
 export const ENROLLMENT = {
   success: {
     generateQr: "QR code généré.",
-    regenerateCode: "Nouveau code généré.",
+    generateCode: "Code généré.",
     downloadQr: "QR code téléchargé.",
     copyCode: "Code copié.",
     connect: "Appareil connecté.",
@@ -10,7 +10,7 @@ export const ENROLLMENT = {
   },
   error: {
     generateQr: "Impossible de générer le QR code. Réessayez.",
-    regenerateCode: "Impossible de générer un nouveau code. Réessayez.",
+    generateCode: "Impossible de générer le code. Réessayez.",
     downloadQr: "Impossible de télécharger le QR code. Réessayez.",
     printQr: "Impossible d’imprimer le QR code. Réessayez.",
     copyCode: "Impossible de copier le code. Réessayez.",
@@ -22,6 +22,7 @@ export const ENROLLMENT = {
     reset: "Réinitialiser",
     generateQr: "Générer le QR code",
     regenerateQr: "Régénérer le QR code",
+    generateCode: "Générer le code",
     regenerateCode: "Générer un nouveau code",
     downloadQr: "Télécharger",
     printQr: "Imprimer",
@@ -146,7 +147,13 @@ export const ENROLLMENT = {
   noUsb: {
     title: "Sans USB",
     description: "Installation depuis l’appareil, en mode restreint (sans Device Owner)",
-    code: { label: "Code à saisir dans l’agent" },
+    code: {
+      label: "Code à saisir dans l’agent",
+      empty: {
+        title: "Aucun code généré",
+        description: "Générez le code à 6 chiffres à saisir dans l’agent, sur l’appareil.",
+      },
+    },
     steps: {
       install: "Téléchargez l’agent sur l’appareil et installez l’APK (sources inconnues à autoriser).",
       enterCode: "Ouvrez l’agent, saisissez le code à 6 chiffres puis touchez « Enrôler ».",

@@ -2,7 +2,6 @@ import { createHttpError } from "@/lib/api/intefaces/http-errors";
 import { EnrollmentDto } from "../_dto/enrollment.dto";
 import {
   ENROLLMENT_OPTIONS_MOCK,
-  INITIAL_ENROLLMENT_CODE_MOCK,
   USB_DEVICE_MOCK,
   USB_ENROLLMENT_MOCK,
   buildEnrollmentCodeMock,
@@ -41,10 +40,10 @@ export const createEnrollmentQrApi = async (input: ProvisioningInput) => {
   return EnrollmentDto.parseQr(await response.json());
 };
 
-// `GET /enrollment/otp-generate`. Chaque appel génère un nouveau code ; `isNew` distingue la régénération du premier code.
-export const fetchEnrollmentCodeApi = async ({ isNew = false } = {}) => {
-  if (isNew) await simulateLatency();
-  return EnrollmentDto.parseCode(buildEnrollmentCodeMock(isNew ? randomEnrollmentCodeMock() : INITIAL_ENROLLMENT_CODE_MOCK));
+// `GET /enrollment/otp-generate`. Chaque appel génère un nouveau code.
+export const generateEnrollmentCodeApi = async () => {
+  await simulateLatency();
+  return EnrollmentDto.parseCode(buildEnrollmentCodeMock(randomEnrollmentCodeMock()));
 };
 
 // WebUSB : le navigateur demande quel appareil utiliser, puis l'appareil doit autoriser ce poste (empreinte ADB).
