@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Debug-only overlay: marks the build as testOnly so a provisioned Device Owner
-  can be removed with `adb shell dpm remove-active-admin ...` (impossible for a
-  non-test owner). Never applied to release builds. Install debug with:
-      adb install -t -r app-debug.apk
+  Debug overlay: no longer marks the build as testOnly, so the debug APK installs
+  like any other (`adb install -r app-debug.apk`, no `-t`). The flip side: a Device
+  Owner provisioned with a debug build can no longer be removed with
+  `adb shell dpm remove-active-admin ...`, only a factory reset (or the agent
+  itself) removes it. Use the buildTestOnly variant for a removable Device Owner.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <application
-        android:testOnly="true"
-        tools:ignore="TestOnly" />
 
 </manifest>
