@@ -1,4 +1,4 @@
-import { inArray } from "drizzle-orm";
+import { inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import type { deviceOverview } from "@drizzle/schemas/device-overview-view";
 import type { CollectionConfig } from "@features/paginations/domain/interface";
 import type { DeviceCollectionQuery } from "../dto/schema";
@@ -28,6 +28,7 @@ export const deviceRepositoryFactory = {
             battery: view.battery,
             lastHeartbeatAt: view.lastHeartbeatAt,
             presenceChangedAt: view.presenceChangedAt,
+            blockedAt: view.blockedAt,
             createdAt: view.createdAt,
         }
     },
@@ -58,6 +59,11 @@ export const deviceRepositoryFactory = {
                 sdkVersion: (values) => inArray(view.sdkVersion, values),
                 brand: (values) => inArray(view.brand, values),
                 model: (values) => inArray(view.model, values),
+                // Both values asked: every device, as if the filter were absent.
+                blocked: (values) => {
+                    if (values.includes("true") && values.includes("false")) return sql`true`;
+                    return values.includes("true") ? isNotNull(view.blockedAt) : isNull(view.blockedAt);
+                },
             },
         }
     },

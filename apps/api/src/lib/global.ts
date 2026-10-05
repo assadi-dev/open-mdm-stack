@@ -2,6 +2,7 @@ import {
     HTTPBadGatewayException,
     HTTPBadRequestException,
     HTTPConflictException,
+    HTTPForbiddenException,
     HTTPGatewayTimeoutException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
@@ -19,6 +20,7 @@ export const HttpError = (err: unknown) => {
     if (
         err instanceof HTTPBadRequestException ||
         err instanceof HTTPUnauthorizedException ||
+        err instanceof HTTPForbiddenException ||
         err instanceof HTTPNotFoundException ||
         err instanceof HTTPConflictException ||
         err instanceof HTTPBadGatewayException ||

@@ -113,6 +113,29 @@ describe("devices list routes", () => {
             );
         });
 
+        it("hands the blocked filter to the repository", async () => {
+            authenticate();
+            repoMock.collection.mockResolvedValue({ data: [], metadata: {} });
+
+            await request(app)
+                .get("/api/v1/devices?blocked=true")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(200);
+
+            expect(repoMock.collection).toHaveBeenCalledWith(expect.objectContaining({ filters: { blocked: ["true"] } }));
+        });
+
+        it("rejects a blocked filter that isn't true or false", async () => {
+            authenticate();
+
+            await request(app)
+                .get("/api/v1/devices?blocked=yes")
+                .set("Authorization", "Bearer valid-jwt")
+                .expect(400);
+
+            expect(repoMock.collection).not.toHaveBeenCalled();
+        });
+
         it("ignores an empty brand filter instead of filtering on nothing", async () => {
             authenticate();
             repoMock.collection.mockResolvedValue({ data: [], metadata: {} });

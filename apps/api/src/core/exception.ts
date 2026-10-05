@@ -27,6 +27,17 @@ export class HTTPUnauthorizedException implements ExceptionResponse {
     }
 }
 
+export class HTTPForbiddenException implements ExceptionResponse {
+    public readonly statusCode: number;
+    public readonly name: string;
+    public readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+        this.statusCode = 403;
+        this.name = "HTTPForbiddenException";
+    }
+}
+
 export class HTTPNotFoundException implements ExceptionResponse {
     public readonly statusCode: number;
     public readonly name: string;

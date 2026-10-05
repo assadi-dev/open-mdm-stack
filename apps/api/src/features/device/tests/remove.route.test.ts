@@ -7,7 +7,7 @@ import request from "supertest";
 // ever opened.
 const { repoMock, challengeRepoMock, authRepoMock, verifyJWTMock } = vi.hoisted(() => ({
     repoMock: {
-        unenroll: vi.fn(),
+        deleteMany: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -67,7 +67,7 @@ describe("DELETE /api/v1/devices", () => {
     it("rejects a request with no bearer token", async () => {
         await request(app).delete("/api/v1/devices").send({ ids: [FIRST_ID] }).expect(401);
 
-        expect(repoMock.unenroll).not.toHaveBeenCalled();
+        expect(repoMock.deleteMany).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -81,24 +81,24 @@ describe("DELETE /api/v1/devices", () => {
 
         await remove(body).expect(400);
 
-        expect(repoMock.unenroll).not.toHaveBeenCalled();
+        expect(repoMock.deleteMany).not.toHaveBeenCalled();
     });
 
-    it("unenrolls a single device sent as a list of one id, answering 204 with no body", async () => {
+    it("deletes a single device sent as a list of one id, answering 204 with no body", async () => {
         authenticate();
 
         const res = await remove({ ids: [FIRST_ID] }).expect(204);
 
-        expect(repoMock.unenroll).toHaveBeenCalledWith([FIRST_ID]);
+        expect(repoMock.deleteMany).toHaveBeenCalledWith([FIRST_ID]);
         expect(res.body).toEqual({});
     });
 
-    it("unenrolls several devices at once, collapsing duplicated ids", async () => {
+    it("deletes several devices at once, collapsing duplicated ids", async () => {
         authenticate();
 
         await remove({ ids: [FIRST_ID, SECOND_ID, FIRST_ID] }).expect(204);
 
-        expect(repoMock.unenroll).toHaveBeenCalledTimes(1);
-        expect(repoMock.unenroll).toHaveBeenCalledWith([FIRST_ID, SECOND_ID]);
+        expect(repoMock.deleteMany).toHaveBeenCalledTimes(1);
+        expect(repoMock.deleteMany).toHaveBeenCalledWith([FIRST_ID, SECOND_ID]);
     });
 });

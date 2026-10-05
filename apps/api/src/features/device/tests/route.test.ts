@@ -99,6 +99,20 @@ describe("POST /api/v1/devices/:deviceId/heartbeat", () => {
         expect(repoMock.recordHeartbeat).not.toHaveBeenCalled();
     });
 
+    it("rejects a heartbeat for a blocked device with 403 DEVICE_BLOCKED", async () => {
+        verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
+        repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled", blockedAt: new Date() });
+
+        const res = await request(app)
+            .post("/api/v1/devices/device-1/heartbeat")
+            .set("Authorization", "Bearer valid-jwt")
+            .send(heartbeatBody)
+            .expect(403);
+
+        expect(res.body).toEqual({ message: "Device is blocked", code: "DEVICE_BLOCKED" });
+        expect(repoMock.recordHeartbeat).not.toHaveBeenCalled();
+    });
+
     it("accepts a heartbeat for an enrolled device and refreshes its reported facts", async () => {
         verifyJWTMock.mockResolvedValue({ payload: { sub: "device-1", type: "device" } });
         repoMock.findDeviceById.mockResolvedValue({ id: "device-1", enrollmentStatus: "enrolled" });

@@ -18,6 +18,8 @@ deviceRouter.patch("/:id", requireAuth, controller.update);
 deviceRouter.delete("/", requireAuth, controller.removeMany);
 deviceRouter.post("/refresh", requireAuth, controller.refreshMany);
 deviceRouter.post("/:id/refresh", requireAuth, controller.refresh);
+deviceRouter.post("/block", requireAuth, controller.blockMany);
+deviceRouter.post("/:id/block", requireAuth, controller.block);
 
 deviceRouter.post("/enroll", controller.enroll);
 deviceRouter.post("/:deviceId/heartbeat", requireDeviceAuth, controller.heartbeat);

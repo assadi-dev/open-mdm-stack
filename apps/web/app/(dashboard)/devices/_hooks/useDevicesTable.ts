@@ -1,5 +1,5 @@
 import { functionalUpdate, type OnChangeFn, type SortingState } from "@tanstack/react-table";
-import { parseAsArrayOf, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs";
+import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useDataTableSearchParams } from "@/hooks/useDataTableSearchParams";
 import { DEVICE_STATUS_KEYS } from "../_dto/device.dto";
 import type { Device } from "../_types/device.types";
@@ -14,6 +14,8 @@ const FILTERS = {
   sdkVersion: parseAsArrayOf(parseAsInteger),
   brand: parseAsArrayOf(parseAsString),
   model: parseAsArrayOf(parseAsString),
+  // `blocked=true` : seulement les appareils bloqués. Absent, aucun filtre.
+  blocked: parseAsBoolean,
 };
 
 // Référence stable : `data ?? []` créerait un nouveau tableau à chaque rendu tant que la requête charge.

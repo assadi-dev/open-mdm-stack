@@ -240,7 +240,7 @@ test.describe("appareils", () => {
     await expect(page.getByText(DEVICE.success.update)).toHaveCount(0);
   });
 
-  // Ces tests annulent la confirmation : aucun appareil n'est désenrôlé.
+  // Ces tests annulent la confirmation : aucun appareil n'est supprimé ni bloqué.
   test("demande confirmation avant de supprimer un appareil, et le garde si on annule", async ({ page }) => {
     const rows = await rowCount(page);
     await page.getByRole("button", { name: new RegExp(`^${DEVICE.actionsFor} `) }).first().click();
@@ -268,11 +268,38 @@ test.describe("appareils", () => {
     await expect(page.getByRole("toolbar")).toContainText(`2 ${DATA_TABLE.selection.many}`);
   });
 
-  test("propose d'actualiser ou de supprimer les appareils sélectionnés", async ({ page }) => {
+  test("demande confirmation avant de bloquer un appareil, et le laisse si on annule", async ({ page }) => {
+    await page.getByRole("button", { name: new RegExp(`^${DEVICE.actionsFor} `) }).first().click();
+    await page.getByRole("menuitem", { name: DEVICE.button.block }).click();
+
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText(DEVICE.dialog.block.description);
+    await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText(DEVICE.success.block)).toHaveCount(0);
+  });
+
+  test("demande confirmation avant de bloquer la sélection, et la garde si on annule", async ({ page }) => {
+    const rowCheckboxes = page.getByRole("checkbox", { name: DATA_TABLE.selection.row });
+    await rowCheckboxes.nth(0).check();
+    await rowCheckboxes.nth(1).check();
+    await page.getByRole("toolbar").getByRole("button", { name: DEVICE.button.blockMany }).click();
+
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText(DEVICE.dialog.blockMany.description);
+    await dialog.getByRole("button", { name: ACTION_LABELS.cancel }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("toolbar")).toContainText(`2 ${DATA_TABLE.selection.many}`);
+  });
+
+  test("propose d'actualiser, de bloquer ou de supprimer les appareils sélectionnés", async ({ page }) => {
     await page.getByRole("checkbox", { name: DATA_TABLE.selection.row }).first().check();
 
     const bar = page.getByRole("toolbar");
     await expect(bar.getByRole("button", { name: DEVICE.button.refreshMany })).toBeVisible();
+    await expect(bar.getByRole("button", { name: DEVICE.button.blockMany })).toBeVisible();
     await expect(bar.getByRole("button", { name: DEVICE.button.deleteMany })).toBeVisible();
   });
 });

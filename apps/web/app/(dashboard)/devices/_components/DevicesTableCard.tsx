@@ -11,6 +11,7 @@ import { DEVICE } from "@/constants/device";
 import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
 import type { Device } from "../_types/device.types";
 import { deviceColumns } from "./device-columns";
+import { BlockDevicesAction } from "./selection-actions/BlockDevicesAction";
 import { RefreshDevicesAction } from "./selection-actions/RefreshDevicesAction";
 import { RemoveDevicesAction } from "./selection-actions/RemoveDevicesAction";
 
@@ -58,6 +59,7 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
           showPagination={false}
           selectionActions={(selected) => [
             <RefreshDevicesAction key="refresh" devices={selected} />,
+            <BlockDevicesAction key="block" devices={selected} onBlocked={dataTable.selection.clear} />,
             <RemoveDevicesAction key="remove" devices={selected} onDeleted={dataTable.selection.clear} />,
           ]}
         />

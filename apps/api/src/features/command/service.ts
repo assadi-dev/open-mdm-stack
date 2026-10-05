@@ -2,6 +2,7 @@ import { ENV } from "@config/env";
 import {
     HTTPBadGatewayException,
     HTTPConflictException,
+    HTTPForbiddenException,
     HTTPGatewayTimeoutException,
     HTTPNotFoundException,
     HTTPServiceUnavailableException,
@@ -70,6 +71,7 @@ export class CommandService {
      * is done.
      *
      *   404  the device doesn't exist or is no longer listed (revoked, unenrolled)
+     *   403  it is blocked (see DeviceService.block)
      *   409  it is offline (or still pending): it can't answer, so nothing is sent
      *   503  the broker is unreachable
      *   502  the device answered `failed` (e.g. an agent too old to know `refresh`)
@@ -82,6 +84,10 @@ export class CommandService {
         const device = await this.deviceRepository.findDeviceById(deviceId);
         if (!device || device.enrollmentStatus === "revoked" || device.enrollmentStatus === "unenrolled") {
             throw new HTTPNotFoundException("Device not found");
+        }
+        // It would answer through the HTTP endpoints, which `requireDeviceAuth` refuses to a blocked device.
+        if (device.blockedAt) {
+            throw new HTTPForbiddenException("Device is blocked");
         }
         if (device.enrollmentStatus === "pending" || !device.online) {
             throw new HTTPConflictException("Device is offline");

@@ -15,6 +15,7 @@ export const STATUS = {
   failed: { label: "Échec", tone: "danger" },
   commandRunning: { label: "Commande en cours", tone: "info" },
   running: { label: "En cours", tone: "info" },
+  blocked: { label: "Bloqué", tone: "danger" },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type StatusKey = keyof typeof STATUS;

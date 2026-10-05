@@ -155,6 +155,8 @@ export const deviceCollectionQuerySchema = createCollectionQuerySchema({
         // comma can't be filtered on: the comma separates the values of a filter.
         brand: z.string().min(1),
         model: z.string().min(1),
+        // `blocked=true` keeps the blocked devices, `blocked=false` the others (see `blockedAt`).
+        blocked: z.enum(["true", "false"]),
     },
 });
 
@@ -183,12 +185,15 @@ const deviceIdsSchema = z.object({
     ids: z.array(z.uuid()).min(1, "at least one id is required").max(MAX_LIMIT).transform((ids) => [...new Set(ids)]),
 });
 
-// Admin -> API on DELETE /devices. Unenrolling one device is a list of one id: single and bulk unenrollment share
-// this endpoint.
+// Admin -> API on DELETE /devices. Deleting one device is a list of one id: single and bulk deletion share this
+// endpoint.
 export const deleteDevicesSchema = deviceIdsSchema;
 
 // Admin -> API on POST /devices/refresh. The single-device refresh is POST /devices/:id/refresh, which has no body.
 export const refreshDevicesSchema = deviceIdsSchema;
+
+// Admin -> API on POST /devices/block. The single-device block is POST /devices/:id/block, which has no body.
+export const blockDevicesSchema = deviceIdsSchema;
 
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
@@ -198,6 +203,7 @@ export type DeviceCollectionQuery = z.infer<typeof deviceCollectionQuerySchema>;
 export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
 export type DeleteDevicesInput = z.infer<typeof deleteDevicesSchema>;
 export type RefreshDevicesInput = z.infer<typeof refreshDevicesSchema>;
+export type BlockDevicesInput = z.infer<typeof blockDevicesSchema>;
 
 
 export const deviceDecoder = {
@@ -209,4 +215,5 @@ export const deviceDecoder = {
     update: (data: unknown) => updateDeviceSchema.safeParse(data),
     deleteMany: (data: unknown) => deleteDevicesSchema.safeParse(data),
     refreshMany: (data: unknown) => refreshDevicesSchema.safeParse(data),
+    blockMany: (data: unknown) => blockDevicesSchema.safeParse(data),
 };

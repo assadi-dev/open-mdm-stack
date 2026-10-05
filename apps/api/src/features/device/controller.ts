@@ -4,6 +4,7 @@ import { API_BASE_URL } from "@config/cors";
 import { HTTPNotFoundException } from "@core/exception";
 import { DeviceService } from "./service";
 import {
+    validateBlockDevicesInput,
     validateDeleteDevicesInput,
     validateDeviceCollectionQuery,
     validateDeviceIdParam,
@@ -73,10 +74,24 @@ export class DeviceController {
         return res.json(device);
     };
 
-    // DELETE /devices  { ids: [...] }  (admin) — unenrolls the devices; one id unenrolls a single device
+    // DELETE /devices  { ids: [...] }  (admin) — deletes the devices and their data; one id deletes a single device
     removeMany = async (req: Request, res: Response) => {
         const { ids } = validateDeleteDevicesInput(req.body);
-        await this.deviceService.unenroll(ids);
+        await this.deviceService.remove(ids);
+        return res.status(204).send();
+    };
+
+    // POST /devices/:id/block  (admin) — answers with the updated list row; 404 unknown device
+    block = async (req: Request<{ id: string }>, res: Response) => {
+        const id = validateDeviceIdParam(req.params.id);
+        const device = await this.deviceService.block(id);
+        return res.json(device);
+    };
+
+    // POST /devices/block  { ids: [...] }  (admin) — the same for several devices at once; unknown ids are ignored
+    blockMany = async (req: Request, res: Response) => {
+        const { ids } = validateBlockDevicesInput(req.body);
+        await this.deviceService.blockMany(ids);
         return res.status(204).send();
     };
 

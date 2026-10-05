@@ -90,6 +90,9 @@ export const devices = pgTable("devices", {
     // Last known screen power state (on/off), reported by the device
     // whenever it changes (see CommandService.handleScreen).
     isScreenOn: boolean("is_screen_on").default(false).notNull(),
+    // Set by an admin (see DeviceService.block): a blocked device is turned away by
+    // requireDeviceAuth (403 DEVICE_BLOCKED). NULL while the device isn't blocked.
+    blockedAt: timestamp("blocked_at"),
     // Account the device is assigned to, shown as "Utilisateur" in the devices
     // list (see device_overview). Cleared if the account is deleted.
     assignedToUserId: text("assigned_to_user_id").references(() => user.id, { onDelete: "set null" }),

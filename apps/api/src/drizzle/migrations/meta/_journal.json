@@ -141,6 +141,13 @@
       "when": 1791134803597,
       "tag": "0019_add_enrollment_otps",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791201041640,
+      "tag": "0020_add_device_blocked_at",
+      "breakpoints": true
     }
   ]
 }
