@@ -14,6 +14,7 @@ import com.openmdm.agent.inventory.InventoryCollector
 import com.openmdm.agent.security.CanonicalMessage
 import java.time.Instant
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Orchestrates the device lifecycle against the backend + secure local store:
@@ -27,6 +28,9 @@ class DeviceRepository(
 ) {
 
     val isEnrolled: Boolean get() = store.isEnrolled
+
+    /** Emits when the local store changes, e.g. an enrollment finishing in the background (see [SecureDeviceStore.changes]). */
+    val changes: Flow<Unit> get() = store.changes
 
     val deviceId: String? get() = store.deviceId
 

@@ -35,6 +35,9 @@ data class AgentUiState(
     val osVersion: String = "",
     val serial: String = "",
     val busy: Boolean = false,
+    // An enrollment running in the background (USB `autoEnroll`, provisioning QR): the screen waits for it, it
+    // didn't start it, so `busy` isn't set.
+    val enrolling: Boolean = false,
     val message: String? = null,
     val mqttState: MqttConnectionState = MqttConnectionState.DISCONNECTED,
 )
@@ -64,6 +67,14 @@ class AgentViewModel(
         refresh()
         container.mqttGateway.connectionState
             .onEach { mqttState -> _state.update { it.copy(mqttState = mqttState) } }
+            .launchIn(viewModelScope)
+        // An enrollment started elsewhere (USB `autoEnroll`) ends without this screen: it follows what the enrollment
+        // saves (the device id, the name…), and whether the work is still running.
+        repository.changes
+            .onEach { refresh() }
+            .launchIn(viewModelScope)
+        MdmWork.enrollmentInProgress(app)
+            .onEach { running -> _state.update { it.copy(enrolling = running) } }
             .launchIn(viewModelScope)
     }
 

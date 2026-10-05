@@ -60,7 +60,7 @@ fun AgentScreen(
             StatusCard(state)
         } else {
             ManualEnrollmentCard(
-                busy = state.busy,
+                busy = state.busy || state.enrolling,
                 onEnroll = viewModel::enroll,
                 onScanned = viewModel::enrollFromQr,
             )

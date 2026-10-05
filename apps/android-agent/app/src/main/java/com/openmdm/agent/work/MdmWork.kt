@@ -10,8 +10,12 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 /**
  * Names, input keys and enqueue helpers for the agent's background work.
@@ -74,6 +78,22 @@ object MdmWork {
         WorkManager.getInstance(context)
             .enqueueUniqueWork(ENROLL_WORK, ExistingWorkPolicy.REPLACE, request)
     }
+
+    /**
+     * Whether the one-off enrollment is waiting for its first run or running, for the screen to say so instead of
+     * offering the code. An attempt that failed and waits for its retry does not count (`runAttemptCount > 0`): the
+     * screen is usable again, and an enrollment done by hand meanwhile makes the retry a no-op (see [EnrollWorker]).
+     */
+    fun enrollmentInProgress(context: Context): Flow<Boolean> =
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWorkFlow(ENROLL_WORK)
+            .map { infos ->
+                infos.any {
+                    it.state == WorkInfo.State.RUNNING ||
+                        (it.state == WorkInfo.State.ENQUEUED && it.runAttemptCount == 0)
+                }
+            }
+            .distinctUntilChanged()
 
     /** Schedules the recurring heartbeat (Android's minimum period is 15 min). */
     fun schedulePeriodicHeartbeat(context: Context) {

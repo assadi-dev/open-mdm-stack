@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.conflate
 
 /**
  * Encrypted persistence for the device identity issued at enrollment
@@ -28,6 +32,18 @@ class SecureDeviceStore(context: Context) {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
     }
+
+    /**
+     * Emits each time something is saved here, whoever saves it: the screen follows an enrollment that finishes in the
+     * background (USB `autoEnroll`, provisioning QR, see [com.openmdm.agent.work.EnrollWorker]) without having started
+     * it. Conflated: a burst of writes (the token, then the name…) is one refresh.
+     */
+    val changes: Flow<Unit> = callbackFlow {
+        // SharedPreferences only holds its listeners weakly: this one lives as long as the flow is collected.
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> trySend(Unit) }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.conflate()
 
     var deviceId: String?
         get() = prefs.getString(KEY_DEVICE_ID, null)
