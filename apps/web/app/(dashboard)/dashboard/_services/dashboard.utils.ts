@@ -1,16 +1,17 @@
 import { DASHBOARD } from "@/constants/dashboard";
 import { formatDelta, formatNumber, formatPercent } from "@/lib/format";
 import type { ChartDatum, FlowDatum, FlowHighlight } from "@/types/chart";
-import type { DeltaDirection, DeltaSentiment } from "@/types/delta";
-import type { AndroidVersions, CommandsFlow, Compliance, Kpi } from "../_types/dashboard.types";
+// import type { DeltaDirection, DeltaSentiment } from "@/types/delta";
+import type { AndroidVersions, CommandsFlow, Compliance, DashboardKpis, DeviceSummary, Kpi } from "../_types/dashboard.types";
 
-// Une hausse est favorable pour les appareils enrôlés ou en ligne, défavorable pour les non-conformes et les commandes en attente.
-const HIGHER_IS_BETTER: Record<Kpi["id"], boolean> = {
-  enrolled: true,
-  online: true,
-  nonCompliant: false,
-  pendingCommands: false,
-};
+// À rétablir avec les variations des KPI : une hausse est favorable pour les appareils enrôlés ou en ligne, défavorable
+// pour les appareils hors ligne et les commandes en cours.
+// const HIGHER_IS_BETTER: Record<Kpi["id"], boolean> = {
+//   enrolled: true,
+//   online: true,
+//   offline: false,
+//   commandRunning: false,
+// };
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -24,18 +25,27 @@ export const toAttentionSubtitle = (count: number) => {
   return `${formatNumber(count)} ${count > 1 ? DASHBOARD.attention.many : DASHBOARD.attention.one}`;
 };
 
-export const toStatCard = ({ id, value, delta, deltaUnit }: Kpi) => {
-  const isIncrease = delta >= 0;
-  const direction: DeltaDirection = isIncrease ? "up" : "down";
-  const sentiment: DeltaSentiment = isIncrease === HIGHER_IS_BETTER[id] ? "positive" : "negative";
+// Les indicateurs du parc, calculés depuis son résumé (`GET /devices/summary`).
+// - « Appareils enrôlés » : tous les appareils listés, comme le sous-titre de la page Appareils.
+// - « En ligne » : connectés en MQTT, avec ou sans commande en cours (un appareil `pending` n'est pas encore enrôlé).
+// - `attentionDeviceCount` (le sous-titre de l'en-tête) : les appareils hors ligne ou dont l'enrôlement n'est pas fini.
+export const toKpis = ({ total, byStatus }: DeviceSummary): DashboardKpis => ({
+  attentionDeviceCount: byStatus.offline + byStatus.pending,
+  items: [
+    { id: "enrolled", value: total },
+    { id: "online", value: byStatus.online + byStatus.commandRunning },
+    { id: "offline", value: byStatus.offline },
+    { id: "commandRunning", value: byStatus.commandRunning },
+  ],
+});
 
-  return {
-    label: DASHBOARD.kpi[id].label,
-    value: formatNumber(value),
-    hint: DASHBOARD.kpi[id].hint,
-    delta: { label: formatDelta(delta, deltaUnit), direction, sentiment },
-  };
-};
+export const toStatCard = ({ id, value }: Kpi) => ({
+  label: DASHBOARD.kpi[id].label,
+  value: formatNumber(value),
+  // À rétablir avec les variations :
+  // hint: DASHBOARD.kpi[id].hint,
+  // delta: { label: formatDelta(delta, deltaUnit), direction, sentiment },
+});
 
 export const toFlowChart = ({ months, highlightMonth }: CommandsFlow) => {
   const data: FlowDatum[] = months.map(({ month, count }) => ({

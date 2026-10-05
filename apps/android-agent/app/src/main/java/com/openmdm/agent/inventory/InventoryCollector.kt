@@ -45,6 +45,8 @@ class InventoryCollector(private val context: Context) {
         publicKey: String = "",
         enrollmentMethod: String? = null,
         enrollmentStatus: String? = null,
+        // Reported when the device can't read its own serial (Android 10+ without Device Owner): the one ADB sees.
+        serialFallback: String? = null,
     ): DeviceInfoDto {
         val agentPackageInfo = readAgentPackageInfo()
         return DeviceInfoDto(
@@ -55,7 +57,7 @@ class InventoryCollector(private val context: Context) {
             osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
             release = Build.VERSION.RELEASE,
             sdkVersion = Build.VERSION.SDK_INT,
-            serial = readSerial(),
+            serial = readSerial().takeUnless { it.isBlank() || it == Build.UNKNOWN } ?: serialFallback ?: Build.UNKNOWN,
             publicKey = publicKey,
             enrollmentMethod = enrollmentMethod,
             enrollmentStatus = enrollmentStatus,

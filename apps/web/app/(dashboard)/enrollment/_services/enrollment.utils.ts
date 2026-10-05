@@ -1,6 +1,6 @@
+import type { AdbDaemonWebUsbDevice } from "@yume-chan/adb-daemon-webusb";
 import type { BreadcrumbEntry } from "../../_types/page-header.types";
 import { ENROLLMENT } from "@/constants/enrollment";
-import { formatLongDateTime } from "@/lib/format";
 import { ENROLLMENT_METHOD_KEYS } from "../_dto/enrollment.dto";
 import type {
   EnrollmentConfigFormValues,
@@ -10,14 +10,12 @@ import type {
   ProvisioningInput,
   UsbDevice,
   UsbEnrollmentInput,
-  UsbEnrollmentStatus,
   UsbStep,
   UsbStepStatus,
+  UsbStepStatuses,
 } from "../_types/enrollment.types";
 
 const PAGE_HREF = "/enrollment";
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
 
 // La valeur du choix « Aucun » du réseau Wi-Fi : une liste déroulante ne porte que des textes.
 export const NO_WIFI = "none";
@@ -32,12 +30,6 @@ export const toBreadcrumbs = (method: EnrollmentMethod): BreadcrumbEntry[] => [
   { label: ENROLLMENT.page.breadcrumb, href: PAGE_HREF },
   { label: ENROLLMENT.methods[method].breadcrumb, href: `${PAGE_HREF}?method=${method}` },
 ];
-
-// Remplace `{version}` d'un texte des constantes.
-const fillVersion = (template: string, version: string) => template.replace("{version}", version);
-
-export const toApkUrlDescription = (version: string) => fillVersion(ENROLLMENT.config.apkUrl.description, version);
-export const toInstallStepDescription = (version: string) => fillVersion(ENROLLMENT.usb.steps.install.description, version);
 
 export const toGroupOptions = ({ groups }: EnrollmentOptions): EnrollmentOption[] =>
   groups.map(({ id, name }) => ({ value: id, label: name }));
@@ -60,8 +52,10 @@ export const toConfigFormValues = ({ defaults }: EnrollmentOptions): EnrollmentC
 });
 
 // Les valeurs du formulaire sont déjà rognées par le schéma : « Aucun » et une URL vide laissent le serveur décider.
-export const toProvisioningInput = ({ wifiId, apkUrl, ...values }: EnrollmentConfigFormValues): ProvisioningInput => ({
-  ...values,
+export const toProvisioningInput = ({ name, groupId, policyId, wifiId, apkUrl }: EnrollmentConfigFormValues): ProvisioningInput => ({
+  name,
+  groupId,
+  policyId,
   ...(wifiId !== NO_WIFI && { wifiId }),
   ...(apkUrl && { apkUrl }),
 });
@@ -72,43 +66,63 @@ export const toUsbEnrollmentInput = (values: EnrollmentConfigFormValues, { seria
   serial,
 });
 
-// L'URL saisie, sinon l'APK par défaut du serveur : le bouton de téléchargement sert toujours un fichier.
-export const toAgentApkUrl = (apkUrl: string, { agent }: EnrollmentOptions) => apkUrl.trim() || agent.apkUrl;
+// Le proxy Next qui sert l'APK de l'agent (`app/api/v1/(enrollment)/enrollment/agent`) : le navigateur ne télécharge jamais
+// l'APK directement.
+export const AGENT_DOWNLOAD_URL = "/api/v1/enrollment/agent";
 
-// « 482 913 » : deux groupes de trois chiffres, plus faciles à recopier.
-export const formatEnrollmentCode = (token: string) => `${token.slice(0, 3)} ${token.slice(3)}`;
-
-export const isExpired = (expiresAt: string, now: number) => new Date(expiresAt).getTime() <= now;
-
-// « Expire le 28 sept. 2026 à 14:32 »
-export const toExpiryDate = (expiresAt: string) => `${ENROLLMENT.expiry.on} ${formatLongDateTime(expiresAt)}`;
-
-// « Expire dans 23 h 52 », « Expire dans 8 min » : le temps restant, arrondi à la minute inférieure.
-export const toRemainingLabel = (expiresAt: string, now: number) => {
-  const remaining = new Date(expiresAt).getTime() - now;
-  const hours = Math.floor(remaining / HOUR);
-  const minutes = Math.floor((remaining % HOUR) / MINUTE);
-  const duration = hours > 0 ? `${hours} h ${String(minutes).padStart(2, "0")}` : `${Math.max(minutes, 1)} min`;
-  return `${ENROLLMENT.expiry.in} ${duration}`;
+// L'URL saisie est transmise au proxy ; sans elle, il sert l'APK par défaut du serveur, qu'il est seul à connaître.
+export const toAgentDownloadUrl = (apkUrl = "") => {
+  const url = apkUrl.trim();
+  return url ? `${AGENT_DOWNLOAD_URL}?${new URLSearchParams({ apkUrl: url })}` : AGENT_DOWNLOAD_URL;
 };
+
+// L'appareil d'une session ADB, tel que son descripteur USB le décrit. Une session n'existe qu'une fois l'appareil
+// autorisé ; sa version d'Android n'est pas encore lue.
+export const toUsbDevice = ({ raw, serial }: AdbDaemonWebUsbDevice): UsbDevice => ({
+  brand: raw.manufacturerName ?? null,
+  model: raw.productName ?? ENROLLMENT.usb.device.unknownModel,
+  serial,
+  androidVersion: null,
+  adbAuthorized: true,
+});
 
 // « Google Pixel 8 »
 export const toUsbDeviceName = ({ brand, model }: UsbDevice) => (brand ? `${brand} ${model}` : model);
 
-// « N° 3A1B7K2P · Android 14 · ADB autorisé »
+// « N° 3A1B7K2P · Android 14 · ADB autorisé », sans ce que l'appareil n'a pas encore dit.
 export const toUsbDeviceMeta = ({ serial, androidVersion, adbAuthorized }: UsbDevice) => {
   const { device } = ENROLLMENT.usb;
-  return [`${device.serial} ${serial}`, `${device.android} ${androidVersion}`, ...(adbAuthorized ? [device.adbAuthorized] : [])].join(
-    " · ",
-  );
+  return [
+    `${device.serial} ${serial}`,
+    ...(androidVersion ? [`${device.android} ${androidVersion}`] : []),
+    ...(adbAuthorized ? [device.adbAuthorized] : []),
+  ].join(" · ");
 };
 
-// L'enrôlement par USB fait les trois étapes d'un seul appel : elles avancent ensemble.
-export const toUsbStepStatus = (status: UsbEnrollmentStatus): UsbStepStatus => {
-  if (status === "enrolled") return "done";
-  if (status === "enrolling") return "running";
-  return "todo";
+// Les étapes avancent l'une après l'autre : celles déjà faites, celle en cours quand l'enrôlement tourne, les autres à faire.
+export const toUsbStepStatuses = (doneSteps: readonly UsbStep[], isRunning: boolean): UsbStepStatuses => {
+  const current = toCurrentUsbStep(doneSteps);
+  const toStatus = (step: UsbStep): UsbStepStatus => {
+    if (doneSteps.includes(step)) return "done";
+    return isRunning && step === current ? "running" : "todo";
+  };
+  return Object.fromEntries(USB_STEPS.map((step) => [step, toStatus(step)])) as UsbStepStatuses;
 };
+
+export const wait = (duration: number) => new Promise<void>((resolve) => setTimeout(resolve, duration));
+
+// L'étape qui a le focus : celle en cours, ou la prochaine à faire. Aucune une fois toutes faites.
+export const toCurrentUsbStep = (doneSteps: readonly UsbStep[]) => USB_STEPS.find((step) => !doneSteps.includes(step)) ?? null;
+
+// L'étape de l'enrôlement par USB qui a échoué, pour dire laquelle dans le message ; l'erreur d'origine est dans `cause`.
+export class UsbStepError extends Error {
+  readonly step: UsbStep;
+
+  constructor(step: UsbStep, cause: unknown) {
+    super(`USB enrollment failed at step "${step}"`, { cause });
+    this.step = step;
+  }
+}
 
 // Le SVG renvoyé par l'API, affiché dans une balise `<img>` : aucun balisage injecté dans la page.
 export const toSvgDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Checkbox } from "@/components/checkboxes/Checkbox";
 import { DataTableFilter } from "@/components/data-table/DataTableFilter";
 import { Field, FieldLabel } from "@/components/fields/Field";
 import { MultiSelect } from "@/components/multi-select/MultiSelect";
@@ -20,6 +21,7 @@ const BRAND_FIELD_ID = "devices-brand-filter";
 const MODEL_FIELD_ID = "devices-model-filter";
 const GROUP_FIELD_ID = "devices-group-filter";
 const ANDROID_FIELD_ID = "devices-android-filter";
+const BLOCKED_FIELD_ID = "devices-blocked-filter";
 const NO_OPTIONS: MultiSelectOption[] = [];
 const NO_VALUES: string[] = [];
 
@@ -34,11 +36,12 @@ type DevicesFilterProps = {
   onReset: () => void;
 };
 
-// Le bouton « Filtrer » : la marque, le modèle et la version d'Android, plusieurs valeurs chacun. Le groupe est grisé, en
-// attendant que l'API en ait. Les champs modifient un brouillon ; le tableau (donc l'URL) ne change qu'à « Appliquer ».
+// Le bouton « Filtrer » : la marque, le modèle et la version d'Android, plusieurs valeurs chacun, et les appareils bloqués
+// seuls. Le groupe est grisé, en attendant que l'API en ait. Les champs modifient un brouillon ; le tableau (donc l'URL)
+// ne change qu'à « Appliquer ».
 export const DevicesFilter = ({ summary, applied, activeCount, onApply, onReset }: DevicesFilterProps) => {
   const [draft, setDraft] = useState<DeviceFilterValues>(applied);
-  const { brand, model, group, android } = DEVICE.filters;
+  const { brand, model, group, android, blocked } = DEVICE.filters;
 
   const brandOptions = useMemo(() => withAppliedOptions(toValueOptions(summary?.brands ?? []), applied.brand), [summary, applied.brand]);
   const modelOptions = useMemo(() => withAppliedOptions(toValueOptions(summary?.models ?? []), applied.model), [summary, applied.model]);
@@ -47,7 +50,7 @@ export const DevicesFilter = ({ summary, applied, activeCount, onApply, onReset 
     [summary, applied.sdkVersion],
   );
 
-  const hasDraft = draft.brand.length + draft.model.length + draft.sdkVersion.length > 0;
+  const hasDraft = draft.brand.length + draft.model.length + draft.sdkVersion.length > 0 || draft.blocked;
 
   const reset = () => {
     setDraft(NO_DEVICE_FILTERS);
@@ -96,6 +99,16 @@ export const DevicesFilter = ({ summary, applied, activeCount, onApply, onReset 
         value={draft.sdkVersion}
         onValueChange={(value) => setDraft((current) => ({ ...current, sdkVersion: value }))}
       />
+      <Field orientation="horizontal">
+        <Checkbox
+          id={BLOCKED_FIELD_ID}
+          checked={draft.blocked}
+          onCheckedChange={(checked) => setDraft((current) => ({ ...current, blocked: checked }))}
+        />
+        <FieldLabel htmlFor={BLOCKED_FIELD_ID} className="font-normal">
+          {blocked.label}
+        </FieldLabel>
+      </Field>
     </DataTableFilter>
   );
 };

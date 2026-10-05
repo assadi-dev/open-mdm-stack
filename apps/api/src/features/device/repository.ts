@@ -13,11 +13,13 @@ import {
     DEFAULT_BATTERY_TELEMETRY,
     DEFAULT_LOCATION_TELEMETRY,
 } from "@drizzle/schemas/device-telemetry-schema";
-import { and, asc, count, desc, eq, inArray, isNotNull, max, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, max, ne } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
 import type { DeviceCollectionQuery } from "./dto/schema";
 import { deviceRepositoryFactory } from "./factory/repositories";
+import { DeleteDeviceResult } from "./entities/repositories";
+import { HTTPNotFoundException } from "@core/exception";
 
 export class DeviceRepository {
 
@@ -39,6 +41,8 @@ export class DeviceRepository {
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
+        /** The name given at enrollment (provisioning QR). Left out, the device has none: `null`. */
+        name?: string | null;
     }) {
         const [row] = await this.db
             .insert(devices)
@@ -57,6 +61,7 @@ export class DeviceRepository {
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,
+                name: input.name ?? null,
             })
             .returning();
         return row;
@@ -75,7 +80,9 @@ export class DeviceRepository {
     /**
      * Re-enrolls a device whose pinned public key matched (see
      * DeviceService.create): refreshes its reported metadata and the
-     * enrollmentIdentity audit stamp, without touching `publicKey`.
+     * enrollmentIdentity audit stamp, without touching `publicKey`. `name` follows the
+     * convention of an update: left out, the current name (possibly typed by an admin)
+     * is kept; a value replaces it; `null` clears it.
      */
     async reEnrollDevice(id: string, input: {
         enrollmentIdentity: string;
@@ -89,6 +96,7 @@ export class DeviceRepository {
         agentVersionName?: string;
         agentVersionCode?: number;
         agentPackage?: string;
+        name?: string | null;
     }) {
         const [row] = await this.db
             .update(devices)
@@ -105,6 +113,7 @@ export class DeviceRepository {
                 agentVersionName: input.agentVersionName,
                 agentVersionCode: input.agentVersionCode,
                 agentPackage: input.agentPackage,
+                name: input.name,
             })
             .where(eq(devices.id, id))
             .returning();
@@ -247,13 +256,23 @@ export class DeviceRepository {
         await this.db.update(devices).set(patch).where(eq(devices.id, id));
     }
 
-    /** Marks the listed (pending or enrolled) devices among `ids` as unenrolled. Any other id is left alone. */
-    async unenroll(ids: string[]) {
+    /** Blocks the devices among `ids` that aren't blocked yet: an already blocked device keeps its date. Unknown ids are ignored. */
+    async block(ids: string[]) {
         await this.db
             .update(devices)
-            .set({ enrollmentStatus: "unenrolled" })
-            .where(and(inArray(devices.id, ids), inArray(devices.enrollmentStatus, ["pending", "enrolled"])));
+            .set({ blockedAt: new Date() })
+            .where(and(inArray(devices.id, ids), isNull(devices.blockedAt)));
     }
+
+    /** Unblocks the blocked devices among `ids`. Unknown or not blocked ids are ignored. */
+    async unblock(ids: string[]) {
+        await this.db
+            .update(devices)
+            .set({ blockedAt: null })
+            .where(and(inArray(devices.id, ids), isNotNull(devices.blockedAt)));
+    }
+
+
 
     /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */
     async collection(collectionQuery: DeviceCollectionQuery) {
@@ -305,5 +324,29 @@ export class DeviceRepository {
             brands: brands.flatMap(({ value }) => (value ? [value] : [])),
             models: models.flatMap(({ value }) => (value ? [value] : [])),
         };
+    }
+
+    async delete(id: string) {
+        const [row] = await this.db.delete(devices).where(eq(devices.id, id)).returning();
+        if (!row) {
+            throw new HTTPNotFoundException(`Device with id ${id} not found`);
+        }
+        await this.db.delete(devices).where(eq(devices.id, row.id))
+    }
+
+    async deleteMany(ids: string[]): Promise<DeleteDeviceResult> {
+        const results: DeleteDeviceResult = {
+            success: [],
+            failures: []
+        }
+        for (const id of ids) {
+            try {
+                await this.delete(id)
+                results.success.push(id)
+            } catch (error) {
+                results.failures.push({ id, reason: error.message })
+            }
+        }
+        return results
     }
 }

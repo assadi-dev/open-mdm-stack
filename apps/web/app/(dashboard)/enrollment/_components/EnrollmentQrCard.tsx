@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Copy, Download, Info, LoaderCircle, Printer, QrCode } from "lucide-react";
+import { Download, Info, LoaderCircle, Printer, QrCode } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/alerts/Alert";
 import { Button } from "@/components/buttons/Button";
 import { CardContent } from "@/components/cards/Card";
@@ -10,11 +10,12 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { ENROLLMENT } from "@/constants/enrollment";
 import { cn } from "@/lib/utils";
 import { useEnrollmentQrActions } from "../_hooks/useEnrollmentQrActions";
-import { toExpiryDate, toSvgDataUrl } from "../_services/enrollment.utils";
+import { toSvgDataUrl } from "../_services/enrollment.utils";
 import type { EnrollmentQr } from "../_types/enrollment.types";
-import { ExpiryBadge } from "./ExpiryBadge";
 
-const QR_SIZE = 232;
+// Le QR code de provisioning est dense (une centaine de modules de côté : le jeu d'extras Android est long) : à 232 px, un
+// module ne fait que ~2,4 px et un téléphone peine à le lire sur un écran. Il se réduit sur mobile (`w-full`).
+const QR_SIZE = 320;
 
 type EnrollmentQrCardProps = {
   // Absent tant qu'aucun QR code n'a été généré.
@@ -26,16 +27,11 @@ type EnrollmentQrCardProps = {
 };
 
 export const EnrollmentQrCard = ({ qr, isGenerating, canGenerate, onGenerate }: EnrollmentQrCardProps) => {
-  const { download, print, copyLink } = useEnrollmentQrActions(qr);
+  const { download, print } = useEnrollmentQrActions(qr);
   const { instructions, empty } = ENROLLMENT.qr;
 
   return (
-    <SectionCard
-      title={ENROLLMENT.qr.title}
-      description={qr ? toExpiryDate(qr.expiresAt) : undefined}
-      action={qr && <ExpiryBadge expiresAt={qr.expiresAt} />}
-      className="min-w-0"
-    >
+    <SectionCard title={ENROLLMENT.qr.title} className="min-w-0">
       <CardContent className="flex flex-col items-center gap-6">
         {qr ? (
           <>
@@ -43,7 +39,7 @@ export const EnrollmentQrCard = ({ qr, isGenerating, canGenerate, onGenerate }: 
                 Pendant la régénération, l'ancien reste affiché, estompé. */}
             <div
               aria-busy={isGenerating}
-              className={cn("rounded-lg bg-(--sand-0) p-3 transition-opacity", isGenerating && "opacity-50")}
+              className={cn("w-full max-w-86 rounded-lg bg-(--sand-0) p-3 transition-opacity", isGenerating && "opacity-50")}
             >
               <Image
                 src={toSvgDataUrl(qr.svg)}
@@ -51,7 +47,7 @@ export const EnrollmentQrCard = ({ qr, isGenerating, canGenerate, onGenerate }: 
                 width={QR_SIZE}
                 height={QR_SIZE}
                 unoptimized
-                className="block"
+                className="block h-auto w-full"
               />
             </div>
             <div className="flex flex-wrap justify-center gap-2 py-4">
@@ -62,10 +58,6 @@ export const EnrollmentQrCard = ({ qr, isGenerating, canGenerate, onGenerate }: 
               <Button variant="secondary" size="sm" onClick={print}>
                 <Printer aria-hidden="true" />
                 {ENROLLMENT.button.printQr}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={copyLink}>
-                <Copy aria-hidden="true" />
-                {ENROLLMENT.button.copyLink}
               </Button>
             </div>
           </>

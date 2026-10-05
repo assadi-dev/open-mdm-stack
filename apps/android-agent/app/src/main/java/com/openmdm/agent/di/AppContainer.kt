@@ -9,6 +9,7 @@ import com.openmdm.agent.data.remote.DeviceApi
 import com.openmdm.agent.data.remote.MockDeviceApi
 import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.device.DeviceOwnerManager
+import com.openmdm.agent.enrollment.UsbEnrollmentHandler
 import com.openmdm.agent.inventory.InventoryCollector
 import com.openmdm.agent.mqtt.CommandExecutor
 import com.openmdm.agent.mqtt.DeviceMqttGateway
@@ -57,6 +58,8 @@ class AppContainer(private val appContext: Context) {
     val deviceRepository: DeviceRepository by lazy {
         DeviceRepository(deviceApi, secureStore, inventoryCollector, deviceKeyStore)
     }
+
+    val usbEnrollmentHandler: UsbEnrollmentHandler by lazy { UsbEnrollmentHandler(appContext, secureStore) }
 
     private fun buildDeviceApi(): DeviceApi {
         if (BuildConfig.USE_MOCK) return MockDeviceApi()

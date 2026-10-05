@@ -2,6 +2,7 @@ import z from "zod";
 import { HTTPNotFoundException } from "@core/exception";
 import {
 
+    BlockDevicesInput,
     deviceDecoder,
     DeleteDevicesInput,
     DeviceCollectionQuery,
@@ -10,6 +11,7 @@ import {
     InventoryInput,
     RefreshDevicesInput,
     TelemetryPatchInput,
+    UnblockDevicesInput,
     UpdateDeviceInput,
 } from "./dto/schema";
 
@@ -73,6 +75,22 @@ export const validateDeleteDevicesInput = (body: unknown): DeleteDevicesInput =>
 
 export const validateRefreshDevicesInput = (body: unknown): RefreshDevicesInput => {
     const result = deviceDecoder.refreshMany(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateBlockDevicesInput = (body: unknown): BlockDevicesInput => {
+    const result = deviceDecoder.blockMany(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateUnblockDevicesInput = (body: unknown): UnblockDevicesInput => {
+    const result = deviceDecoder.unblockMany(body);
     if (!result.success) {
         throw result.error;
     }

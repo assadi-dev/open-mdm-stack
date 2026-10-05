@@ -19,8 +19,8 @@ export const GET = async (request: NextRequest) => {
 
 
 // DELETE /api/v1/devices  { ids: [...] }
-// Un appareil ou plusieurs : la suppression d'un seul appareil envoie une liste d'un id. L'API désenrôle les appareils
-// et ignore les ids qui n'existent plus.
+// Un appareil ou plusieurs : la suppression d'un seul appareil envoie une liste d'un id. L'API supprime les appareils
+// et leurs données, et ignore les ids qui n'existent plus.
 export const DELETE = async (request: NextRequest) => {
 
     try {

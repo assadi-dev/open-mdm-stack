@@ -2,7 +2,7 @@ import { createDataTableColumnHelper } from "@/components/data-table/data-table-
 import { BatteryMeter } from "@/components/devices/BatteryMeter";
 import { DeviceStatusBadge } from "@/components/devices/DeviceStatusBadge";
 import { DEVICE } from "@/constants/device";
-import { toDeviceName, toLastContactLabel, toLastSeenTime } from "../_services/devices.utils";
+import { isDeviceBlocked, toDeviceName, toLastContactLabel, toLastSeenTime } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
 import { DeviceTableRowActions } from "./table/DeviceTableRowActions";
 
@@ -47,7 +47,8 @@ export const deviceColumns = [
   helper.accessor("status", {
     header: DEVICE.table.status,
     enableSorting: false,
-    cell: ({ row }) => <DeviceStatusBadge status={row.original.status} />,
+    // Un appareil bloqué garde sa présence MQTT, mais le serveur refuse ses requêtes : c'est ce qu'on affiche.
+    cell: ({ row }) => <DeviceStatusBadge status={isDeviceBlocked(row.original) ? "blocked" : row.original.status} />,
   }),
   helper.accessor((device) => device.battery ?? -1, {
     id: "battery",

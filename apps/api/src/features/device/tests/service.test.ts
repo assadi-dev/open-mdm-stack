@@ -33,6 +33,10 @@ vi.mock("@features/enrollment/repositories", () => ({
     ChallengeRepository: vi.fn(function () {
         return challengeRepoMock;
     }),
+    // DeviceService builds an EnrollmentService, which also wants the OTP repository — not exercised here.
+    OtpRepository: vi.fn(function () {
+        return {};
+    }),
 }));
 
 // DeviceService.create runs inside db.transaction(async (tx) => ...); the
@@ -137,6 +141,33 @@ describe("DeviceService", () => {
             expect(result).toEqual({ deviceId: "device-uuid", deviceToken: "signed-device-jwt" });
         });
 
+        it("stores the name carried by the provisioning QR on the new device", async () => {
+            repoMock.createDevice.mockResolvedValue({ id: "device-uuid" });
+
+            await service.create({
+                challenge: CHALLENGE,
+                timestamp: TIMESTAMP,
+                signature: signEnrollment(keyPair),
+                device: deviceInfo,
+                name: "Terrain-Lyon",
+            });
+
+            expect(repoMock.createDevice).toHaveBeenCalledWith(expect.objectContaining({ name: "Terrain-Lyon" }));
+        });
+
+        it("creates the device with a null name when none was given", async () => {
+            repoMock.createDevice.mockResolvedValue({ id: "device-uuid" });
+
+            await service.create({
+                challenge: CHALLENGE,
+                timestamp: TIMESTAMP,
+                signature: signEnrollment(keyPair),
+                device: deviceInfo,
+            });
+
+            expect(repoMock.createDevice).toHaveBeenCalledWith(expect.objectContaining({ name: null }));
+        });
+
         it("rejects with HTTPBadRequestException and never creates a device when the challenge is already consumed", async () => {
             challengeRepoMock.byChallenge.mockResolvedValue({
                 consumedAt: new Date(),
@@ -235,6 +266,40 @@ describe("DeviceService", () => {
                 );
                 expect(repoMock.createDevice).not.toHaveBeenCalled();
                 expect(result).toEqual({ deviceId: "existing-device-uuid", deviceToken: "signed-device-jwt" });
+            });
+
+            it("replaces the name of a re-enrolled device when the QR carried one", async () => {
+                repoMock.findByAndroidId.mockResolvedValue({ id: "existing-device-uuid", publicKey: keyPair.publicKeyBase64 });
+                repoMock.reEnrollDevice.mockResolvedValue({ id: "existing-device-uuid" });
+
+                await service.create({
+                    challenge: CHALLENGE,
+                    timestamp: TIMESTAMP,
+                    signature: signPinned(keyPair),
+                    device: pinnedDeviceInfo,
+                    name: "Entrepôt Nord 3",
+                });
+
+                expect(repoMock.reEnrollDevice).toHaveBeenCalledWith(
+                    "existing-device-uuid",
+                    expect.objectContaining({ name: "Entrepôt Nord 3" }),
+                );
+            });
+
+            it("keeps the current name of a re-enrolled device when none is given (it may have been typed by an admin)", async () => {
+                repoMock.findByAndroidId.mockResolvedValue({ id: "existing-device-uuid", publicKey: keyPair.publicKeyBase64 });
+                repoMock.reEnrollDevice.mockResolvedValue({ id: "existing-device-uuid" });
+
+                await service.create({
+                    challenge: CHALLENGE,
+                    timestamp: TIMESTAMP,
+                    signature: signPinned(keyPair),
+                    device: pinnedDeviceInfo,
+                });
+
+                // `undefined`, not `null`: the update leaves the column alone instead of clearing it.
+                const [, input] = repoMock.reEnrollDevice.mock.calls[0];
+                expect(input.name).toBeUndefined();
             });
 
             it("rejects re-enrollment when the same androidId presents a different public key than the pinned one", async () => {

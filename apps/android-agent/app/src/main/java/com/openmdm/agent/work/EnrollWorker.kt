@@ -18,6 +18,7 @@ import com.openmdm.agent.R
 import com.openmdm.agent.data.repository.DeviceRepository
 import com.openmdm.agent.inventory.DeviceCollector
 import com.openmdm.agent.mqtt.MqttConnectionService
+import com.openmdm.agent.ui.autoEnrollmentFailureMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -63,16 +64,35 @@ class EnrollWorker(
         val baseUrl = inputData.getString(MdmWork.KEY_BASE_URL)
         val enrollmentMethod = inputData.getString(MdmWork.KEY_ENROLLMENT_METHOD)
             ?: MdmWork.METHOD_MANUAL
+        val name = inputData.getString(MdmWork.KEY_DEVICE_NAME)
+        val serial = inputData.getString(MdmWork.KEY_SERIAL)
 
-        return repository.enroll(baseUrl, enrollmentMethod).fold(
+        return repository.autoEnroll(baseUrl, enrollmentMethod, name, serial).fold(
             onSuccess = {
                 MdmWork.schedulePeriodicHeartbeat(appContext)
                 MqttConnectionService.start(appContext)
                 notifyEnrollmentSuccess()
                 Result.success()
             },
-            onFailure = { Result.retry() },
+            onFailure = { failure ->
+                if (enrollmentMethod == MdmWork.METHOD_USB) {
+                    // Someone is at the device (USB enrollment): tell them it failed, and stop. Retrying silently
+                    // would leave them waiting; the screen's button runs the enrollment again. A provisioning QR has
+                    // nobody to tell, and the network may just not be up yet, so it keeps retrying.
+                    notifyEnrollmentFailure(failure)
+                    Result.failure()
+                } else {
+                    Result.retry()
+                }
+            },
         )
+    }
+
+    /** The feedback of a background enrollment that failed: a toast, the screen is usable again. */
+    private suspend fun notifyEnrollmentFailure(failure: Throwable) {
+        withContext(Dispatchers.Main) {
+            Toast.makeText(appContext, autoEnrollmentFailureMessage(failure), Toast.LENGTH_LONG).show()
+        }
     }
 
     /**

@@ -33,14 +33,6 @@ export const formatRelativeTime = (date: Date | string | number, now: Date = new
 export const formatDate = (date: Date | string | number) =>
   new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(date));
 
-// La date longue de la charte, hors des listes : « 25 sept. 2026 à 14:32 ».
-export const formatLongDateTime = (date: Date | string | number) => {
-  const value = new Date(date);
-  const day = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" }).format(value);
-  const time = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(value);
-  return `${day} à ${time}`;
-};
-
 export const formatDeviceName =(model: string, serial: string) => `${model} · #${serial.slice(-4).toUpperCase()}`;
 
 export const formatInitials = (name: string) => {

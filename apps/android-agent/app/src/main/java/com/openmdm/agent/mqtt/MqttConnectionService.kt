@@ -26,7 +26,8 @@ import kotlinx.coroutines.launch
  * category for "maintain a connection to receive messages over the network,
  * beyond the lifetime of an activity" — exactly this use case.
  *
- * Started after enrollment ([com.openmdm.agent.work.EnrollWorker]), after
+ * Started after enrollment ([com.openmdm.agent.work.EnrollWorker], or the screen's own enrollment, see
+ * [com.openmdm.agent.ui.AgentViewModel]), after
  * boot for an already-enrolled device ([com.openmdm.agent.work.BootReceiver]),
  * and from [MdmAgentApp] in case the process was restarted some other way
  * (e.g. the user reopening the app after it was killed in the background).
@@ -46,6 +47,7 @@ class MqttConnectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        running = true
         // Two-arg overload: the foreground service type is read from the
         // static `remoteMessaging` declaration on this service in the
         // manifest — nothing else is declared there, so there's no
@@ -56,6 +58,9 @@ class MqttConnectionService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val container = (application as MdmAgentApp).container
         if (!container.deviceRepository.isEnrolled) {
+            // Cleared now rather than in onDestroy: a start() arriving before the system has torn the service down
+            // would otherwise see it as running and skip, leaving no service once it is gone.
+            running = false
             stopSelf()
             return START_NOT_STICKY
         }
@@ -93,6 +98,7 @@ class MqttConnectionService : Service() {
         commandsJob?.cancel()
         screenStateReporter?.stop()
         screenStateReporter = null
+        running = false
         super.onDestroy()
     }
 
@@ -142,7 +148,18 @@ class MqttConnectionService : Service() {
         private const val TAG = "MqttConnectionService"
         private const val NOTIFICATION_ID = 2001
 
+        // The service lives in the app's single process, so a flag is enough (and dies with the process, as the
+        // service does) — `ActivityManager.getRunningServices` is deprecated.
+        @Volatile
+        private var running = false
+
+        /**
+         * Starts the foreground service unless it is already running. Every caller (enrollment, boot, process restart)
+         * just wants "make sure it is up", and re-sending the start intent to a live service would only re-run the
+         * no-op of [onStartCommand].
+         */
         fun start(context: Context) {
+            if (running) return
             val intent = Intent(context, MqttConnectionService::class.java)
             ContextCompat.startForegroundService(context, intent)
         }

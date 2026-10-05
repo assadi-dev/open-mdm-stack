@@ -5,6 +5,7 @@ import com.openmdm.agent.data.remote.dto.EnrollRequest
 import com.openmdm.agent.data.remote.dto.EnrollResponse
 import com.openmdm.agent.data.remote.dto.HeartbeatRequest
 import com.openmdm.agent.data.remote.dto.InventoryRequest
+import com.openmdm.agent.data.remote.dto.OtpVerifyRequest
 import com.openmdm.agent.data.remote.dto.SimpleOkResponse
 import com.openmdm.agent.data.remote.dto.TelemetryRequest
 import kotlinx.coroutines.delay
@@ -26,6 +27,9 @@ class MockDeviceApi : DeviceApi {
             expiresAt = Instant.now().plusSeconds(120).toString(),
         )
     }
+
+    // Any code is accepted: the mock has no notion of a pending/consumed code.
+    override suspend fun verifyOtp(body: OtpVerifyRequest): ChallengeResponse = challenge()
 
     override suspend fun enroll(body: EnrollRequest): EnrollResponse {
         delay(300)

@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, boolean, uuid, index, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, uuid, index, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user } from "@repo/db/schemas/auth-schema";
 import { updatedAndCreatedAt } from "../timestampable";
 import { integer } from "drizzle-orm/pg-core";
@@ -27,6 +28,31 @@ export const enrollmentChallenges = pgTable(
 
 export type EnrollmentChallengeSqlInferSelect = typeof enrollmentChallenges.$inferSelect;
 export type EnrollmentChallengeSqlInferInsert = typeof enrollmentChallenges.$inferInsert;
+
+/**
+ * Short numeric code an admin reads out to the person enrolling a device (typed in the agent, exchanged for a
+ * challenge at `POST /enrollment/otp-verify`). Random, single-use and short-lived.
+ *
+ * The code space is small (6 digits), so uniqueness is only enforced among codes still waiting to be used —
+ * a consumed code is kept as history and may be drawn again later. A row that expired without being used is
+ * recycled in place by `OtpRepository.issue`, so no purge job is needed.
+ */
+export const enrollmentOtps = pgTable(
+    "enrollment_otps",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        code: text("code").notNull(),
+        expiresAt: timestamp("expires_at").notNull(),
+        consumedAt: timestamp("consumed_at"),
+        ...updatedAndCreatedAt,
+    },
+    (table) => [
+        uniqueIndex("enrollment_otps_pending_code_uq").on(table.code).where(sql`${table.consumedAt} is null`),
+    ],
+);
+
+export type EnrollmentOtpSqlInferSelect = typeof enrollmentOtps.$inferSelect;
+export type EnrollmentOtpSqlInferInsert = typeof enrollmentOtps.$inferInsert;
 
 /**
  * A device enrolled via the pinned-key handshake. Holds the identity
@@ -64,6 +90,9 @@ export const devices = pgTable("devices", {
     // Last known screen power state (on/off), reported by the device
     // whenever it changes (see CommandService.handleScreen).
     isScreenOn: boolean("is_screen_on").default(false).notNull(),
+    // Set by an admin (see DeviceService.block): a blocked device is turned away by
+    // requireDeviceAuth (403 DEVICE_BLOCKED). NULL while the device isn't blocked.
+    blockedAt: timestamp("blocked_at"),
     // Account the device is assigned to, shown as "Utilisateur" in the devices
     // list (see device_overview). Cleared if the account is deleted.
     assignedToUserId: text("assigned_to_user_id").references(() => user.id, { onDelete: "set null" }),

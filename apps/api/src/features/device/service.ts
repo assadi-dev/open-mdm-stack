@@ -2,10 +2,12 @@ import { randomInt } from "crypto";
 import { JWTPayload } from "better-auth";
 import { auth } from "@lib/auth";
 import { ENV } from "@config/env";
+import { DEVICE_REFUSAL } from "@core/constants";
 import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
     HTTPConflictException,
+    HTTPForbiddenException,
     HTTPGatewayTimeoutException,
     HTTPInternalServerErrorException,
     HTTPNotFoundException,
@@ -30,7 +32,7 @@ import { verifyDeviceSignature } from "./utils/keys";
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
 /** What happened to one device of a bulk refresh. */
-export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "failed";
+export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "notEnrolled" | "blocked" | "failed";
 
 // Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
 const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -141,6 +143,9 @@ export class DeviceService {
                         agentVersionName: input.device.agentVersionName,
                         agentVersionCode: input.device.agentVersionCode,
                         agentPackage: input.device.agentPackage,
+                        // Left out, the current name is kept: a re-enrollment without one (manual, USB) must not wipe a
+                        // name an admin typed.
+                        name: input.name,
                     });
                 }
             }
@@ -161,6 +166,8 @@ export class DeviceService {
                     agentVersionName: input.device.agentVersionName,
                     agentVersionCode: input.device.agentVersionCode,
                     agentPackage: input.device.agentPackage,
+                    // No name given: `null` (the list then falls back on the model).
+                    name: input.name ?? null,
                 });
             } catch (error) {
                 if (isUniqueViolation(error)) {
@@ -233,13 +240,58 @@ export class DeviceService {
     }
 
     /**
-     * "Deleting" devices from the list unenrolls them: they leave the list, `requireDeviceAuth` and the command
-     * service turn them away (they only serve `enrolled` devices), and a re-enrollment with the pinned key brings
-     * them back (see `create`). Idempotent: ids that don't exist or are already unenrolled are ignored, so a stale
-     * selection can't make the request fail.
+     * Deletes the devices for good, with their telemetry and commands. Their token no longer matches any device, so
+     * `requireDeviceAuth` turns them away; enrolling again creates a new device. Idempotent: ids that don't exist are
+     * ignored, so a stale selection can't make the request fail.
      */
-    async unenroll(ids: string[]) {
-        await this.repository.unenroll(ids);
+    async remove(ids: string[]) {
+        await this.repository.deleteMany(ids);
+    }
+
+    /**
+     * Blocks a listed device: `requireDeviceAuth` then answers it 403 `DEVICE_BLOCKED`, and it can no longer be
+     * refreshed. Answers with the updated list row. Blocking a device already blocked keeps its date.
+     */
+    async block(id: string) {
+        if (!(await this.repository.findOverviewById(id))) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+
+        await this.repository.block([id]);
+
+        const updated = await this.repository.findOverviewById(id);
+        if (!updated) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return updated;
+    }
+
+    /** The same for several devices at once. Idempotent: unknown or already blocked ids are ignored. */
+    async blockMany(ids: string[]) {
+        await this.repository.block(ids);
+    }
+
+    /**
+     * Lifts the block of a listed device: `requireDeviceAuth` lets it in again. Answers with the updated list row.
+     * Unblocking a device that isn't blocked changes nothing.
+     */
+    async unblock(id: string) {
+        if (!(await this.repository.findOverviewById(id))) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+
+        await this.repository.unblock([id]);
+
+        const updated = await this.repository.findOverviewById(id);
+        if (!updated) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return updated;
+    }
+
+    /** The same for several devices at once. Idempotent: unknown or not blocked ids are ignored. */
+    async unblockMany(ids: string[]) {
+        await this.repository.unblock(ids);
     }
 
     /**
@@ -275,7 +327,7 @@ export class DeviceService {
 
     /**
      * Asks the device to report now, then answers with its (fresh) list row. Throws what the command service
-     * throws: 404 unknown device, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
+     * throws: 404 unknown device, 403 not enrolled or blocked, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
      */
     async refresh(id: string) {
         await this.commandService.refresh(id);
@@ -301,6 +353,9 @@ export class DeviceService {
             return "refreshed";
         } catch (error) {
             if (error instanceof HTTPNotFoundException) return "notFound";
+            if (error instanceof HTTPForbiddenException) {
+                return error.reason === DEVICE_REFUSAL.notEnrolled ? "notEnrolled" : "blocked";
+            }
             if (error instanceof HTTPConflictException) return "offline";
             if (error instanceof HTTPGatewayTimeoutException) return "timeout";
             console.error(`Refresh failed for device ${id}`, error);

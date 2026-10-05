@@ -1,6 +1,41 @@
-import { describe, expect, it } from "vitest";
-import { generateRandomChallenge, buildProvisioningPayload } from "../utils/generators";
+import { describe, expect, it, vi } from "vitest";
+import { randomInt } from "crypto";
+import { generateOtpCode, generateRandomChallenge, buildProvisioningPayload } from "../utils/generators";
 import type { CreateProvisioningPayloadInput } from "../dto/schema";
+
+// `randomInt` stays the real CSPRNG unless a test pins it, to check the padding and the bounds.
+vi.mock("crypto", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("crypto")>();
+    return { ...actual, randomInt: vi.fn(actual.randomInt) };
+});
+
+describe("generateOtpCode", () => {
+    it("always yields exactly 6 digits", () => {
+        for (let i = 0; i < 2000; i++) {
+            expect(generateOtpCode()).toMatch(/^\d{6}$/);
+        }
+    });
+
+    it("keeps the leading zeros of a small draw", () => {
+        vi.mocked(randomInt).mockReturnValueOnce(42 as never);
+
+        expect(generateOtpCode()).toBe("000042");
+    });
+
+    it("draws over the whole 000000–999999 range, upper bound excluded", () => {
+        generateOtpCode();
+
+        expect(randomInt).toHaveBeenLastCalledWith(0, 1_000_000);
+    });
+
+    it("does not repeat itself from one call to the next", () => {
+        // 1M possible codes: 200 draws all distinct is the overwhelmingly likely outcome for a real random source
+        // (P(collision) ≈ 2%) — a fixed or time-windowed code (the old TOTP) would fail it for sure.
+        const codes = new Set(Array.from({ length: 200 }, generateOtpCode));
+
+        expect(codes.size).toBeGreaterThan(190);
+    });
+});
 
 describe("generateRandomChallenge", () => {
     it("produces a random single-use challenge expiring `ttlSeconds` from now", () => {
@@ -84,5 +119,15 @@ describe("buildProvisioningPayload", () => {
         ] as Record<string, unknown>;
         expect(extras.policyId).toBe("policy-1");
         expect(extras.groupId).toBe("group-1");
+    });
+
+    it("forwards the device name into the admin extras bundle when provided, and omits it otherwise", () => {
+        const bundle = (input: CreateProvisioningPayloadInput) =>
+            buildProvisioningPayload(input)[
+                "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE"
+            ] as Record<string, unknown>;
+
+        expect(bundle({ ...base, name: "Tablette {n}" }).name).toBe("Tablette {n}");
+        expect(bundle(base)).not.toHaveProperty("name");
     });
 });

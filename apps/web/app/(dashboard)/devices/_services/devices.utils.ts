@@ -1,5 +1,6 @@
 import { DEVICE } from "@/constants/device";
-import { Conflict, GatewayTimeout } from "@/lib/api/intefaces/http-errors";
+import { Conflict, Forbidden, GatewayTimeout, getHttpErrorReason } from "@/lib/api/intefaces/http-errors";
+import { DEVICE_REFUSAL_REASONS } from "../_dto/device.dto";
 import type { MultiSelectOption } from "@/components/multi-select/multi-select-options";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
 import type {
@@ -16,7 +17,7 @@ import type {
 
 // Aucun filtre du panneau : la référence est stable, pour ne pas relancer un rendu à chaque lecture.
 const NO_TEXTS: string[] = [];
-export const NO_DEVICE_FILTERS: DeviceFilterValues = { brand: NO_TEXTS, model: NO_TEXTS, sdkVersion: NO_TEXTS };
+export const NO_DEVICE_FILTERS: DeviceFilterValues = { brand: NO_TEXTS, model: NO_TEXTS, sdkVersion: NO_TEXTS, blocked: false };
 
 // Les statuts de l'API que chaque onglet réunit (`status=online,commandRunning,pending`) ; « Tous » ne filtre pas.
 // Un appareil en attente d'enrôlement a déjà contacté le serveur : il compte parmi les appareils en ligne.
@@ -100,8 +101,11 @@ export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDevic
   name: values.name || null,
 });
 
-// Le toast d'échec d'une actualisation : hors ligne (409) et sans réponse (504) se règlent différemment, le reste reste générique.
+// Le toast d'échec d'une actualisation : non enrôlé ou bloqué (403, selon la `reason`), hors ligne (409) et sans réponse
+// (504) se règlent différemment, le reste reste générique.
 export const toRefreshErrorMessage = (error: unknown) => {
+  if (getHttpErrorReason(error) === DEVICE_REFUSAL_REASONS.notEnrolled) return DEVICE.error.refreshNotEnrolled;
+  if (error instanceof Forbidden) return DEVICE.error.refreshBlocked;
   if (error instanceof Conflict) return DEVICE.error.refreshOffline;
   if (error instanceof GatewayTimeout) return DEVICE.error.refreshTimeout;
   return DEVICE.error.refresh;
@@ -131,5 +135,17 @@ export const toDeleteTitle = (name: string) => `${DEVICE.dialog.delete.title} «
 // « Supprimer 3 appareils ? »
 export const toDeleteManyTitle = (count: number) => {
   const { title, items } = DEVICE.dialog.deleteMany;
+  return `${title} ${formatNumber(count)} ${items} ?`;
+};
+
+// Un appareil bloqué par un administrateur : le serveur refuse ses requêtes.
+export const isDeviceBlocked = ({ blockedAt }: Pick<Device, "blockedAt">) => blockedAt !== null;
+
+// « Bloquer l'appareil « Pixel 8 » ? »
+export const toBlockTitle = (name: string) => `${DEVICE.dialog.block.title} « ${name} » ?`;
+
+// « Bloquer 3 appareils ? »
+export const toBlockManyTitle = (count: number) => {
+  const { title, items } = DEVICE.dialog.blockMany;
   return `${title} ${formatNumber(count)} ${items} ?`;
 };

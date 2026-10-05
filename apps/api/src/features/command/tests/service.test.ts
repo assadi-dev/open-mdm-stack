@@ -102,10 +102,32 @@ describe("CommandService", () => {
             }));
         });
 
-        it("rejects a device that is not enrolled", async () => {
-            deviceRepoMock.findDeviceById.mockResolvedValue({ id: DEVICE_ID, enrollmentStatus: "revoked" });
+        it("answers 404 for a device that doesn't exist", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(undefined);
 
             await expect(service.create(DEVICE_ID, { type: "lock" })).rejects.toMatchObject({ statusCode: 404 });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it.each(["pending", "revoked", "unenrolled"])("refuses a %s device with 403 DEVICE_NOT_ENROLLED", async (enrollmentStatus) => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ id: DEVICE_ID, enrollmentStatus });
+
+            await expect(service.create(DEVICE_ID, { type: "lock" })).rejects.toMatchObject({
+                statusCode: 403,
+                message: "Device is not enrolled",
+                reason: "DEVICE_NOT_ENROLLED",
+            });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("refuses a blocked device with 403 DEVICE_BLOCKED", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ id: DEVICE_ID, enrollmentStatus: "enrolled", blockedAt: new Date() });
+
+            await expect(service.create(DEVICE_ID, { type: "lock" })).rejects.toMatchObject({
+                statusCode: 403,
+                message: "Device is blocked",
+                reason: "DEVICE_BLOCKED",
+            });
             expect(commandRepoMock.create).not.toHaveBeenCalled();
         });
     });
@@ -188,21 +210,24 @@ describe("CommandService", () => {
             expect(publishJsonMock).not.toHaveBeenCalled();
         });
 
-        it("answers 409 for a device that has not finished enrolling", async () => {
-            deviceRepoMock.findDeviceById.mockResolvedValue({ ...onlineDevice, enrollmentStatus: "pending", online: false });
+        it("answers 404 when the device is unknown", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue(undefined);
 
-            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 409 });
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 404 });
             expect(commandRepoMock.create).not.toHaveBeenCalled();
         });
 
-        it.each([
-            ["is unknown", undefined],
-            ["is revoked", { ...onlineDevice, enrollmentStatus: "revoked" }],
-            ["is unenrolled", { ...onlineDevice, enrollmentStatus: "unenrolled" }],
-        ])("answers 404 when the device %s", async (_label, device) => {
-            deviceRepoMock.findDeviceById.mockResolvedValue(device);
+        it.each(["pending", "revoked", "unenrolled"])("refuses a %s device with 403 DEVICE_NOT_ENROLLED", async (enrollmentStatus) => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ ...onlineDevice, enrollmentStatus });
 
-            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 404 });
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 403, reason: "DEVICE_NOT_ENROLLED" });
+            expect(commandRepoMock.create).not.toHaveBeenCalled();
+        });
+
+        it("refuses a blocked device with 403 DEVICE_BLOCKED, even when it is online", async () => {
+            deviceRepoMock.findDeviceById.mockResolvedValue({ ...onlineDevice, blockedAt: new Date() });
+
+            await expect(service.refresh(DEVICE_ID)).rejects.toMatchObject({ statusCode: 403, reason: "DEVICE_BLOCKED" });
             expect(commandRepoMock.create).not.toHaveBeenCalled();
         });
 

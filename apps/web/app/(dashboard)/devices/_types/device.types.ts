@@ -16,6 +16,8 @@ export type DeviceFilterValues = {
   brand: string[];
   model: string[];
   sdkVersion: string[];
+  // Seulement les appareils bloqués (`blocked=true`) ; `false` ne filtre pas.
+  blocked: boolean;
 };
 
 // Ce que l'API reçoit : `null` efface la valeur.

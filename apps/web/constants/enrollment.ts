@@ -1,39 +1,44 @@
 export const ENROLLMENT = {
   success: {
     generateQr: "QR code généré.",
-    regenerateCode: "Nouveau code généré.",
+    generateCode: "Code généré.",
     downloadQr: "QR code téléchargé.",
-    copyLink: "Lien copié.",
     copyCode: "Code copié.",
     connect: "Appareil connecté.",
+    disconnect: "Appareil déconnecté.",
     enroll: "Appareil enrôlé.",
     applyDeviceOwner: "Mode sans restriction appliqué.",
   },
   error: {
     generateQr: "Impossible de générer le QR code. Réessayez.",
-    regenerateCode: "Impossible de générer un nouveau code. Réessayez.",
+    generateCode: "Impossible de générer le code. Réessayez.",
     downloadQr: "Impossible de télécharger le QR code. Réessayez.",
     printQr: "Impossible d’imprimer le QR code. Réessayez.",
-    copyLink: "Impossible de copier le lien. Réessayez.",
     copyCode: "Impossible de copier le code. Réessayez.",
     connect: "Impossible de se connecter à l’appareil. Réessayez.",
+    deviceBusy: "L’appareil est utilisé par un autre programme. Arrêtez ADB (« adb kill-server »), puis réessayez.",
+    disconnect: "Impossible de déconnecter l’appareil. Réessayez.",
+    install: "Impossible de télécharger et d’installer l’agent. Réessayez.",
     enroll: "Impossible d’enrôler l’appareil. Réessayez.",
+    deviceOwner: "Impossible d’activer le mode Device Owner. Réessayez.",
     applyDeviceOwner: "Impossible d’appliquer le mode sans restriction. Réessayez.",
   },
   button: {
     reset: "Réinitialiser",
     generateQr: "Générer le QR code",
     regenerateQr: "Régénérer le QR code",
+    generateCode: "Générer le code",
     regenerateCode: "Générer un nouveau code",
     downloadQr: "Télécharger",
     printQr: "Imprimer",
-    copyLink: "Copier le lien",
     copyCode: "Copier le code",
     connect: "Connecter un appareil",
     disconnect: "Déconnecter",
     enroll: "Enrôler",
     downloadAgent: "Télécharger l’agent",
     downloadApk: "Télécharger l’APK de l’agent",
+    installWithCode: "Installer avec un code",
+    installWithUsb: "Installer par USB",
     applyDeviceOwner: "Appliquer le mode sans restriction",
     confirmDeviceOwner: "Appliquer",
   },
@@ -62,9 +67,9 @@ export const ENROLLMENT = {
       manual: "Ces réglages sont appliqués à l’appareil lors de l’enrôlement.",
     },
     optional: "facultatif",
-    namePattern: {
-      label: "Nom des appareils",
-      description: "{n} est remplacé par un numéro incrémental.",
+    name: {
+      label: "Nom de l’appareil",
+      description: "Ce nom sera attribué à l’appareil une fois enrôlé.",
     },
     group: { label: "Groupe" },
     policy: { label: "Politique" },
@@ -77,13 +82,8 @@ export const ENROLLMENT = {
     apkUrl: {
       label: "URL de téléchargement de l’agent",
       placeholder: "https://mdm.entreprise.fr/agent/openmdm-agent.apk",
-      description: "Vide : l’APK par défaut du serveur est utilisé (version {version}), téléchargeable avec le bouton.",
+      description: "Vide : l’APK par défaut du serveur est utilisé, téléchargeable avec le bouton.",
     },
-  },
-  expiry: {
-    on: "Expire le",
-    in: "Expire dans",
-    expired: "Expiré",
   },
   qr: {
     title: "QR code d’enrôlement",
@@ -123,12 +123,24 @@ export const ENROLLMENT = {
       android: "Android",
       adbAuthorized: "ADB autorisé",
       connected: "Connecté",
+      // Un appareil dont le descripteur USB n'a pas de nom de produit.
+      unknownModel: "Appareil Android",
+    },
+    // WebUSB absent (Firefox, Safari, page non sécurisée) : on le dit, et on oriente vers l'installation avec un code.
+    unsupported: {
+      message: "Ce navigateur ne prend pas en charge WebUSB.",
+      recommendation: "Installez plutôt l’agent avec un code.",
     },
     // L'ordre des clés est celui des étapes.
     steps: {
-      install: { title: "Installer l’agent", description: "APK par défaut du serveur · {version}" },
-      enroll: { title: "Enrôler auprès du serveur", description: "Automatique, aucun code à saisir" },
+      install: { title: "Installer l’agent", description: "Télécharge l’APK via le serveur, puis l’installe par ADB" },
+      enroll: { title: "Enrôler auprès du serveur", description: "Démarre l’agent avec le nom, le groupe et la politique" },
       deviceOwner: { title: "Activer le mode Device Owner", description: "dpm set-device-owner, exécuté par WebUSB" },
+    },
+    // Le badge de « Installer l'agent » dit où elle en est.
+    installPhase: {
+      download: "Téléchargement en cours",
+      install: "Installation en cours",
     },
     stepStatus: {
       todo: "À faire",
@@ -142,13 +154,20 @@ export const ENROLLMENT = {
     chromiumOnly: {
       title: "Navigateurs basés sur Chromium uniquement",
       description:
-        "Firefox et Safari ne prennent pas en charge WebUSB : utilisez l’installation sans USB ci-dessous. Si ADB tourne sur ce poste, arrêtez-le (« adb kill-server ») : il bloque l’accès à l’appareil.",
+        "Firefox et Safari ne prennent pas en charge WebUSB : utilisez l’installation avec un code. Si ADB tourne sur ce poste, arrêtez-le (« adb kill-server ») : il bloque l’accès à l’appareil.",
     },
   },
   noUsb: {
-    title: "Sans USB",
+    title: "Installation avec code",
     description: "Installation depuis l’appareil, en mode restreint (sans Device Owner)",
-    code: { label: "Code à saisir dans l’agent" },
+    code: {
+      label: "Code à saisir dans l’agent",
+      expired: "Code expiré",
+      empty: {
+        title: "Aucun code généré",
+        description: "Générez le code à 6 chiffres à saisir dans l’agent, sur l’appareil.",
+      },
+    },
     steps: {
       install: "Téléchargez l’agent sur l’appareil et installez l’APK (sources inconnues à autoriser).",
       enterCode: "Ouvrez l’agent, saisissez le code à 6 chiffres puis touchez « Enrôler ».",
@@ -165,8 +184,8 @@ export const ENROLLMENT = {
     },
   },
   validation: {
-    namePatternRequired: "Saisissez le nom des appareils.",
-    namePatternTooLong: "Le nom des appareils ne peut pas dépasser 100 caractères.",
+    nameRequired: "Saisissez le nom de l’appareil.",
+    nameTooLong: "Le nom de l’appareil ne peut pas dépasser 100 caractères.",
     groupRequired: "Choisissez un groupe.",
     policyRequired: "Choisissez une politique.",
     apkUrlInvalid: "Saisissez une URL valide, commençant par https:// ou http://.",

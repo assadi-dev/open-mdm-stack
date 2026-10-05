@@ -6,7 +6,13 @@ import { toPaginatedSchema } from "@/lib/api/dto/pagination.dto";
 export const DEVICE_STATUS_KEYS = ["pending", "offline", "commandRunning", "online"] as const;
 
 // Ce qui est arrivé à chaque appareil d'une actualisation groupée (`POST /devices/refresh`).
-export const DEVICE_REFRESH_OUTCOME_KEYS = ["refreshed", "offline", "timeout", "notFound", "failed"] as const;
+export const DEVICE_REFRESH_OUTCOME_KEYS = ["refreshed", "offline", "timeout", "notFound", "notEnrolled", "blocked", "failed"] as const;
+
+// Pourquoi l'API refuse une commande à un appareil (`reason` d'un 403) : seul un appareil enrôlé et non bloqué en reçoit.
+export const DEVICE_REFUSAL_REASONS = {
+  notEnrolled: "DEVICE_NOT_ENROLLED",
+  blocked: "DEVICE_BLOCKED",
+} as const;
 
 // La limite de l'API (`updateDeviceSchema`).
 const NAME_MAX_LENGTH = 100;
@@ -31,6 +37,8 @@ export const deviceSchema = z.object({
   battery: z.number().min(0).max(100).nullable(),
   lastHeartbeatAt: z.iso.datetime().nullable(),
   presenceChangedAt: z.iso.datetime().nullable(),
+  // La date du blocage par un administrateur, `null` tant que l'appareil n'est pas bloqué.
+  blockedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
 });
 

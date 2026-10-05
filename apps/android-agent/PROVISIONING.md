@@ -173,7 +173,8 @@ this JSON. Host `app-release.apk` (not `app-debug.apk` — see the note in
   "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
     "uvZWxNiL69K71LKebOhMCv8Jecs7RD5U7yMm5LsRDCw",
   "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
-    "serverBaseUrl": "https://YOUR_MDM_SERVER/"
+    "serverBaseUrl": "https://YOUR_MDM_SERVER/",
+    "name": "Terrain-Lyon"
   },
   "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false
 }
@@ -190,9 +191,17 @@ this JSON. Host `app-release.apk` (not `app-debug.apk` — see the note in
   outlived by Device Owner provisioning (wipe + DPC install + boot), so a
   pre-baked one would likely already be expired or consumed by the time the
   agent starts. On success, `onProfileProvisioningComplete` reads only
-  `serverBaseUrl` from the extras and enqueues `EnrollWorker`, which fetches a
-  fresh challenge itself right before enrolling — exactly like the manual UI
-  path below.
+  `serverBaseUrl` and `name` from the extras and enqueues `EnrollWorker`, which
+  fetches a fresh challenge itself right before enrolling — exactly like the
+  manual UI path below.
+- `name` is optional: the device name typed in the dashboard's enrollment form.
+  It travels in the work's input data (so a retried enrollment keeps it), is
+  trimmed and cut to 100 characters (`DeviceName.normalize`; a blank value is
+  dropped, never an error), then sent as `name` in the body of `POST
+  /devices/enroll`, next to `device` and outside the signed canonical message.
+  Once the server accepted the enrollment, the agent keeps it in its encrypted
+  local store and shows it in the **Name** row of the status card; with no name,
+  the row is not shown.
 
 ## Provisioning B — ADB (dev, no factory reset of QR flow)
 

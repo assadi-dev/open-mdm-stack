@@ -1,7 +1,9 @@
 import { ENV } from "@config/env";
+import { DEVICE_REFUSAL } from "@core/constants";
 import {
     HTTPBadGatewayException,
     HTTPConflictException,
+    HTTPForbiddenException,
     HTTPGatewayTimeoutException,
     HTTPNotFoundException,
     HTTPServiceUnavailableException,
@@ -41,11 +43,27 @@ export class CommandService {
         this.deviceRepository = new DeviceRepository();
     }
 
-    async create(deviceId: string, input: CreateCommandInput) {
+    /**
+     * The one gate of every remote command: the device must exist (404), be enrolled and not be blocked. Anything
+     * else is refused with a 403 whose `reason` says why (`DEVICE_NOT_ENROLLED`, `DEVICE_BLOCKED`).
+     */
+    private async assertCommandable(deviceId: string) {
         const device = await this.deviceRepository.findDeviceById(deviceId);
-        if (!device || device.enrollmentStatus !== "enrolled") {
+        if (!device) {
             throw new HTTPNotFoundException("Device not found");
         }
+        if (device.enrollmentStatus !== "enrolled") {
+            throw new HTTPForbiddenException("Device is not enrolled", DEVICE_REFUSAL.notEnrolled);
+        }
+        // It would answer through the HTTP endpoints, which `requireDeviceAuth` refuses to a blocked device.
+        if (device.blockedAt) {
+            throw new HTTPForbiddenException("Device is blocked", DEVICE_REFUSAL.blocked);
+        }
+        return device;
+    }
+
+    async create(deviceId: string, input: CreateCommandInput) {
+        await this.assertCommandable(deviceId);
 
         const command = await this.repository.create({
             deviceId,
@@ -69,8 +87,9 @@ export class CommandService {
      * caller can read fresh data right after. The device writes through its usual endpoints; the ack only says it
      * is done.
      *
-     *   404  the device doesn't exist or is no longer listed (revoked, unenrolled)
-     *   409  it is offline (or still pending): it can't answer, so nothing is sent
+     *   404  the device doesn't exist
+     *   403  it isn't enrolled (`DEVICE_NOT_ENROLLED`) or is blocked (`DEVICE_BLOCKED`), see `assertCommandable`
+     *   409  it is offline: it can't answer, so nothing is sent
      *   503  the broker is unreachable
      *   502  the device answered `failed` (e.g. an agent too old to know `refresh`)
      *   504  no answer within `REFRESH_TIMEOUT_MS`
@@ -79,11 +98,8 @@ export class CommandService {
      * `handleStatus`), and writing it here would stick until the device reconnects, even though it may be fine.
      */
     async refresh(deviceId: string) {
-        const device = await this.deviceRepository.findDeviceById(deviceId);
-        if (!device || device.enrollmentStatus === "revoked" || device.enrollmentStatus === "unenrolled") {
-            throw new HTTPNotFoundException("Device not found");
-        }
-        if (device.enrollmentStatus === "pending" || !device.online) {
+        const device = await this.assertCommandable(deviceId);
+        if (!device.online) {
             throw new HTTPConflictException("Device is offline");
         }
 

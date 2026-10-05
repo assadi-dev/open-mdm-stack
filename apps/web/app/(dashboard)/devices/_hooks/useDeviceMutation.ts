@@ -1,7 +1,16 @@
 import { type QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DEVICE } from "@/constants/device";
-import { refreshDeviceApi, refreshDevicesApi, removeDevicesApi, updateDeviceApi } from "../_services/devices.api";
+import {
+  blockDeviceApi,
+  blockDevicesApi,
+  refreshDeviceApi,
+  refreshDevicesApi,
+  removeDevicesApi,
+  unblockDeviceApi,
+  unblockDevicesApi,
+  updateDeviceApi,
+} from "../_services/devices.api";
 import { DEVICES } from "../_services/devices.queries";
 import { toRefreshErrorMessage, toRefreshManyLoading, toRefreshManySuccess } from "../_services/devices.utils";
 
@@ -30,6 +39,24 @@ export const useDeviceMutation = () => {
   const removeMany = useMutation({
     mutationFn: removeDevicesApi,
     ...afterMutation("deleteMany", [DEVICES.collection]),
+  });
+
+  // Le blocage et le déblocage changent la ligne (statut « Bloqué ») et ce que le filtre « Appareils bloqués » retient.
+  const block = useMutation({
+    mutationFn: blockDeviceApi,
+    ...afterMutation("block", [DEVICES.collection]),
+  });
+  const blockMany = useMutation({
+    mutationFn: blockDevicesApi,
+    ...afterMutation("blockMany", [DEVICES.collection]),
+  });
+  const unblock = useMutation({
+    mutationFn: unblockDeviceApi,
+    ...afterMutation("unblock", [DEVICES.collection]),
+  });
+  const unblockMany = useMutation({
+    mutationFn: unblockDevicesApi,
+    ...afterMutation("unblockMany", [DEVICES.collection]),
   });
 
   // L'actualisation attend l'appareil (15 s au plus) : un toast de promesse la suit de l'envoi au résultat, puis la liste
@@ -62,5 +89,5 @@ export const useDeviceMutation = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: DEVICES.collection }),
   });
 
-  return { update, refresh, refreshMany, remove, removeMany };
+  return { update, refresh, refreshMany, remove, removeMany, block, blockMany, unblock, unblockMany };
 };

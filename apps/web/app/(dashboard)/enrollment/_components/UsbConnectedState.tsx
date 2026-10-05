@@ -4,19 +4,31 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import { Button } from "@/components/buttons/Button";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { toUsbDeviceMeta, toUsbDeviceName } from "../_services/enrollment.utils";
-import type { UsbDevice, UsbEnrollmentStatus } from "../_types/enrollment.types";
+import type { UsbDevice, UsbEnrollmentStatus, UsbStep, UsbStepLabels, UsbStepStatuses } from "../_types/enrollment.types";
 import { UsbEnrollmentSteps } from "./UsbEnrollmentSteps";
 
 type UsbConnectedStateProps = {
   device: UsbDevice;
   status: UsbEnrollmentStatus;
-  agentVersion?: string;
+  steps: UsbStepStatuses;
+  stepLabels: UsbStepLabels;
+  currentStep: UsbStep | null;
+  isDisconnecting: boolean;
   onEnroll: () => void;
   onDisconnect: () => void;
 };
 
 // Un appareil branché : ce qu'il est, les étapes de l'enrôlement, puis le bouton qui les lance.
-export const UsbConnectedState = ({ device, status, agentVersion, onEnroll, onDisconnect }: UsbConnectedStateProps) => {
+export const UsbConnectedState = ({
+  device,
+  status,
+  steps,
+  stepLabels,
+  currentStep,
+  isDisconnecting,
+  onEnroll,
+  onDisconnect,
+}: UsbConnectedStateProps) => {
   const isEnrolling = status === "enrolling";
   const isEnrolled = status === "enrolled";
   const { usb } = ENROLLMENT;
@@ -34,7 +46,7 @@ export const UsbConnectedState = ({ device, status, agentVersion, onEnroll, onDi
         <StatusBadge tone="success">{usb.device.connected}</StatusBadge>
       </div>
 
-      <UsbEnrollmentSteps status={status} agentVersion={agentVersion} />
+      <UsbEnrollmentSteps statuses={steps} labels={stepLabels} currentStep={currentStep} />
 
       {isEnrolled && (
         <Alert variant="success" role="status">
@@ -45,10 +57,11 @@ export const UsbConnectedState = ({ device, status, agentVersion, onEnroll, onDi
       )}
 
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onDisconnect} disabled={isEnrolling}>
+        <Button variant="ghost" onClick={onDisconnect} disabled={isEnrolling || isDisconnecting}>
+          {isDisconnecting && <LoaderCircle aria-hidden="true" className="animate-spin" />}
           {ENROLLMENT.button.disconnect}
         </Button>
-        <Button onClick={onEnroll} disabled={isEnrolling || isEnrolled}>
+        <Button onClick={onEnroll} disabled={isEnrolling || isEnrolled || isDisconnecting}>
           {isEnrolling ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
           {ENROLLMENT.button.enroll}
         </Button>

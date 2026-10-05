@@ -5,7 +5,7 @@ import { NO_WIFI, toConfigFormValues, toProvisioningInput } from "../_services/e
 import type { EnrollmentConfigFormValues, EnrollmentOptions } from "../_types/enrollment.types";
 import { useEnrollmentMutation } from "./useEnrollmentMutation";
 
-const EMPTY_CONFIG: EnrollmentConfigFormValues = { namePattern: "", groupId: "", policyId: "", wifiId: NO_WIFI, apkUrl: "" };
+const EMPTY_CONFIG: EnrollmentConfigFormValues = { name: "", groupId: "", policyId: "", wifiId: NO_WIFI, apkUrl: "" };
 
 // Le formulaire « Configuration » sert les deux méthodes : sa soumission génère le QR code ; l'enrôlement par USB
 // le valide et lit ses valeurs (`useUsbEnrollment`).

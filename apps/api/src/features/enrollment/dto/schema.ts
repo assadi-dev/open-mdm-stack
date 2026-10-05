@@ -3,7 +3,7 @@ import z from "zod";
 
 
 export const createProvisioningPayloadSchema = z.object({
-    deviceName: z.string().optional(),
+    name: z.string().optional(),
     apkUrl: z.string().optional(),
     wifiSsid: z.string().optional(),
     wifiPassword: z.string().optional(),
@@ -29,5 +29,16 @@ export const createChallengeSchema = z.object({
 })
 
 
+/** Length of the code an admin reads out and the agent types in. */
+export const OTP_DIGITS = 6;
+
+// POST /enrollment/otp-verify. Only the shape is checked here: whether the code is right is the service's call, and it
+// answers the same "Invalid OTP" whether it is unknown, expired or already used.
+export const verifyOtpSchema = z.object({
+    code: z.string().regex(new RegExp(`^\\d{${OTP_DIGITS}}$`), `code must be ${OTP_DIGITS} digits`),
+});
+
+
 export type CreateProvisioningPayloadInput = z.infer<typeof createProvisioningPayloadSchema>;
 export type CreateChallengeInput = z.infer<typeof createChallengeSchema>;
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;

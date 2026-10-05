@@ -31,6 +31,8 @@ export type DeviceOverviewStatus = (typeof deviceOverviewStatus)[number];
  *   and a phone at 0 % is off anyway.
  * - `lastHeartbeatAt` and `presenceChangedAt` are both exposed as-is; both
  *   are NULL for a device never seen. The front decides which one to show.
+ * - `blockedAt` is kept apart from `status`: a blocked device still has a
+ *   presence, the front shows it as blocked when the date is set.
  * - SQL literals stay in the template: a view definition can't take parameters.
  */
 export const deviceOverview = pgView("device_overview").as((qb) =>
@@ -61,6 +63,7 @@ export const deviceOverview = pgView("device_overview").as((qb) =>
             battery: sql<number | null>`nullif((${deviceTelemetry.battery} ->> 'level')::int, 0)`.as("battery"),
             lastHeartbeatAt: devices.lastHeartbeatAt,
             presenceChangedAt: devices.presenceChangedAt,
+            blockedAt: devices.blockedAt,
             createdAt: devices.createdAt,
         })
         .from(devices)
