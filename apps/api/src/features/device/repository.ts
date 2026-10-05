@@ -264,6 +264,14 @@ export class DeviceRepository {
             .where(and(inArray(devices.id, ids), isNull(devices.blockedAt)));
     }
 
+    /** Unblocks the blocked devices among `ids`. Unknown or not blocked ids are ignored. */
+    async unblock(ids: string[]) {
+        await this.db
+            .update(devices)
+            .set({ blockedAt: null })
+            .where(and(inArray(devices.id, ids), isNotNull(devices.blockedAt)));
+    }
+
 
 
     /** One page of the devices list (see the `device_overview` view), with the total after search and filters. */

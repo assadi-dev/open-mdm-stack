@@ -9,6 +9,7 @@ const { repoMock, challengeRepoMock, authRepoMock, verifyJWTMock } = vi.hoisted(
     repoMock: {
         findOverviewById: vi.fn(),
         block: vi.fn(),
+        unblock: vi.fn(),
     },
     challengeRepoMock: {
         create: vi.fn(),
@@ -129,5 +130,61 @@ describe("POST /api/v1/devices/block", () => {
         expect(repoMock.block).toHaveBeenCalledTimes(1);
         expect(repoMock.block).toHaveBeenCalledWith([FIRST_ID, SECOND_ID]);
         expect(res.body).toEqual({});
+    });
+});
+
+const unblockOne = (id: string) =>
+    request(app).post(`/api/v1/devices/${id}/unblock`).set("Authorization", "Bearer valid-jwt");
+
+const unblockMany = (body?: unknown) =>
+    request(app).post("/api/v1/devices/unblock").set("Authorization", "Bearer valid-jwt").send(body as object);
+
+describe("POST /api/v1/devices/:id/unblock", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        authenticate();
+    });
+
+    it("rejects a request with no bearer token", async () => {
+        await request(app).post(`/api/v1/devices/${FIRST_ID}/unblock`).expect(401);
+
+        expect(repoMock.unblock).not.toHaveBeenCalled();
+    });
+
+    it("answers 404 for a device that doesn't exist, without unblocking anything", async () => {
+        repoMock.findOverviewById.mockResolvedValue(undefined);
+
+        await unblockOne(FIRST_ID).expect(404);
+
+        expect(repoMock.unblock).not.toHaveBeenCalled();
+    });
+
+    it("unblocks the device and answers with its updated list row", async () => {
+        const row = { id: FIRST_ID, displayName: "Pixel 8", status: "online", blockedAt: null };
+        repoMock.findOverviewById.mockResolvedValueOnce({ ...row, blockedAt: "2026-10-05T10:00:00.000Z" }).mockResolvedValueOnce(row);
+
+        const response = await unblockOne(FIRST_ID).expect(200);
+
+        expect(repoMock.unblock).toHaveBeenCalledWith([FIRST_ID]);
+        expect(response.body).toEqual(row);
+    });
+});
+
+describe("POST /api/v1/devices/unblock", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        authenticate();
+    });
+
+    it("answers 400 for an empty list", async () => {
+        await unblockMany({ ids: [] }).expect(400);
+
+        expect(repoMock.unblock).not.toHaveBeenCalled();
+    });
+
+    it("unblocks several devices at once, collapsing duplicated ids, answering 204", async () => {
+        await unblockMany({ ids: [FIRST_ID, SECOND_ID, FIRST_ID] }).expect(204);
+
+        expect(repoMock.unblock).toHaveBeenCalledWith([FIRST_ID, SECOND_ID]);
     });
 });

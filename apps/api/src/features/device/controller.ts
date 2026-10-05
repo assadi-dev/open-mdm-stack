@@ -13,6 +13,7 @@ import {
     validateInventoryInput,
     validateRefreshDevicesInput,
     validateTelemetryPatchInput,
+    validateUnblockDevicesInput,
     validateUpdateDeviceInput,
 } from "./validator";
 
@@ -92,6 +93,20 @@ export class DeviceController {
     blockMany = async (req: Request, res: Response) => {
         const { ids } = validateBlockDevicesInput(req.body);
         await this.deviceService.blockMany(ids);
+        return res.status(204).send();
+    };
+
+    // POST /devices/:id/unblock  (admin) — answers with the updated list row; 404 unknown device
+    unblock = async (req: Request<{ id: string }>, res: Response) => {
+        const id = validateDeviceIdParam(req.params.id);
+        const device = await this.deviceService.unblock(id);
+        return res.json(device);
+    };
+
+    // POST /devices/unblock  { ids: [...] }  (admin) — the same for several devices at once; unknown ids are ignored
+    unblockMany = async (req: Request, res: Response) => {
+        const { ids } = validateUnblockDevicesInput(req.body);
+        await this.deviceService.unblockMany(ids);
         return res.status(204).send();
     };
 

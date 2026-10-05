@@ -9,11 +9,13 @@ import { DataTablePagination } from "@/components/data-table/DataTablePagination
 import { DataTableSearch } from "@/components/data-table/DataTableSearch";
 import { DEVICE } from "@/constants/device";
 import { useDataTable, type DataTableServerOptions } from "@/hooks/useDataTable";
+import { isDeviceBlocked } from "../_services/devices.utils";
 import type { Device } from "../_types/device.types";
 import { deviceColumns } from "./device-columns";
 import { BlockDevicesAction } from "./selection-actions/BlockDevicesAction";
 import { RefreshDevicesAction } from "./selection-actions/RefreshDevicesAction";
 import { RemoveDevicesAction } from "./selection-actions/RemoveDevicesAction";
+import { UnblockDevicesAction } from "./selection-actions/UnblockDevicesAction";
 
 type DevicesTableCardProps = {
   // La page courante seulement : l'API trie, filtre et pagine.
@@ -57,11 +59,21 @@ export const DevicesTableCard = ({ devices, server, isPending, isError, onRetry,
           dataTable={dataTable}
           showSearch={false}
           showPagination={false}
-          selectionActions={(selected) => [
-            <RefreshDevicesAction key="refresh" devices={selected} />,
-            <BlockDevicesAction key="block" devices={selected} onBlocked={dataTable.selection.clear} />,
-            <RemoveDevicesAction key="remove" devices={selected} onDeleted={dataTable.selection.clear} />,
-          ]}
+          // « Bloquer » ne reçoit que les appareils non bloqués de la sélection, « Débloquer » que les bloqués : chacune
+          // n'apparaît que si elle a de quoi agir, les deux pour une sélection mixte.
+          selectionActions={(selected) => {
+            const blocked = selected.filter(isDeviceBlocked);
+            const unblocked = selected.filter((device) => !isDeviceBlocked(device));
+
+            return [
+              <RefreshDevicesAction key="refresh" devices={selected} />,
+              ...(unblocked.length > 0
+                ? [<BlockDevicesAction key="block" devices={unblocked} onBlocked={dataTable.selection.clear} />]
+                : []),
+              ...(blocked.length > 0 ? [<UnblockDevicesAction key="unblock" devices={blocked} />] : []),
+              <RemoveDevicesAction key="remove" devices={selected} onDeleted={dataTable.selection.clear} />,
+            ];
+          }}
         />
         <DataTablePagination dataTable={dataTable} itemsLabel={DEVICE.pagination.items} className="border-t border-border" />
       </CardQueryState>

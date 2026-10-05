@@ -26,5 +26,9 @@ export const refreshDevicesBodySchema = deviceIdsBodySchema;
 // `POST /api/v1/device/[id]/block`, qui n'a pas de corps et répond avec la ligne de l'appareil.
 export const blockDevicesBodySchema = deviceIdsBodySchema;
 
+// `POST /api/v1/devices/unblock` : le déblocage de plusieurs appareils. Un seul appareil passe par
+// `POST /api/v1/device/[id]/unblock`, sans corps.
+export const unblockDevicesBodySchema = deviceIdsBodySchema;
+
 // L'id de l'URL est recopié dans le chemin de l'API : on vérifie sa forme avant.
 export const deviceIdSchema = z.uuid();

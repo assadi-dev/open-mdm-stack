@@ -271,6 +271,29 @@ export class DeviceService {
     }
 
     /**
+     * Lifts the block of a listed device: `requireDeviceAuth` lets it in again. Answers with the updated list row.
+     * Unblocking a device that isn't blocked changes nothing.
+     */
+    async unblock(id: string) {
+        if (!(await this.repository.findOverviewById(id))) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+
+        await this.repository.unblock([id]);
+
+        const updated = await this.repository.findOverviewById(id);
+        if (!updated) {
+            throw new HTTPNotFoundException("Device not found");
+        }
+        return updated;
+    }
+
+    /** The same for several devices at once. Idempotent: unknown or not blocked ids are ignored. */
+    async unblockMany(ids: string[]) {
+        await this.repository.unblock(ids);
+    }
+
+    /**
      * Admin edit from the devices list: the label and the facts a device reports. Answers with the updated
      * list row. Only listed devices can be edited (see `device_overview`). Note that a heartbeat or a
      * re-enrollment re-reports `sdkVersion` / `release`, and overwrites what an admin typed.

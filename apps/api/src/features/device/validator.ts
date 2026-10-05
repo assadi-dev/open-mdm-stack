@@ -11,6 +11,7 @@ import {
     InventoryInput,
     RefreshDevicesInput,
     TelemetryPatchInput,
+    UnblockDevicesInput,
     UpdateDeviceInput,
 } from "./dto/schema";
 
@@ -82,6 +83,14 @@ export const validateRefreshDevicesInput = (body: unknown): RefreshDevicesInput 
 
 export const validateBlockDevicesInput = (body: unknown): BlockDevicesInput => {
     const result = deviceDecoder.blockMany(body);
+    if (!result.success) {
+        throw result.error;
+    }
+    return result.data;
+};
+
+export const validateUnblockDevicesInput = (body: unknown): UnblockDevicesInput => {
+    const result = deviceDecoder.unblockMany(body);
     if (!result.success) {
         throw result.error;
     }

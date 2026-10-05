@@ -3,7 +3,7 @@ import { DeviceDto } from "../_dto/device.dto";
 import type { UpdateDeviceInput } from "../_types/device.types";
 
 // Tous les appels passent par le proxy Next (`app/api/v1/(devices)`) vers l'API. La collection se lit au pluriel ;
-// les écritures sont au singulier (`/device`), sauf la suppression, l'actualisation et le blocage de plusieurs appareils, au pluriel,
+// les écritures sont au singulier (`/device`), sauf la suppression, l'actualisation, le blocage et le déblocage de plusieurs appareils, au pluriel,
 // qui reçoivent la liste des ids dans le corps.
 const COLLECTION_URL = "/api/v1/devices";
 const SUMMARY_URL = "/api/v1/devices/summary";
@@ -65,6 +65,23 @@ export const blockDeviceApi = async (id: string) => {
 // Plusieurs appareils à la fois. L'API répond 204 sans corps et ignore les ids qui n'existent plus ou déjà bloqués.
 export const blockDevicesApi = async (ids: string[]) => {
   const response = await fetch(`${COLLECTION_URL}/block`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ ids }),
+  });
+  if (!response.ok) throw createHttpError(response.status);
+};
+
+// L'API lève le blocage : l'appareil peut de nouveau joindre le serveur. Elle répond avec sa ligne mise à jour, ou 404.
+export const unblockDeviceApi = async (id: string) => {
+  const response = await fetch(`${ITEM_URL}/${encodeURIComponent(id)}/unblock`, { method: "POST" });
+  if (!response.ok) throw createHttpError(response.status);
+  return DeviceDto.parse(await response.json());
+};
+
+// Plusieurs appareils à la fois. L'API répond 204 sans corps et ignore les ids qui n'existent plus ou pas bloqués.
+export const unblockDevicesApi = async (ids: string[]) => {
+  const response = await fetch(`${COLLECTION_URL}/unblock`, {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify({ ids }),

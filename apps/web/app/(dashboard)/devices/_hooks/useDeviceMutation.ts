@@ -7,6 +7,8 @@ import {
   refreshDeviceApi,
   refreshDevicesApi,
   removeDevicesApi,
+  unblockDeviceApi,
+  unblockDevicesApi,
   updateDeviceApi,
 } from "../_services/devices.api";
 import { DEVICES } from "../_services/devices.queries";
@@ -39,7 +41,7 @@ export const useDeviceMutation = () => {
     ...afterMutation("deleteMany", [DEVICES.collection]),
   });
 
-  // Le blocage change la ligne (statut « Bloqué ») et ce que le filtre « Appareils bloqués » retient.
+  // Le blocage et le déblocage changent la ligne (statut « Bloqué ») et ce que le filtre « Appareils bloqués » retient.
   const block = useMutation({
     mutationFn: blockDeviceApi,
     ...afterMutation("block", [DEVICES.collection]),
@@ -47,6 +49,14 @@ export const useDeviceMutation = () => {
   const blockMany = useMutation({
     mutationFn: blockDevicesApi,
     ...afterMutation("blockMany", [DEVICES.collection]),
+  });
+  const unblock = useMutation({
+    mutationFn: unblockDeviceApi,
+    ...afterMutation("unblock", [DEVICES.collection]),
+  });
+  const unblockMany = useMutation({
+    mutationFn: unblockDevicesApi,
+    ...afterMutation("unblockMany", [DEVICES.collection]),
   });
 
   // L'actualisation attend l'appareil (15 s au plus) : un toast de promesse la suit de l'envoi au résultat, puis la liste
@@ -79,5 +89,5 @@ export const useDeviceMutation = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: DEVICES.collection }),
   });
 
-  return { update, refresh, refreshMany, remove, removeMany, block, blockMany };
+  return { update, refresh, refreshMany, remove, removeMany, block, blockMany, unblock, unblockMany };
 };

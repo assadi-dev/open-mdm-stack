@@ -195,6 +195,9 @@ export const refreshDevicesSchema = deviceIdsSchema;
 // Admin -> API on POST /devices/block. The single-device block is POST /devices/:id/block, which has no body.
 export const blockDevicesSchema = deviceIdsSchema;
 
+// Admin -> API on POST /devices/unblock. The single-device unblock is POST /devices/:id/unblock, which has no body.
+export const unblockDevicesSchema = deviceIdsSchema;
+
 export type EnrollDeviceInput = z.infer<typeof enrollDeviceSchema>;
 export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 export type InventoryInput = z.infer<typeof inventorySchema>;
@@ -204,6 +207,7 @@ export type UpdateDeviceInput = z.infer<typeof updateDeviceSchema>;
 export type DeleteDevicesInput = z.infer<typeof deleteDevicesSchema>;
 export type RefreshDevicesInput = z.infer<typeof refreshDevicesSchema>;
 export type BlockDevicesInput = z.infer<typeof blockDevicesSchema>;
+export type UnblockDevicesInput = z.infer<typeof unblockDevicesSchema>;
 
 
 export const deviceDecoder = {
@@ -216,4 +220,5 @@ export const deviceDecoder = {
     deleteMany: (data: unknown) => deleteDevicesSchema.safeParse(data),
     refreshMany: (data: unknown) => refreshDevicesSchema.safeParse(data),
     blockMany: (data: unknown) => blockDevicesSchema.safeParse(data),
+    unblockMany: (data: unknown) => unblockDevicesSchema.safeParse(data),
 };

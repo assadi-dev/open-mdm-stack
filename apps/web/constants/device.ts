@@ -6,6 +6,8 @@ export const DEVICE = {
     deleteMany: "Appareils supprimés.",
     block: "Appareil bloqué.",
     blockMany: "Appareils bloqués.",
+    unblock: "Appareil débloqué.",
+    unblockMany: "Appareils débloqués.",
   },
   error: {
     update: "Impossible de mettre à jour l'appareil. Réessayez.",
@@ -20,6 +22,8 @@ export const DEVICE = {
     deleteMany: "Impossible de supprimer les appareils. Réessayez.",
     block: "Impossible de bloquer l'appareil. Réessayez.",
     blockMany: "Impossible de bloquer les appareils. Réessayez.",
+    unblock: "Impossible de débloquer l'appareil. Réessayez.",
+    unblockMany: "Impossible de débloquer les appareils. Réessayez.",
   },
   // L'actualisation attend les appareils (15 s au plus) : un toast de promesse la suit, de l'envoi au résultat, pour un
   // appareil comme pour plusieurs (un seul toast pour toute la sélection). `{count}`, `{done}` et `{total}` sont
@@ -61,6 +65,8 @@ export const DEVICE = {
     deleteMany: "Supprimer",
     block: "Bloquer",
     blockMany: "Bloquer",
+    unblock: "Débloquer",
+    unblockMany: "Débloquer",
   },
   actionsFor: "Actions pour",
   serialPrefix: "N°",
