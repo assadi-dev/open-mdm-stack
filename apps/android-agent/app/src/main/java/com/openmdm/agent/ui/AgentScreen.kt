@@ -113,6 +113,8 @@ private fun StatusCard(state: AgentUiState) {
             InfoRow("Device id", state.deviceId ?: "—")
             // No name (a QR generated without one, ADB or manual enrollment): no row at all, not an empty one.
             state.deviceName?.let { InfoRow("Name", it) }
+            state.groupId?.let { InfoRow("Group", it) }
+            state.policyId?.let { InfoRow("Policy", it) }
             InfoRow("MQTT", formatMqttState(state.mqttState))
             InfoRow("Last heartbeat", formatTimestamp(state.lastHeartbeatAt))
             InfoRow("Model", state.deviceModel)

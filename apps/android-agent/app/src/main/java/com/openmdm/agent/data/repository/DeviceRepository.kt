@@ -33,6 +33,11 @@ class DeviceRepository(
     /** The name received from the provisioning QR and saved at enrollment, `null` when there was none. */
     val deviceName: String? get() = store.deviceName
 
+    /** The group and policy received from a USB enrollment, `null` until one carried them. */
+    val groupId: String? get() = store.groupId
+
+    val policyId: String? get() = store.policyId
+
     val lastHeartbeatAt: Long get() = store.lastHeartbeatAt
 
     /**
@@ -54,12 +59,16 @@ class DeviceRepository(
      * [name] is the device name received from the provisioning QR, if any; it is cleaned up by
      * [DeviceName.normalize] and sent along, outside the signed message (it is an administrator's label, not an
      * identity fact).
+     *
+     * [serial] is the serial a USB enrollment received from ADB: it replaces the device's own only when the device
+     * can't read it (see [InventoryCollector.deviceInfo]), and is then part of the signed message like any serial.
      */
     suspend fun autoEnroll(
         baseUrl: String?,
         enrollmentMethod: String = "manual",
         name: String? = null,
-    ): Result<Unit> = performEnrollment(baseUrl, enrollmentMethod, name) { api.challenge() }
+        serial: String? = null,
+    ): Result<Unit> = performEnrollment(baseUrl, enrollmentMethod, name, serial) { api.challenge() }
 
     /**
      * Same handshake as [autoEnroll], the one difference being where the challenge comes from: instead of being
@@ -82,7 +91,7 @@ class DeviceRepository(
         if (!OTP_FORMAT.matches(otp)) {
             return Result.failure(OtpVerifyException.InvalidCode("The code must be $OTP_LENGTH digits"))
         }
-        return performEnrollment(baseUrl, enrollmentMethod, name) { verifyOtp(otp) }
+        return performEnrollment(baseUrl, enrollmentMethod, name, serial = null) { verifyOtp(otp) }
     }
 
     private suspend fun verifyOtp(code: String): ChallengeResponse = try {
@@ -98,6 +107,7 @@ class DeviceRepository(
         baseUrl: String?,
         enrollmentMethod: String,
         name: String?,
+        serial: String?,
         fetchChallenge: suspend () -> ChallengeResponse,
     ): Result<Unit> = runCatching {
         baseUrl?.let { store.serverBaseUrl = it }
@@ -115,6 +125,7 @@ class DeviceRepository(
         val device = inventory.deviceInfo(
             publicKey = publicKey,
             enrollmentMethod = enrollmentMethod,
+            serialFallback = serial,
         )
         val canonicalMessage = CanonicalMessage.build(
             model = device.model,

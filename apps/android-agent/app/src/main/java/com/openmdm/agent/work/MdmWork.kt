@@ -23,10 +23,12 @@ object MdmWork {
     const val KEY_ENROLLMENT_METHOD = "enrollment_method"
     const val KEY_BASE_URL = "base_url"
     const val KEY_DEVICE_NAME = "device_name"
+    const val KEY_SERIAL = "serial"
 
     /** Values accepted by the server's `device.enrollmentMethod`. */
     const val METHOD_MANUAL = "manual"
     const val METHOD_QR = "qr"
+    const val METHOD_USB = "usb"
 
     private const val HEARTBEAT_INTERVAL_MINUTES = 15L
 
@@ -45,12 +47,16 @@ object MdmWork {
      * carried one). They travel in the work's input data rather than being
      * read from the provisioning intent later: WorkManager re-runs a retried
      * enrollment with the same input, so the name survives a failed attempt.
+     * [serial] is the one a USB enrollment received from ADB (see
+     * [com.openmdm.agent.enrollment.UsbEnrollmentHandler]), used only when the
+     * device can't read its own.
      */
     fun enqueueEnrollment(
         context: Context,
         baseUrl: String?,
         enrollmentMethod: String = METHOD_MANUAL,
         name: String? = null,
+        serial: String? = null,
     ) {
         val request = OneTimeWorkRequestBuilder<EnrollWorker>()
             .setConstraints(networkConstraints)
@@ -61,6 +67,7 @@ object MdmWork {
                     .putString(KEY_ENROLLMENT_METHOD, enrollmentMethod)
                     .putString(KEY_BASE_URL, baseUrl)
                     .putString(KEY_DEVICE_NAME, name)
+                    .putString(KEY_SERIAL, serial)
                     .build()
             )
             .build()

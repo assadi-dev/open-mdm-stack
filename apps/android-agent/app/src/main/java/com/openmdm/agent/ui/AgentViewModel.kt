@@ -27,6 +27,9 @@ data class AgentUiState(
     val deviceId: String? = null,
     // The name received from the provisioning QR; `null` when there is none, and the screen shows nothing then.
     val deviceName: String? = null,
+    // The group and policy received from a USB enrollment; `null` (and not shown) until one carried them.
+    val groupId: String? = null,
+    val policyId: String? = null,
     val lastHeartbeatAt: Long = 0L,
     val deviceModel: String = "",
     val osVersion: String = "",
@@ -73,6 +76,8 @@ class AgentViewModel(
                 isEnrolled = repository.isEnrolled,
                 deviceId = repository.deviceId,
                 deviceName = repository.deviceName,
+                groupId = repository.groupId,
+                policyId = repository.policyId,
                 lastHeartbeatAt = repository.lastHeartbeatAt,
                 deviceModel = "${info.manufacturer} ${info.model}",
                 osVersion = info.osVersion,

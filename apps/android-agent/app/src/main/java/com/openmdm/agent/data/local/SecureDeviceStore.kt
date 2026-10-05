@@ -42,14 +42,29 @@ class SecureDeviceStore(context: Context) {
         set(value) = prefs.edit().putString(KEY_BASE_URL, value).apply()
 
     /**
-     * The name the administrator gave this device in the dashboard, received
-     * from the provisioning QR and saved once the enrollment succeeded. `null`
-     * when the QR carried none (the UI then shows nothing). Not a secret, kept
-     * here with the rest of the device's identity.
+     * The name the administrator gave this device in the dashboard. Received
+     * from the provisioning QR, it is saved once the enrollment succeeded;
+     * received from a USB enrollment, as soon as it arrives (see
+     * [com.openmdm.agent.enrollment.UsbEnrollmentHandler]), like the group and
+     * the policy. `null` when none was received (the UI then shows nothing).
+     * Not a secret, kept here with the rest of the device's identity.
      */
     var deviceName: String?
         get() = prefs.getString(KEY_DEVICE_NAME, null)
         set(value) = prefs.edit().putString(KEY_DEVICE_NAME, value).apply()
+
+    /**
+     * The group and the policy an administrator chose in the dashboard for a USB enrollment (see
+     * [com.openmdm.agent.enrollment.UsbEnrollmentHandler]). The server has neither yet, so they are only kept here,
+     * ready to be sent or applied once it does. `null` until a USB enrollment carries them.
+     */
+    var groupId: String?
+        get() = prefs.getString(KEY_GROUP_ID, null)
+        set(value) = prefs.edit().putString(KEY_GROUP_ID, value).apply()
+
+    var policyId: String?
+        get() = prefs.getString(KEY_POLICY_ID, null)
+        set(value) = prefs.edit().putString(KEY_POLICY_ID, value).apply()
 
     var lastHeartbeatAt: Long
         get() = prefs.getLong(KEY_LAST_HEARTBEAT, 0L)
@@ -74,6 +89,8 @@ class SecureDeviceStore(context: Context) {
         const val KEY_DEVICE_TOKEN = "device_token"
         const val KEY_BASE_URL = "server_base_url"
         const val KEY_DEVICE_NAME = "device_name"
+        const val KEY_GROUP_ID = "group_id"
+        const val KEY_POLICY_ID = "policy_id"
         const val KEY_LAST_HEARTBEAT = "last_heartbeat_at"
     }
 }
