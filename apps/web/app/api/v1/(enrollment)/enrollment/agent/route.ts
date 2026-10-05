@@ -4,6 +4,7 @@ import { HTTP_ERROR } from "@/lib/api/intefaces/http-status";
 import { getSessionServer } from "@/lib/auth/session-server";
 import type { NextRequest } from "next/server";
 import { agentDownloadQuerySchema } from "../../schema";
+import { resolveAgentApkUrl } from "../agent-apk";
 
 const APK_MEDIA_TYPE = "application/vnd.android.package-archive";
 const APK_FILE_NAME = "openmdm-agent.apk";
@@ -18,7 +19,7 @@ export const GET = async (request: NextRequest) => {
         if (!(await getSessionServer())) throw new Unauthorized(HTTP_ERROR.UNAUTHORIZED.message);
 
         const { apkUrl } = validateBody(agentDownloadQuerySchema, Object.fromEntries(request.nextUrl.searchParams));
-        const source = apkUrl ?? process.env.NEXT_PUBLIC_AGENT_APK_URL;
+        const source = resolveAgentApkUrl(apkUrl);
         if (!source) throw new InternalError(HTTP_ERROR.INTERNAL_ERROR.message);
 
         const upstream = await fetch(source, { cache: "no-store", signal: request.signal }).catch(() => {
