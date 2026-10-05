@@ -72,6 +72,7 @@ const FIRST_ID = "7f1c2e4a-9b3d-4c5e-8f6a-1b2c3d4e5f60";
 const SECOND_ID = "0a9b8c7d-6e5f-4a3b-9c2d-1e0f9a8b7c6d";
 const THIRD_ID = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a";
 const FOURTH_ID = "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b";
+const FIFTH_ID = "3c2b1a0f-9e8d-4c7b-8a6f-5e4d3c2b1a0f";
 const COMMAND_ID = "0b6f1d2e-3c4a-4b5c-9d6e-7f8091a2b3c4";
 
 const authenticate = () => {
@@ -145,17 +146,27 @@ describe("POST /api/v1/devices/:id/refresh", () => {
         expect(publishJsonMock).not.toHaveBeenCalled();
     });
 
+    it("answers 403 DEVICE_NOT_ENROLLED when the device hasn't finished enrolling", async () => {
+        repoMock.findDeviceById.mockResolvedValue(device(FIRST_ID, { enrollmentStatus: "pending" }));
+
+        const response = await refreshOne(FIRST_ID).expect(403);
+
+        expect(response.body).toEqual({ message: "Device is not enrolled", code: 403, reason: "DEVICE_NOT_ENROLLED" });
+        expect(commandRepoMock.create).not.toHaveBeenCalled();
+    });
+
     it("answers 404 for a device that doesn't exist", async () => {
         repoMock.findDeviceById.mockResolvedValue(undefined);
 
         await refreshOne(FIRST_ID).expect(404);
     });
 
-    it("answers 403 when the device is blocked, without sending anything", async () => {
+    it("answers 403 DEVICE_BLOCKED when the device is blocked, without sending anything", async () => {
         repoMock.findDeviceById.mockResolvedValue(device(FIRST_ID, { blockedAt: new Date() }));
 
-        await refreshOne(FIRST_ID).expect(403);
+        const response = await refreshOne(FIRST_ID).expect(403);
 
+        expect(response.body).toEqual({ message: "Device is blocked", code: 403, reason: "DEVICE_BLOCKED" });
         expect(commandRepoMock.create).not.toHaveBeenCalled();
         expect(publishJsonMock).not.toHaveBeenCalled();
     });
@@ -219,11 +230,12 @@ describe("POST /api/v1/devices/refresh", () => {
             [SECOND_ID]: device(SECOND_ID, { online: false }),
             [THIRD_ID]: undefined,
             [FOURTH_ID]: device(FOURTH_ID, { blockedAt: new Date() }),
+            [FIFTH_ID]: device(FIFTH_ID, { enrollmentStatus: "pending" }),
         };
         repoMock.findDeviceById.mockImplementation(async (id: string) => known[id]);
         deviceCompletes();
 
-        const response = await refreshMany({ ids: [FIRST_ID, SECOND_ID, THIRD_ID, FOURTH_ID] }).expect(200);
+        const response = await refreshMany({ ids: [FIRST_ID, SECOND_ID, THIRD_ID, FOURTH_ID, FIFTH_ID] }).expect(200);
 
         expect(response.body).toEqual({
             results: [
@@ -231,6 +243,7 @@ describe("POST /api/v1/devices/refresh", () => {
                 { id: SECOND_ID, outcome: "offline" },
                 { id: THIRD_ID, outcome: "notFound" },
                 { id: FOURTH_ID, outcome: "blocked" },
+                { id: FIFTH_ID, outcome: "notEnrolled" },
             ],
         });
         expect(commandRepoMock.create).toHaveBeenCalledTimes(1);

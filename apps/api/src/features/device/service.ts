@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 import { JWTPayload } from "better-auth";
 import { auth } from "@lib/auth";
 import { ENV } from "@config/env";
+import { DEVICE_REFUSAL } from "@core/constants";
 import { db } from "@drizzle/instance";
 import {
     HTTPBadRequestException,
@@ -31,7 +32,7 @@ import { verifyDeviceSignature } from "./utils/keys";
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
 /** What happened to one device of a bulk refresh. */
-export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "blocked" | "failed";
+export type RefreshOutcome = "refreshed" | "offline" | "timeout" | "notFound" | "notEnrolled" | "blocked" | "failed";
 
 // Short enrollment code: 8 chars from an unambiguous alphabet (no 0/O/1/I/L).
 const ENROLL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -326,7 +327,7 @@ export class DeviceService {
 
     /**
      * Asks the device to report now, then answers with its (fresh) list row. Throws what the command service
-     * throws: 404 unknown device, 403 blocked, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
+     * throws: 404 unknown device, 403 not enrolled or blocked, 409 offline, 502 the device failed, 503 broker down, 504 no answer.
      */
     async refresh(id: string) {
         await this.commandService.refresh(id);
@@ -352,7 +353,9 @@ export class DeviceService {
             return "refreshed";
         } catch (error) {
             if (error instanceof HTTPNotFoundException) return "notFound";
-            if (error instanceof HTTPForbiddenException) return "blocked";
+            if (error instanceof HTTPForbiddenException) {
+                return error.reason === DEVICE_REFUSAL.notEnrolled ? "notEnrolled" : "blocked";
+            }
             if (error instanceof HTTPConflictException) return "offline";
             if (error instanceof HTTPGatewayTimeoutException) return "timeout";
             console.error(`Refresh failed for device ${id}`, error);

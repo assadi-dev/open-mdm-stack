@@ -14,6 +14,7 @@ import {
     Unauthorized,
     UnprocessableEntity,
     createHttpError,
+    getHttpErrorReason,
 } from "./intefaces/http-errors";
 import { HTTP_ERROR } from "./intefaces/http-status";
 import { DefaultErrorStrategy } from "./strategy/default-error-strategy";
@@ -56,12 +57,17 @@ const extractMessage = (body: unknown): string | undefined =>
         ? body.message
         : undefined;
 
+const extractReason = (body: unknown): string | undefined =>
+    typeof body === "object" && body !== null && "reason" in body && typeof body.reason === "string"
+        ? body.reason
+        : undefined;
+
 export const handleResponse = async <T>(response: Response): Promise<T> => {
     const text = await response.text();
     const body = text ? parseJson(text) : undefined;
 
     if (!response.ok) {
-        throw createHttpError(response.status, extractMessage(body));
+        throw createHttpError(response.status, extractMessage(body), extractReason(body));
     }
     if (text && body === undefined) {
         throw new InternalError("Invalid response from server");
@@ -106,7 +112,9 @@ export const validateBody = <TSchema extends z.ZodType>(schema: TSchema, body: u
 export const handleApiError = async (error: unknown) => {
     const { message, code } = errorContext.handle(error);
     debugApiError(error);
-    return NextResponse.json({ message }, { status: code });
+    // La raison d'un refus de l'API (`DEVICE_BLOCKED`…) est relayée telle quelle : le front choisit son message avec.
+    const reason = getHttpErrorReason(error);
+    return NextResponse.json(reason ? { message, reason } : { message }, { status: code });
 }
 
 

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { auth } from "@lib/auth";
 import { DeviceRepository } from "@features/device/repository";
+import { DEVICE_REFUSAL } from "@core/constants";
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -10,8 +11,6 @@ declare global {
         }
     }
 }
-
-export const DEVICE_BLOCKED_CODE = "DEVICE_BLOCKED";
 
 /**
  * Authenticates a device by its long-lived device JWT (deviceToken). Validates
@@ -43,7 +42,7 @@ export const requireDeviceAuth = async (req: Request, res: Response, next: NextF
         // The token is still valid, but an admin blocked the device: a stable `code` lets the client tell it
         // apart from any other 403.
         if (device.blockedAt) {
-            return res.status(403).json({ message: "Device is blocked", code: DEVICE_BLOCKED_CODE });
+            return res.status(403).json({ message: "Device is blocked", code: DEVICE_REFUSAL.blocked });
         }
 
         req.deviceId = deviceId;

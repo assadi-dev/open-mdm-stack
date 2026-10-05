@@ -1,5 +1,6 @@
 import { DEVICE } from "@/constants/device";
-import { Conflict, Forbidden, GatewayTimeout } from "@/lib/api/intefaces/http-errors";
+import { Conflict, Forbidden, GatewayTimeout, getHttpErrorReason } from "@/lib/api/intefaces/http-errors";
+import { DEVICE_REFUSAL_REASONS } from "../_dto/device.dto";
 import type { MultiSelectOption } from "@/components/multi-select/multi-select-options";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
 import type {
@@ -100,9 +101,10 @@ export const toUpdateInput = (id: string, values: DeviceFormValues): UpdateDevic
   name: values.name || null,
 });
 
-// Le toast d'échec d'une actualisation : bloqué (403), hors ligne (409) et sans réponse (504) se règlent différemment, le
-// reste reste générique.
+// Le toast d'échec d'une actualisation : non enrôlé ou bloqué (403, selon la `reason`), hors ligne (409) et sans réponse
+// (504) se règlent différemment, le reste reste générique.
 export const toRefreshErrorMessage = (error: unknown) => {
+  if (getHttpErrorReason(error) === DEVICE_REFUSAL_REASONS.notEnrolled) return DEVICE.error.refreshNotEnrolled;
   if (error instanceof Forbidden) return DEVICE.error.refreshBlocked;
   if (error instanceof Conflict) return DEVICE.error.refreshOffline;
   if (error instanceof GatewayTimeout) return DEVICE.error.refreshTimeout;

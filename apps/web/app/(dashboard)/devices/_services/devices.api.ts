@@ -1,4 +1,4 @@
-import { createHttpError } from "@/lib/api/intefaces/http-errors";
+import { createHttpError, readHttpError } from "@/lib/api/intefaces/http-errors";
 import { DeviceDto } from "../_dto/device.dto";
 import type { UpdateDeviceInput } from "../_types/device.types";
 
@@ -37,10 +37,11 @@ export const updateDeviceApi = async ({ id, ...input }: UpdateDeviceInput) => {
 };
 
 // L'API demande à l'appareil de se signaler et attend sa réponse (15 s au plus) : l'appel est long. Elle répond avec la
-// ligne mise à jour, ou 403 (bloqué), 409 (hors ligne), 502 (l'appareil a échoué), 503 (broker injoignable), 504 (aucune réponse).
+// ligne mise à jour, ou 403 (non enrôlé ou bloqué, la `reason` dit lequel), 409 (hors ligne), 502 (l'appareil a échoué),
+// 503 (broker injoignable), 504 (aucune réponse).
 export const refreshDeviceApi = async (id: string) => {
   const response = await fetch(`${ITEM_URL}/${encodeURIComponent(id)}/refresh`, { method: "POST" });
-  if (!response.ok) throw createHttpError(response.status);
+  if (!response.ok) throw await readHttpError(response);
   return DeviceDto.parse(await response.json());
 };
 

@@ -31,10 +31,13 @@ export class HTTPForbiddenException implements ExceptionResponse {
     public readonly statusCode: number;
     public readonly name: string;
     public readonly message: string;
-    constructor(message: string) {
+    /** A stable code for the client (e.g. `DEVICE_BLOCKED`), sent as `reason` by the error handler. */
+    public readonly reason?: string;
+    constructor(message: string, reason?: string) {
         this.message = message;
         this.statusCode = 403;
         this.name = "HTTPForbiddenException";
+        this.reason = reason;
     }
 }
 

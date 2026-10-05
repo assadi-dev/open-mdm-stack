@@ -31,7 +31,8 @@ export const HttpError = (err: unknown) => {
         return {
             statusCode: err.statusCode,
             message: err.message,
-            code: err.statusCode
+            code: err.statusCode,
+            ...(err instanceof HTTPForbiddenException && err.reason ? { reason: err.reason } : {}),
         };
     } else if (err instanceof APIError) {
         // Better Auth's own error (e.g. auth.api.signInEmail on a wrong
@@ -73,6 +74,7 @@ export const errorHandler = async (
         return res.status(error.statusCode).json({
             message: error.message,
             ...("code" in error && error.code ? { code: error.code } : {}),
+            ...("reason" in error && error.reason ? { reason: error.reason } : {}),
         });
     }
 }

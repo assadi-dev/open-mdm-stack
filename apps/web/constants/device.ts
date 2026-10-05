@@ -15,7 +15,8 @@ export const DEVICE = {
     // Deux situations que l'administrateur règle différemment : l'API répond 409 (hors ligne) ou 504 (aucune réponse).
     refreshOffline: "L'appareil est hors ligne.",
     refreshTimeout: "L'appareil n'a pas répondu.",
-    // L'API répond 403 : un appareil bloqué ne peut plus joindre le serveur, il ne peut donc pas se synchroniser.
+    // L'API refuse toute commande (403) à un appareil qui n'est pas enrôlé ou qui est bloqué : un message par cas.
+    refreshNotEnrolled: "L'appareil n'est pas enrôlé.",
     refreshBlocked: "L'appareil est bloqué.",
     refreshMany: "Impossible d'actualiser les appareils. Réessayez.",
     delete: "Impossible de supprimer l'appareil. Réessayez.",
@@ -35,8 +36,8 @@ export const DEVICE = {
     refreshMany: {
       loading: "Synchronisation de {count} appareils en cours",
       all: "{count} appareils synchronisés.",
-      partial: "{done} sur {total} appareils synchronisés. Les autres sont hors ligne, bloqués ou n'ont pas répondu.",
-      none: "Aucun des {total} appareils n'a pu être actualisé : ils sont hors ligne, bloqués ou n'ont pas répondu.",
+      partial: "{done} sur {total} appareils synchronisés. Les autres sont hors ligne, non enrôlés, bloqués ou n'ont pas répondu.",
+      none: "Aucun des {total} appareils n'a pu être actualisé : ils sont hors ligne, non enrôlés, bloqués ou n'ont pas répondu.",
     },
   },
   battery: {
