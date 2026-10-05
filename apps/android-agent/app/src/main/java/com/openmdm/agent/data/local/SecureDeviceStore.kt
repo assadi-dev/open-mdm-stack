@@ -66,6 +66,20 @@ class SecureDeviceStore(context: Context) {
         get() = prefs.getString(KEY_POLICY_ID, null)
         set(value) = prefs.edit().putString(KEY_POLICY_ID, value).apply()
 
+    /**
+     * What a USB enrollment started without `autoEnroll` leaves for the enrollment with a code that follows (see
+     * [com.openmdm.agent.ui.AgentViewModel.enroll]): the serial ADB sees the device under, if one was received, and
+     * whether the agent was started that way at all (the enrollment is then reported as `usb`). Both are cleared once
+     * an enrollment succeeds.
+     */
+    var usbSerial: String?
+        get() = prefs.getString(KEY_USB_SERIAL, null)
+        set(value) = prefs.edit().putString(KEY_USB_SERIAL, value).apply()
+
+    var usbEnrollmentPending: Boolean
+        get() = prefs.getBoolean(KEY_USB_ENROLLMENT_PENDING, false)
+        set(value) = prefs.edit().putBoolean(KEY_USB_ENROLLMENT_PENDING, value).apply()
+
     var lastHeartbeatAt: Long
         get() = prefs.getLong(KEY_LAST_HEARTBEAT, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_HEARTBEAT, value).apply()
@@ -91,6 +105,8 @@ class SecureDeviceStore(context: Context) {
         const val KEY_DEVICE_NAME = "device_name"
         const val KEY_GROUP_ID = "group_id"
         const val KEY_POLICY_ID = "policy_id"
+        const val KEY_USB_SERIAL = "usb_serial"
+        const val KEY_USB_ENROLLMENT_PENDING = "usb_enrollment_pending"
         const val KEY_LAST_HEARTBEAT = "last_heartbeat_at"
     }
 }

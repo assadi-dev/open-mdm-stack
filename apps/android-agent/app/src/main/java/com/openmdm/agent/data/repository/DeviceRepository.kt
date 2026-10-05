@@ -38,6 +38,11 @@ class DeviceRepository(
 
     val policyId: String? get() = store.policyId
 
+    /** Left by a USB enrollment started without `autoEnroll`, for the enrollment with a code (see [SecureDeviceStore]). */
+    val usbEnrollmentPending: Boolean get() = store.usbEnrollmentPending
+
+    val usbSerial: String? get() = store.usbSerial
+
     val lastHeartbeatAt: Long get() = store.lastHeartbeatAt
 
     /**
@@ -86,12 +91,13 @@ class DeviceRepository(
         code: String,
         enrollmentMethod: String = "manual",
         name: String? = null,
+        serial: String? = null,
     ): Result<Unit> {
         val otp = code.trim()
         if (!OTP_FORMAT.matches(otp)) {
             return Result.failure(OtpVerifyException.InvalidCode("The code must be $OTP_LENGTH digits"))
         }
-        return performEnrollment(baseUrl, enrollmentMethod, name, serial = null) { verifyOtp(otp) }
+        return performEnrollment(baseUrl, enrollmentMethod, name, serial) { verifyOtp(otp) }
     }
 
     private suspend fun verifyOtp(code: String): ChallengeResponse = try {
@@ -155,6 +161,9 @@ class DeviceRepository(
         // Saved only once the server accepted the enrollment: a failed attempt (retried later with the same name)
         // leaves no name behind on a device that is not enrolled. `null` clears the one of a previous enrollment.
         store.deviceName = enrolledName
+        // What a USB enrollment left for this one has been used: a later enrollment starts afresh.
+        store.usbSerial = null
+        store.usbEnrollmentPending = false
         Log.i(TAG, "Enrolled as deviceId=${response.deviceId}")
         // Best-effort first telemetry report; failure here must not fail enrollment.
         sendTelemetry().onFailure { Log.w(TAG, "Initial telemetry report failed", it) }

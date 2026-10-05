@@ -90,9 +90,20 @@ class AgentViewModel(
      * Manual enrollment: [code] is the one an administrator generated in the dashboard and read out, exchanged for a
      * challenge by [DeviceRepository.enroll]. [baseUrl] is an optional server base URL override. Each way the code
      * step can fail gets its own message (see [enrollmentMessage]).
+     *
+     * When the agent was started by a USB enrollment without `autoEnroll` (see
+     * [com.openmdm.agent.enrollment.UsbEnrollmentHandler]), the code completes it: the enrollment is reported as
+     * `usb`, and the saved name and serial are sent along. Both are optional, each is sent only when one was saved.
      */
     fun enroll(baseUrl: String, code: String) = runEnrollment {
-        repository.enroll(baseUrl.trim().ifBlank { null }, code, MdmWork.METHOD_MANUAL)
+        val usb = repository.usbEnrollmentPending
+        repository.enroll(
+            baseUrl = baseUrl.trim().ifBlank { null },
+            code = code,
+            enrollmentMethod = if (usb) MdmWork.METHOD_USB else MdmWork.METHOD_MANUAL,
+            name = repository.deviceName,
+            serial = repository.usbSerial,
+        )
     }
 
     /**

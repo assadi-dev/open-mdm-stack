@@ -12,9 +12,11 @@ import com.openmdm.agent.work.MdmWork
  *  1. `deviceName` — saved in the local store, and sent to the server with the enrollment;
  *  2. `groupId`    — saved in the local store (the server has no groups yet);
  *  3. `policyId`   — saved in the local store (the server has no policies yet);
- *  4. `serial`     — kept for the enrollment, in case the device can't read its own;
+ *  4. `serial`     — saved in the local store, used by the enrollment in case the device can't read its own;
  *  5. `autoEnroll` — when `true`, enrolls in the background ([MdmWork.enqueueEnrollment], method `usb`), so the
- *                    enrollment survives the dashboard closing the ADB session or the screen going off.
+ *                    enrollment survives the dashboard closing the ADB session or the screen going off. Otherwise
+ *                    the person enrolls with a code from the screen, which reuses what was saved here (see
+ *                    [com.openmdm.agent.ui.AgentViewModel.enroll]).
  *
  * Every step logs what it did under [TAG] (`adb logcat -s UsbEnrollment`), to follow a test from the command line.
  */
@@ -46,12 +48,18 @@ class UsbEnrollmentHandler(
             Log.i(TAG, "policyId: $it, saved")
         } ?: Log.i(TAG, "policyId: none, unchanged (${store.policyId ?: "—"})")
 
-        // 4. serial
-        Log.i(TAG, "serial: ${args.serial ?: "none"}, used if the device can't read its own")
+        // 4. serial — same rule.
+        args.serial?.let {
+            store.usbSerial = it
+            Log.i(TAG, "serial: $it, saved, used if the device can't read its own")
+        } ?: Log.i(TAG, "serial: none, unchanged (${store.usbSerial ?: "—"})")
+
+        // Whatever the parameters, the next enrollment is a USB one (cleared once an enrollment succeeds).
+        if (!store.isEnrolled) store.usbEnrollmentPending = true
 
         // 5. autoEnroll
         when {
-            !args.autoEnroll -> Log.i(TAG, "autoEnroll: false, waiting for an enrollment from the screen")
+            !args.autoEnroll -> Log.i(TAG, "autoEnroll: false, waiting for an enrollment with a code from the screen")
             // A re-run of the dashboard (or of the script) must not enroll the device a second time.
             store.isEnrolled -> {
                 Log.i(TAG, "autoEnroll: true, but the device is already enrolled (${store.deviceId}): skipped")
