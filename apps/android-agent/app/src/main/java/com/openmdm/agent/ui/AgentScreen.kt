@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.journeyapps.barcodescanner.ScanContract
@@ -26,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,7 +63,10 @@ fun AgentScreen(
         } else {
             ManualEnrollmentCard(
                 busy = state.busy || state.enrolling,
+                autoEnroll = state.autoEnroll,
                 onEnroll = viewModel::enroll,
+                onAutoEnroll = viewModel::autoEnroll,
+                onDisableAutoEnroll = viewModel::disableAutoEnroll,
                 onScanned = viewModel::enrollFromQr,
             )
         }
@@ -141,7 +146,11 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ManualEnrollmentCard(
     busy: Boolean,
+    // The USB enrollment asked the agent to enroll by itself: no code to type, and a switch to turn that off.
+    autoEnroll: Boolean,
     onEnroll: (baseUrl: String, code: String) -> Unit,
+    onAutoEnroll: (baseUrl: String) -> Unit,
+    onDisableAutoEnroll: () -> Unit,
     onScanned: (baseUrl: String, name: String?) -> Unit,
 ) {
     var code by remember { mutableStateOf("") }
@@ -162,8 +171,13 @@ private fun ManualEnrollmentCard(
         ) {
             Text("Enrôlement", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Saisis le code à ${DeviceRepository.OTP_LENGTH} chiffres affiché dans le dashboard, " +
-                    "ou scanne le QR du serveur.",
+                if (autoEnroll) {
+                    "L'enrôlement automatique a été demandé depuis le dashboard. " +
+                        "Désactive-le pour saisir un code, ou scanne le QR du serveur."
+                } else {
+                    "Saisis le code à ${DeviceRepository.OTP_LENGTH} chiffres affiché dans le dashboard, " +
+                        "ou scanne le QR du serveur."
+                },
                 style = MaterialTheme.typography.bodySmall,
             )
 
@@ -173,10 +187,28 @@ private fun ManualEnrollmentCard(
                 onValueChange = { code = it.filter(Char::isDigit).take(DeviceRepository.OTP_LENGTH) },
                 label = { Text("Code d'enrôlement") },
                 singleLine = true,
-                enabled = !busy,
+                // Greyed as long as the automatic enrollment is on; turning it off frees it.
+                enabled = !busy && !autoEnroll,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            // Only while the automatic enrollment is on: switching it off removes it (it can't be switched back on
+            // from here, the dashboard asks for it again).
+            if (autoEnroll) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("Enrôlement automatique", style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = true,
+                        onCheckedChange = { checked -> if (!checked) onDisableAutoEnroll() },
+                        enabled = !busy,
+                    )
+                }
+            }
 
             if (showAdvanced) {
                 OutlinedTextField(
@@ -190,8 +222,9 @@ private fun ManualEnrollmentCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { onEnroll(baseUrl, code) },
-                    enabled = !busy && code.length == DeviceRepository.OTP_LENGTH,
+                    // Automatic enrollment on: it runs again without a code; off: the code is exchanged.
+                    onClick = { if (autoEnroll) onAutoEnroll(baseUrl) else onEnroll(baseUrl, code) },
+                    enabled = !busy && (autoEnroll || code.length == DeviceRepository.OTP_LENGTH),
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(if (busy) "Enrôlement…" else "Enrôler")

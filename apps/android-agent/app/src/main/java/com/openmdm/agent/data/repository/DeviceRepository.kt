@@ -47,6 +47,14 @@ class DeviceRepository(
 
     val usbSerial: String? get() = store.usbSerial
 
+    /** Whether the USB enrollment asked the agent to enroll by itself, and it hasn't yet (see [SecureDeviceStore.autoEnroll]). */
+    val autoEnroll: Boolean get() = store.autoEnroll
+
+    /** The person turned the automatic enrollment off: the variable is removed, the code enrollment takes over. */
+    fun disableAutoEnroll() {
+        store.autoEnroll = false
+    }
+
     val lastHeartbeatAt: Long get() = store.lastHeartbeatAt
 
     /**
@@ -168,6 +176,7 @@ class DeviceRepository(
         // What a USB enrollment left for this one has been used: a later enrollment starts afresh.
         store.usbSerial = null
         store.usbEnrollmentPending = false
+        store.autoEnroll = false
         Log.i(TAG, "Enrolled as deviceId=${response.deviceId}")
         // Best-effort first telemetry report; failure here must not fail enrollment.
         sendTelemetry().onFailure { Log.w(TAG, "Initial telemetry report failed", it) }

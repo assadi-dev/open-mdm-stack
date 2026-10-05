@@ -13,9 +13,11 @@ import com.openmdm.agent.work.MdmWork
  *  2. `groupId`    — saved in the local store (the server has no groups yet);
  *  3. `policyId`   — saved in the local store (the server has no policies yet);
  *  4. `serial`     — saved in the local store, used by the enrollment in case the device can't read its own;
- *  5. `autoEnroll` — when `true`, enrolls in the background ([MdmWork.enqueueEnrollment], method `usb`), so the
- *                    enrollment survives the dashboard closing the ADB session or the screen going off. Otherwise
- *                    the person enrolls with a code from the screen, which reuses what was saved here (see
+ *  5. `autoEnroll` — saved in the local store while it is `true`, and then enrolls in the background
+ *                    ([MdmWork.enqueueEnrollment], method `usb`), so the enrollment survives the dashboard closing the
+ *                    ADB session or the screen going off. The screen then greys the code input and offers a switch to
+ *                    turn it off; its button enrolls by itself again if the first attempt failed. Otherwise the
+ *                    person enrolls with a code from the screen, which reuses what was saved here (see
  *                    [com.openmdm.agent.ui.AgentViewModel.enroll]).
  *
  * Every step logs what it did under [TAG] (`adb logcat -s UsbEnrollment`), to follow a test from the command line.
@@ -54,8 +56,12 @@ class UsbEnrollmentHandler(
             Log.i(TAG, "serial: $it, saved, used if the device can't read its own")
         } ?: Log.i(TAG, "serial: none, unchanged (${store.usbSerial ?: "—"})")
 
-        // Whatever the parameters, the next enrollment is a USB one (cleared once an enrollment succeeds).
-        if (!store.isEnrolled) store.usbEnrollmentPending = true
+        // Whatever the parameters, the next enrollment is a USB one (cleared once an enrollment succeeds). `autoEnroll`
+        // is stored as received: a start with `false` turns off one left by an earlier start.
+        if (!store.isEnrolled) {
+            store.usbEnrollmentPending = true
+            store.autoEnroll = args.autoEnroll
+        }
 
         // 5. autoEnroll
         when {

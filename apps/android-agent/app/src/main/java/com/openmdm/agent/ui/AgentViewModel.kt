@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
+import retrofit2.HttpException
 
 data class AgentUiState(
     val isDeviceOwner: Boolean = false,
@@ -27,6 +29,9 @@ data class AgentUiState(
     val deviceId: String? = null,
     // The name received from the provisioning QR; `null` when there is none, and the screen shows nothing then.
     val deviceName: String? = null,
+    // The USB enrollment asked the agent to enroll by itself, and it hasn't yet: the code input stays greyed and a
+    // switch offers to turn it off.
+    val autoEnroll: Boolean = false,
     // The group and policy received from a USB enrollment; `null` (and not shown) until one carried them.
     val groupId: String? = null,
     val policyId: String? = null,
@@ -42,14 +47,28 @@ data class AgentUiState(
     val mqttState: MqttConnectionState = MqttConnectionState.DISCONNECTED,
 )
 
-/** What the screen says once an enrollment attempt ended: [failure] is `null` when it succeeded. */
+private const val ENROLLMENT_FAILED = "Enrollment failed"
+
+/**
+ * What the screen says once an enrollment attempt ended: [failure] is `null` when it succeeded. The code step reports
+ * an [OtpVerifyException]; the enrollment by itself (no code) lets the network and HTTP errors through as they are.
+ */
 internal fun enrollmentMessage(failure: Throwable?): String = when (failure) {
     null -> "Enrolled"
     is OtpVerifyException.InvalidCode -> "Code invalide, expiré ou déjà utilisé"
     is OtpVerifyException.Rejected -> "Demande refusée par le serveur (HTTP ${failure.status})"
     is OtpVerifyException.Server -> "Erreur du serveur (HTTP ${failure.status}), réessaie plus tard"
-    is OtpVerifyException.Network -> "Serveur injoignable, vérifie la connexion"
-    else -> "Enrollment failed"
+    is OtpVerifyException.Network, is IOException -> "Serveur injoignable, vérifie la connexion"
+    is HttpException ->
+        if (failure.code() in 500..599) "Erreur du serveur (HTTP ${failure.code()}), réessaie plus tard"
+        else "Demande refusée par le serveur (HTTP ${failure.code()})"
+    else -> ENROLLMENT_FAILED
+}
+
+/** The toast of an automatic enrollment that failed in the background; the reason is given when it is known. */
+internal fun autoEnrollmentFailureMessage(failure: Throwable): String {
+    val reason = enrollmentMessage(failure).takeUnless { it == ENROLLMENT_FAILED }
+    return if (reason == null) "Échec de l'enrôlement automatique" else "Échec de l'enrôlement automatique : $reason"
 }
 
 class AgentViewModel(
@@ -87,6 +106,7 @@ class AgentViewModel(
                 isEnrolled = repository.isEnrolled,
                 deviceId = repository.deviceId,
                 deviceName = repository.deviceName,
+                autoEnroll = repository.autoEnroll,
                 groupId = repository.groupId,
                 policyId = repository.policyId,
                 lastHeartbeatAt = repository.lastHeartbeatAt,
@@ -107,15 +127,45 @@ class AgentViewModel(
      * `usb`, and the saved name and serial are sent along. Both are optional, each is sent only when one was saved.
      */
     fun enroll(baseUrl: String, code: String) = runEnrollment {
-        val usb = repository.usbEnrollmentPending
         repository.enroll(
             baseUrl = baseUrl.trim().ifBlank { null },
             code = code,
-            enrollmentMethod = if (usb) MdmWork.METHOD_USB else MdmWork.METHOD_MANUAL,
+            enrollmentMethod = enrollmentMethod(),
             name = repository.deviceName,
             serial = repository.usbSerial,
         )
     }
+
+    /**
+     * The button while the automatic enrollment asked by the USB enrollment is on: no code, the same enrollment the
+     * background one ran (see [com.openmdm.agent.work.EnrollWorker]), run again from the screen after it failed.
+     * Its failure is shown on the screen (see [enrollmentMessage]).
+     */
+    fun autoEnroll(baseUrl: String) = runEnrollment {
+        repository.autoEnroll(
+            baseUrl = baseUrl.trim().ifBlank { null },
+            enrollmentMethod = enrollmentMethod(),
+            name = repository.deviceName,
+            serial = repository.usbSerial,
+        )
+    }
+
+    /**
+     * The switch turned off: the variable is removed from the store, the background enrollment is cancelled (it would
+     * otherwise enroll the device behind the person's back) and the code input is free. The button then enrolls with
+     * the code ([enroll]).
+     */
+    fun disableAutoEnroll() {
+        repository.disableAutoEnroll()
+        MdmWork.cancelEnrollment(getApplication())
+        // The failure of the automatic attempt no longer applies to what the person is about to do.
+        _state.update { it.copy(message = null) }
+        refresh()
+    }
+
+    // An enrollment started over USB is reported as such, whichever way it ends (code or automatic).
+    private fun enrollmentMethod() =
+        if (repository.usbEnrollmentPending) MdmWork.METHOD_USB else MdmWork.METHOD_MANUAL
 
     /**
      * Enrollment after scanning the server's QR (see [EnrollmentQrParser], which extracts a `serverBaseUrl` and the

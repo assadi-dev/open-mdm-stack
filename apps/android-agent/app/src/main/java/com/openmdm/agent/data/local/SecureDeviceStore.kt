@@ -96,6 +96,17 @@ class SecureDeviceStore(context: Context) {
         get() = prefs.getBoolean(KEY_USB_ENROLLMENT_PENDING, false)
         set(value) = prefs.edit().putBoolean(KEY_USB_ENROLLMENT_PENDING, value).apply()
 
+    /**
+     * Whether the USB enrollment asked the agent to enroll by itself (`autoEnroll` true). While it is set, the screen
+     * keeps the code input greyed and offers a switch to turn it off. Turning it off, like a successful enrollment,
+     * removes the entry rather than storing `false`: the variable only exists while it is true.
+     */
+    var autoEnroll: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_ENROLL, false)
+        set(value) = prefs.edit().apply {
+            if (value) putBoolean(KEY_AUTO_ENROLL, true) else remove(KEY_AUTO_ENROLL)
+        }.apply()
+
     var lastHeartbeatAt: Long
         get() = prefs.getLong(KEY_LAST_HEARTBEAT, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_HEARTBEAT, value).apply()
@@ -123,6 +134,7 @@ class SecureDeviceStore(context: Context) {
         const val KEY_POLICY_ID = "policy_id"
         const val KEY_USB_SERIAL = "usb_serial"
         const val KEY_USB_ENROLLMENT_PENDING = "usb_enrollment_pending"
+        const val KEY_AUTO_ENROLL = "auto_enroll"
         const val KEY_LAST_HEARTBEAT = "last_heartbeat_at"
     }
 }

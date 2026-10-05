@@ -79,6 +79,11 @@ object MdmWork {
             .enqueueUniqueWork(ENROLL_WORK, ExistingWorkPolicy.REPLACE, request)
     }
 
+    /** Stops the one-off enrollment, queued or running: the person turned the automatic enrollment off. */
+    fun cancelEnrollment(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(ENROLL_WORK)
+    }
+
     /**
      * Whether the one-off enrollment is running right now, for the screen to say so instead of offering the code.
      * Only `RUNNING` counts: `ENQUEUED` also means "waiting for the network" (see [networkConstraints]) or "waiting for
