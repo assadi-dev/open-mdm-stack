@@ -5,8 +5,9 @@ import type { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { ENROLLMENT } from "@/constants/enrollment";
 import { useAdb } from "@/hooks/useAdb";
+import { installApk } from "@/lib/adb/adb-package";
 import { closeAdbSession, isAdbSupported, isDeviceBusyError, openAdbSession } from "@/lib/adb/adb-session";
-import { activateUsbDeviceOwnerApi, enrollUsbDeviceApi, installAgentApi } from "../_services/enrollment.api";
+import { activateUsbDeviceOwnerApi, downloadAgentApi, enrollUsbDeviceApi } from "../_services/enrollment.api";
 import {
   USB_STEPS,
   UsbStepError,
@@ -15,17 +16,34 @@ import {
   toUsbEnrollmentInput,
   toUsbStepStatuses,
 } from "../_services/enrollment.utils";
-import type { EnrollmentConfigFormValues, UsbEnrollmentInput, UsbEnrollmentStatus, UsbStep } from "../_types/enrollment.types";
+import type {
+  EnrollmentConfigFormValues,
+  UsbEnrollmentInput,
+  UsbEnrollmentStatus,
+  UsbInstallPhase,
+  UsbStep,
+  UsbStepLabels,
+} from "../_types/enrollment.types";
 
 // Le temps de lire le message et de cliquer sur l'action : plus long qu'un toast ordinaire (4 s).
 const UNSUPPORTED_TOAST_DURATION = 8000;
 
-const runStep = (step: UsbStep, adb: Adb, input: UsbEnrollmentInput) => {
+// `onInstallPhase` : « Installer l'agent » annonce le téléchargement, puis l'installation, pour le badge de l'étape.
+const runStep = async (
+  step: UsbStep,
+  adb: Adb,
+  input: UsbEnrollmentInput,
+  onInstallPhase: (phase: UsbInstallPhase | null) => void,
+) => {
   switch (step) {
-    case "install":
-      return installAgentApi(adb, input.apkUrl);
+    case "install": {
+      onInstallPhase("download");
+      const apk = await downloadAgentApi(input.apkUrl);
+      onInstallPhase("install");
+      return installApk(adb, apk);
+    }
     case "enroll":
-      return enrollUsbDeviceApi(input);
+      return enrollUsbDeviceApi(adb, input);
     case "deviceOwner":
       return activateUsbDeviceOwnerApi();
   }
@@ -45,6 +63,7 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
   const { session, setSession } = useAdb();
   const device = useMemo(() => (session ? toUsbDevice(session.usbDevice) : null), [session]);
   const [doneSteps, setDoneSteps] = useState<UsbStep[]>([]);
+  const [installPhase, setInstallPhase] = useState<UsbInstallPhase | null>(null);
 
   const connection = useMutation({
     mutationFn: openAdbSession,
@@ -72,9 +91,11 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
     mutationFn: async ({ adb, input, steps }: EnrollmentRun) => {
       for (const step of steps) {
         try {
-          await runStep(step, adb, input);
+          await runStep(step, adb, input, setInstallPhase);
         } catch (error) {
           throw new UsbStepError(step, error);
+        } finally {
+          setInstallPhase(null);
         }
         setDoneSteps((done) => [...done, step]);
       }
@@ -92,6 +113,7 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
   }, [session, resetEnrollment]);
 
   const steps = toUsbStepStatuses(doneSteps, enrollment.isPending);
+  const stepLabels: UsbStepLabels = installPhase ? { install: ENROLLMENT.usb.installPhase[installPhase] } : {};
   const isEnrolled = doneSteps.length === USB_STEPS.length;
 
   const toStatus = (): UsbEnrollmentStatus => {
@@ -132,6 +154,7 @@ export const useUsbEnrollment = (form: UseFormReturn<EnrollmentConfigFormValues>
     device,
     status: toStatus(),
     steps,
+    stepLabels,
     currentStep: toCurrentUsbStep(doneSteps),
     isConnecting: connection.isPending,
     isDisconnecting: disconnection.isPending,

@@ -1,4 +1,4 @@
-import type { EnrollmentOptions, UsbEnrollment } from "../_types/enrollment.types";
+import type { EnrollmentOptions } from "../_types/enrollment.types";
 
 // Les réseaux Wi-Fi ne sont pas fictifs : ils viennent de `GET /wifi-networks` (`fetchEnrollmentOptionsApi`).
 export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = {
@@ -14,8 +14,6 @@ export const ENROLLMENT_OPTIONS_MOCK: Omit<EnrollmentOptions, "wifiNetworks"> = 
   ],
   defaults: { name: "Terrain-Lyon", groupId: "lyon", policyId: "std" },
 };
-
-export const USB_ENROLLMENT_MOCK: UsbEnrollment = { deviceId: "d-3a1b7k2p" };
 
 // Latence simulée : les états « en cours » (connexion, enrôlement, régénération) restent visibles le temps d'un vrai appel.
 export const simulateLatency = (duration = 600) => new Promise((resolve) => setTimeout(resolve, duration));

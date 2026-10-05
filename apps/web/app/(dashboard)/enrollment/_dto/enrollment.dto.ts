@@ -48,11 +48,6 @@ export const usbDeviceSchema = z.object({
   adbAuthorized: z.boolean(),
 });
 
-// Le résultat d'un enrôlement par USB : l'appareil créé dans le parc.
-export const usbEnrollmentSchema = z.object({
-  deviceId: z.string(),
-});
-
 // Le formulaire manipule des textes : un réseau Wi-Fi absent vaut `NO_WIFI`, une URL vide laisse l'APK par défaut.
 export const enrollmentConfigFormSchema = z.object({
   name: z
@@ -74,5 +69,4 @@ export const EnrollmentDto = {
   parseWifiNetworks: (data: unknown) => enrollmentWifiNetworkCollectionSchema.parse(data),
   parseQr: (data: unknown) => enrollmentQrSchema.parse(data),
   parseCode: (data: unknown) => enrollmentCodeSchema.parse(data),
-  parseUsbEnrollment: (data: unknown) => usbEnrollmentSchema.parse(data),
 };

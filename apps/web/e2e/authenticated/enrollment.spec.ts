@@ -4,7 +4,7 @@ import { NAVIGATION } from "@/constants/navigation";
 import { USB_DEVICE, readUsbLog, stubWebUsb, unplugUsbDevice } from "../support/webusb";
 
 // Le QR code, le code à saisir et les réseaux Wi-Fi viennent de l'API ; la connexion de l'appareil USB vient de WebUSB
-// (remplacé par un faux démon ADB dans `support/webusb`), et l'enrôlement par USB d'un mock de la page (`enrollment/_mocks`).
+// (remplacé par un faux démon ADB dans `support/webusb`). Seule l'étape « Activer le mode Device Owner » est encore fictive.
 const PAGE_URL = "/enrollment";
 
 // L'APK de l'agent passe par le proxy Next (`/api/v1/enrollment/agent`) : le test lui donne un faux fichier, que le faux
@@ -16,6 +16,31 @@ const serveAgentApk = (page: Page) =>
   page.route(AGENT_PROXY, (route) =>
     route.fulfill({ contentType: "application/vnd.android.package-archive", body: AGENT_APK }),
   );
+
+// Le proxy ne répond qu'à `release()` : le temps d'observer le badge pendant le téléchargement.
+const holdAgentApk = async (page: Page) => {
+  let release = () => {};
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(AGENT_PROXY, async (route) => {
+    await released;
+    await route.fulfill({ contentType: "application/vnd.android.package-archive", body: AGENT_APK });
+  });
+  return release;
+};
+
+// Ce que `am` reçoit pour lancer l'agent : l'activité, puis le nom, le groupe et la politique du formulaire (leurs valeurs par
+// défaut), le numéro de série de l'appareil et `autoEnroll`.
+const startArgs = (deviceName: string) => [
+  "activity", "start-activity", "-W", "-S", "-n", "com.openmdm.agent/com.openmdm.agent.MainActivity",
+  "--es", "deviceName", deviceName,
+  "--es", "groupId", "lyon",
+  "--es", "policyId", "std",
+  "--es", "serial", USB_DEVICE.serial,
+  "--ez", "autoEnroll", "true",
+];
+const startEntry = (deviceName: string) => `start:${JSON.stringify(startArgs(deviceName))}`;
 
 // L'étape qui a le focus : celle qui est en cours, ou la prochaine à faire.
 const currentStep = (page: Page) => page.locator('[aria-current="step"]');
@@ -79,7 +104,7 @@ test.describe("enrôlement", () => {
 
   test("enrôle un appareil branché en USB", async ({ page }) => {
     await stubWebUsb(page, "device");
-    await serveAgentApk(page);
+    const releaseAgentApk = await holdAgentApk(page);
     await page.goto(`${PAGE_URL}?method=manual`);
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
 
@@ -97,6 +122,10 @@ test.describe("enrôlement", () => {
 
     const enroll = page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true });
     await enroll.click();
+    // Le badge de « Installer l'agent » dit où elle en est : le téléchargement, puis l'installation.
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.installPhase.download);
+    releaseAgentApk();
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.installPhase.install);
     // Le focus suit les étapes : l'enrôlement auprès du serveur le prend quand l'agent est installé.
     await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.enroll.title);
     await expect(page.getByText(ENROLLMENT.usb.enrolled.title, { exact: true })).toBeVisible();
@@ -107,9 +136,41 @@ test.describe("enrôlement", () => {
     await page.getByRole("button", { name: ENROLLMENT.button.disconnect }).click();
     await expect(page.getByText(ENROLLMENT.usb.idle.title)).toBeVisible();
     await expect(page.getByText(ENROLLMENT.success.disconnect)).toBeVisible();
-    // La déconnexion ferme la connexion, puis révoque l'accès du navigateur à l'appareil.
-    // L'APK reçu par l'appareil est celui que Next a servi, en entier.
-    await expect.poll(() => readUsbLog(page)).toEqual(["open", "claim", `install:${AGENT_APK.length}`, "close", "forget"]);
+    // L'appareil a reçu l'APK que Next a servi, en entier, puis la commande qui lance l'agent avec ses réglages ; la
+    // déconnexion ferme ensuite la connexion et révoque l'accès du navigateur à l'appareil.
+    await expect
+      .poll(() => readUsbLog(page))
+      .toEqual(["open", "claim", `install:${AGENT_APK.length}`, startEntry("Terrain-Lyon"), "close", "forget"]);
+  });
+
+  test("lance l'agent avec le nom de l'appareil tel que saisi, espaces et apostrophe compris", async ({ page }) => {
+    await stubWebUsb(page, "device");
+    await serveAgentApk(page);
+    await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByLabel(ENROLLMENT.config.name.label).fill("L'atelier Nord");
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    await expect(page.getByText(ENROLLMENT.usb.device.connected, { exact: true })).toBeVisible();
+
+    await page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true }).click();
+    await expect(page.getByText(ENROLLMENT.usb.enrolled.title, { exact: true })).toBeVisible();
+    // Un seul argument, sans découpage ni interprétation.
+    expect(await readUsbLog(page)).toContain(startEntry("L'atelier Nord"));
+  });
+
+  test("reprend au démarrage de l'agent quand l'appareil refuse de le lancer", async ({ page }) => {
+    await stubWebUsb(page, "start-error");
+    await serveAgentApk(page);
+    await page.goto(`${PAGE_URL}?method=manual`);
+    await page.getByRole("button", { name: ENROLLMENT.button.connect }).click();
+    await expect(page.getByText(ENROLLMENT.usb.device.connected, { exact: true })).toBeVisible();
+
+    const enroll = page.getByRole("button", { name: ENROLLMENT.button.enroll, exact: true });
+    await enroll.click();
+    await expect(page.getByText(ENROLLMENT.error.enroll)).toBeVisible();
+    // L'agent est installé : le focus reste sur l'étape qui a échoué, et un nouveau clic reprend là.
+    await expect(page.getByText(ENROLLMENT.usb.stepStatus.done)).toHaveCount(1);
+    await expect(currentStep(page)).toContainText(ENROLLMENT.usb.steps.enroll.title);
+    await expect(enroll).toBeEnabled();
   });
 
   test("reprend à l'installation de l'agent quand son téléchargement échoue", async ({ page }) => {

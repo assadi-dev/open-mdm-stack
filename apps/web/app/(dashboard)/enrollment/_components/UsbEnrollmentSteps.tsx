@@ -5,7 +5,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { ENROLLMENT } from "@/constants/enrollment";
 import { cn } from "@/lib/utils";
 import { USB_STEPS } from "../_services/enrollment.utils";
-import type { UsbStep, UsbStepStatus, UsbStepStatuses } from "../_types/enrollment.types";
+import type { UsbStep, UsbStepLabels, UsbStepStatus, UsbStepStatuses } from "../_types/enrollment.types";
 
 const STEP_ICONS: Record<UsbStep, LucideIcon> = {
   install: Download,
@@ -30,11 +30,13 @@ const STEP_BACKGROUNDS = {
 
 type UsbEnrollmentStepsProps = {
   statuses: UsbStepStatuses;
+  // Le libellé d'une étape quand il dit mieux que son statut.
+  labels: UsbStepLabels;
   // Absente une fois toutes les étapes terminées.
   currentStep: UsbStep | null;
 };
 
-export const UsbEnrollmentSteps = ({ statuses, currentStep }: UsbEnrollmentStepsProps) => (
+export const UsbEnrollmentSteps = ({ statuses, labels, currentStep }: UsbEnrollmentStepsProps) => (
   <ItemGroup>
     {USB_STEPS.map((step) => {
       const Icon = STEP_ICONS[step];
@@ -53,7 +55,7 @@ export const UsbEnrollmentSteps = ({ statuses, currentStep }: UsbEnrollmentSteps
             <ItemDescription>{text.description}</ItemDescription>
           </ItemContent>
           <ItemActions>
-            <Badge variant={STATUS_VARIANTS[status]}>{ENROLLMENT.usb.stepStatus[status]}</Badge>
+            <Badge variant={STATUS_VARIANTS[status]}>{labels[step] ?? ENROLLMENT.usb.stepStatus[status]}</Badge>
           </ItemActions>
         </Item>
       );

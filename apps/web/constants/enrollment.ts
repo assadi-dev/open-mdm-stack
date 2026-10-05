@@ -133,9 +133,14 @@ export const ENROLLMENT = {
     },
     // L'ordre des clés est celui des étapes.
     steps: {
-      install: { title: "Installer l’agent", description: "Téléchargement de l’APK par le serveur, puis installation par ADB" },
-      enroll: { title: "Enrôler auprès du serveur", description: "Automatique, aucun code à saisir" },
+      install: { title: "Installer l’agent", description: "Télécharge l’APK via le serveur, puis l’installe par ADB" },
+      enroll: { title: "Enrôler auprès du serveur", description: "Démarre l’agent avec le nom, le groupe et la politique" },
       deviceOwner: { title: "Activer le mode Device Owner", description: "dpm set-device-owner, exécuté par WebUSB" },
+    },
+    // Le badge de « Installer l'agent » dit où elle en est.
+    installPhase: {
+      download: "Téléchargement en cours",
+      install: "Installation en cours",
     },
     stepStatus: {
       todo: "À faire",

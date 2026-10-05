@@ -109,6 +109,8 @@ export const toUsbStepStatuses = (doneSteps: readonly UsbStep[], isRunning: bool
   return Object.fromEntries(USB_STEPS.map((step) => [step, toStatus(step)])) as UsbStepStatuses;
 };
 
+export const wait = (duration: number) => new Promise<void>((resolve) => setTimeout(resolve, duration));
+
 // L'étape qui a le focus : celle en cours, ou la prochaine à faire. Aucune une fois toutes faites.
 export const toCurrentUsbStep = (doneSteps: readonly UsbStep[]) => USB_STEPS.find((step) => !doneSteps.includes(step)) ?? null;
 

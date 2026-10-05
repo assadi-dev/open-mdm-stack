@@ -5,8 +5,9 @@ import type { Page } from "@playwright/test";
 // - `device` : la fenêtre choisit le Pixel 8 ci-dessous ;
 // - `cancel` : la fenêtre est refermée sans choix ;
 // - `busy` : un autre programme tient l'appareil (le serveur ADB local, par exemple) ;
+// - `start-error` : l'appareil refuse de lancer l'agent (activité introuvable) ;
 // - `unsupported` : WebUSB est retiré (Firefox, Safari, page non sécurisée).
-type WebUsbStub = "device" | "cancel" | "busy" | "unsupported";
+type WebUsbStub = "device" | "cancel" | "busy" | "start-error" | "unsupported";
 
 export const USB_DEVICE = { manufacturer: "Google", product: "Pixel 8", serial: "3A1B7K2P" };
 
@@ -22,7 +23,7 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
       const WRTE = 0x45545257;
       const HEADER_SIZE = 24;
       const DEVICE_SOCKET_ID = 1;
-      const INSTALL_DURATION = 200;
+      const INSTALL_DURATION = 700;
       const log: string[] = [];
 
       const toResult = (bytes: Uint8Array) => ({ status: "ok", data: new DataView(bytes.slice().buffer) });
@@ -60,7 +61,22 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
           send(CNXN, 0x01000001, 0x100000, `device::ro.product.model=${usbDevice.product};features=shell_v2,cmd,stat_v2,abb_exec`);
         }
         if (command === OPEN) {
-          const size = /\0-S\0(\d+)\0/.exec(new TextDecoder().decode(payload))?.[1];
+          const service = new TextDecoder().decode(payload);
+          // Le démarrage de l'agent (`am start-activity`) : chaque argument est tracé tel que l'appareil le reçoit.
+          if (service.startsWith("abb_exec:activity\0")) {
+            log.push(`start:${JSON.stringify(service.slice("abb_exec:".length).split("\0").filter(Boolean))}`);
+            send(OKAY, DEVICE_SOCKET_ID, arg0, "");
+            setTimeout(() => {
+              const output =
+                mode === "start-error"
+                  ? "Error: Activity class {com.openmdm.agent/com.openmdm.agent.MainActivity} does not exist.\nError type 3\n"
+                  : "Starting: Intent { cmp=com.openmdm.agent/.MainActivity }\nStatus: ok\nComplete\n";
+              send(WRTE, DEVICE_SOCKET_ID, arg0, output);
+              send(CLSE, DEVICE_SOCKET_ID, arg0, "");
+            }, 100);
+            return;
+          }
+          const size = /\0-S\0(\d+)\0/.exec(service)?.[1];
           if (size === undefined) return send(CLSE, 0, arg0, "");
           installs.set(arg0, { size: Number(size), received: 0 });
           send(OKAY, DEVICE_SOCKET_ID, arg0, "");
@@ -178,7 +194,8 @@ export const stubWebUsb = (page: Page, stub: WebUsbStub) =>
     { mode: stub, usbDevice: USB_DEVICE },
   );
 
-// Ce que le faux appareil a reçu du navigateur, dans l'ordre : `open`, `claim`, `install:<octets de l'APK>`, `close`, `forget`.
+// Ce que le faux appareil a reçu du navigateur, dans l'ordre : `open`, `claim`, `install:<octets de l'APK>`,
+// `start:<arguments d'am, en JSON>`, `close`, `forget`.
 export const readUsbLog = (page: Page) => page.evaluate(() => Reflect.get(window, "__usbLog") as string[]);
 
 // Le câble est débranché : le navigateur le signale à la page, sans que l'utilisateur ait cliqué sur « Déconnecter ».

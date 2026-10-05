@@ -7,7 +7,6 @@ import type {
   enrollmentOptionsSchema,
   enrollmentQrSchema,
   usbDeviceSchema,
-  usbEnrollmentSchema,
 } from "../_dto/enrollment.dto";
 
 export type EnrollmentMethod = (typeof ENROLLMENT_METHOD_KEYS)[number];
@@ -15,7 +14,6 @@ export type EnrollmentOptions = z.infer<typeof enrollmentOptionsSchema>;
 export type EnrollmentQr = z.infer<typeof enrollmentQrSchema>;
 export type EnrollmentCode = z.infer<typeof enrollmentCodeSchema>;
 export type UsbDevice = z.infer<typeof usbDeviceSchema>;
-export type UsbEnrollment = z.infer<typeof usbEnrollmentSchema>;
 export type EnrollmentConfigFormValues = z.infer<typeof enrollmentConfigFormSchema>;
 
 // Un choix de liste déroulante du formulaire.
@@ -44,6 +42,10 @@ export type UsbEnrollmentStatus = "idle" | "connected" | "enrolling" | "enrolled
 export type UsbStep = keyof typeof ENROLLMENT.usb.steps;
 export type UsbStepStatus = keyof typeof ENROLLMENT.usb.stepStatus;
 export type UsbStepStatuses = Record<UsbStep, UsbStepStatus>;
+// Le libellé du badge d'une étape quand il dit mieux que son statut (« Téléchargement en cours » plutôt que « En cours »).
+export type UsbStepLabels = Partial<Record<UsbStep, string>>;
+// Les deux temps de l'étape « Installer l'agent ».
+export type UsbInstallPhase = keyof typeof ENROLLMENT.usb.installPhase;
 
 // Les actions de copie, qui partagent leur hook et leurs messages.
 export type CopyAction = "copyCode";
