@@ -2,21 +2,10 @@ import type {
   AndroidVersions,
   CommandsFlow,
   Compliance,
-  DashboardKpis,
   RecentDevice,
 } from "../_types/dashboard.types";
 
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
-
-export const DASHBOARD_KPIS_MOCK: DashboardKpis = {
-  attentionDeviceCount: 12,
-  items: [
-    { id: "enrolled", value: 1248, delta: 3.2, deltaUnit: "percent" },
-    { id: "online", value: 1106, delta: -1.4, deltaUnit: "percent" },
-    { id: "nonCompliant", value: 37, delta: 4, deltaUnit: "count" },
-    { id: "pendingCommands", value: 12, delta: -5, deltaUnit: "count" },
-  ],
-};
 
 export const COMMANDS_FLOW_MOCK: CommandsFlow = {
   months: [

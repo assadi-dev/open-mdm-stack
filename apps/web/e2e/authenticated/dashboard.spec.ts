@@ -8,9 +8,10 @@ test.describe("tableau de bord", () => {
     await page.goto("/dashboard");
   });
 
+  // Le sous-titre vient du parc réel (appareils hors ligne ou en attente) : aucun, un seul ou plusieurs.
   test("affiche la salutation et le nombre d'appareils à surveiller", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(DASHBOARD.page.greeting);
-    await expect(page.getByText(DASHBOARD.attention.many)).toBeVisible();
+    await expect(page.getByText(/attention aujourd/)).toBeVisible();
   });
 
   test("affiche les quatre indicateurs", async ({ page }) => {

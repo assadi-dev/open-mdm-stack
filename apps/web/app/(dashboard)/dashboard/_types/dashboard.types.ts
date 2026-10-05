@@ -3,11 +3,13 @@ import type {
   androidVersionsSchema,
   commandsFlowSchema,
   complianceSchema,
+  deviceSummarySchema,
   kpiSchema,
   kpisSchema,
   recentDeviceSchema,
 } from "../_dto/dashboard.dto";
 
+export type DeviceSummary = z.infer<typeof deviceSummarySchema>;
 export type Kpi = z.infer<typeof kpiSchema>;
 export type DashboardKpis = z.infer<typeof kpisSchema>;
 export type CommandsFlow = z.infer<typeof commandsFlowSchema>;

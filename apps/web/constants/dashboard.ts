@@ -8,11 +8,12 @@ export const DASHBOARD = {
     one: "appareil demande votre attention aujourd’hui.",
     many: "appareils demandent votre attention aujourd’hui.",
   },
+  // Le hint (« cette semaine », « vs hier ») ira avec les variations, quand l'API les fournira.
   kpi: {
-    enrolled: { label: "Appareils enrôlés", hint: "cette semaine" },
-    online: { label: "En ligne", hint: "vs hier" },
-    nonCompliant: { label: "Non conformes", hint: "depuis hier" },
-    pendingCommands: { label: "Commandes en attente", hint: "vs hier" },
+    enrolled: { label: "Appareils enrôlés" /* , hint: "cette semaine" */ },
+    online: { label: "En ligne" /* , hint: "vs hier" */ },
+    offline: { label: "Hors ligne" /* , hint: "depuis hier" */ },
+    commandRunning: { label: "Commande en cours" /* , hint: "vs hier" */ },
   },
   flow: {
     title: "Commandes exécutées",

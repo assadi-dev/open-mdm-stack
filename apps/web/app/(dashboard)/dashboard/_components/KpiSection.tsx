@@ -27,7 +27,7 @@ export const KpiSection = ({ className }: KpiSectionProps) => {
   return (
     <div className={cn("grid gap-5 sm:grid-cols-2", className)}>
       {isPending
-        ? KPI_IDS.map((id) => <Skeleton key={id} className="h-40.5 rounded-xl" />)
+        ? KPI_IDS.map((id) => <Skeleton key={id} className="h-27.5 rounded-xl" />)
         : data.items.map((kpi) => <StatCard key={kpi.id} {...toStatCard(kpi)} />)}
     </div>
   );
