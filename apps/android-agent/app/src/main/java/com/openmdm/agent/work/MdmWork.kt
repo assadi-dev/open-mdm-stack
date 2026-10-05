@@ -80,19 +80,15 @@ object MdmWork {
     }
 
     /**
-     * Whether the one-off enrollment is waiting for its first run or running, for the screen to say so instead of
-     * offering the code. An attempt that failed and waits for its retry does not count (`runAttemptCount > 0`): the
-     * screen is usable again, and an enrollment done by hand meanwhile makes the retry a no-op (see [EnrollWorker]).
+     * Whether the one-off enrollment is running right now, for the screen to say so instead of offering the code.
+     * Only `RUNNING` counts: `ENQUEUED` also means "waiting for the network" (see [networkConstraints]) or "waiting for
+     * the retry of a failed attempt", and the screen must stay usable then, e.g. with no connection. An enrollment done
+     * by hand meanwhile makes the retry a no-op (see [EnrollWorker]).
      */
     fun enrollmentInProgress(context: Context): Flow<Boolean> =
         WorkManager.getInstance(context)
             .getWorkInfosForUniqueWorkFlow(ENROLL_WORK)
-            .map { infos ->
-                infos.any {
-                    it.state == WorkInfo.State.RUNNING ||
-                        (it.state == WorkInfo.State.ENQUEUED && it.runAttemptCount == 0)
-                }
-            }
+            .map { infos -> infos.any { it.state == WorkInfo.State.RUNNING } }
             .distinctUntilChanged()
 
     /** Schedules the recurring heartbeat (Android's minimum period is 15 min). */
