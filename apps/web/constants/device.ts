@@ -20,12 +20,12 @@ export const DEVICE = {
   // remplacés par des nombres (voir `devices.utils.ts`).
   toast: {
     refresh: {
-      loading: "Interrogation en cours",
+      loading: "Synchronisation en cours",
     },
     refreshMany: {
-      loading: "Interrogation de {count} appareils en cours",
-      all: "{count} appareils actualisés.",
-      partial: "{done} sur {total} appareils actualisés. Les autres sont hors ligne ou n'ont pas répondu.",
+      loading: "Synchronisation de {count} appareils en cours",
+      all: "{count} appareils synchronisés.",
+      partial: "{done} sur {total} appareils synchronisés. Les autres sont hors ligne ou n'ont pas répondu.",
       none: "Aucun des {total} appareils n'a pu être actualisé : ils sont hors ligne ou n'ont pas répondu.",
     },
   },
@@ -48,8 +48,8 @@ export const DEVICE = {
     create: "Enrôler un appareil",
     filter: "Filtrer",
     viewDetail: "Voir le détail",
-    refresh: "Actualiser",
-    refreshMany: "Actualiser",
+    refresh: "Synchroniser",
+    refreshMany: "Synchroniser",
     update: "Modifier",
     delete: "Supprimer",
     deleteMany: "Supprimer",
