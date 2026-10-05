@@ -18,6 +18,8 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { buildPaginatedData, toCollectionClauses } from "@features/paginations/services";
 import type { DeviceCollectionQuery } from "./dto/schema";
 import { deviceRepositoryFactory } from "./factory/repositories";
+import { HTTPNotFoundException } from "@core/exception";
+import { DeleteDeviceResult } from "./entities/repositories";
 
 export class DeviceRepository {
 
@@ -312,5 +314,29 @@ export class DeviceRepository {
             brands: brands.flatMap(({ value }) => (value ? [value] : [])),
             models: models.flatMap(({ value }) => (value ? [value] : [])),
         };
+    }
+
+    async delete(id: string) {
+        const [row] = await this.db.delete(devices).where(eq(devices.id, id)).returning();
+        if (!row) {
+            throw new HTTPNotFoundException(`Device with id ${id} not found`);
+        }
+        await this.db.delete(devices).where(eq(devices.id, row.id))
+    }
+
+    async deleteMany(ids: string[]): Promise<DeleteDeviceResult> {
+        const results: DeleteDeviceResult = {
+            success: [],
+            failures: []
+        }
+        for (const id of ids) {
+            try {
+                await this.delete(id)
+                results.success.push(id)
+            } catch (error) {
+                results.failures.push({ id, reason: error.message })
+            }
+        }
+        return results
     }
 }
