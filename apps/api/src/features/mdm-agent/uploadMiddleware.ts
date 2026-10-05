@@ -13,6 +13,7 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename(req, file, callback) {
+        const filename = "mdm-agent-latest.apk"
         const ext = path.extname(file.originalname);
         const size = file.size;
         if (size > 10 * 1024 * 1024) {
@@ -21,7 +22,10 @@ const storage = multer.diskStorage({
         if (ext !== '.apk') {
             throw new HTTPBadRequestException('Invalid file type');
         }
-        callback(null, `mdm-agent-latest.apk`);
+        if (fs.existsSync(path.join(process.cwd(), "src/storage/mdm-agent", filename))) {
+            fs.unlinkSync(path.join(process.cwd(), "src/storage/mdm-agent", filename));
+        }
+        callback(null, filename);
     },
 
 })
